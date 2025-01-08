@@ -8,3 +8,4 @@ notebook_pridec_pkg.md
 lab_notebook_files/*
 demos/*
 data-raw/*
+^data-raw$
