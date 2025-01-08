@@ -4,12 +4,12 @@
 \name{PRIDEC-package}
 \alias{PRIDEC}
 \alias{PRIDEC-package}
-\title{PRIDEC: What the Package Does (One Line, Title Case)}
+\title{PRIDEC: Disease Forecasting with PRIDE-C}
 \description{
-What the package does (one paragraph).
+Functions used by the Predicting Infectious Diseases via Environment and Climate (PRIDE-C) forecasting workflow to forecast infectious diseases for DHIS2 instances.
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Michelle Evans \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
 
 }
 \keyword{internal}

@@ -1,18 +1,18 @@
 Package: PRIDEC
-Title: What the Package Does (One Line, Title Case)
+Title: Disease Forecasting with PRIDE-C
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+    person("Michelle", "Evans", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: Functions used by the Predicting Infectious Diseases via Environment and Climate (PRIDE-C) forecasting workflow to forecast infectious diseases for DHIS2 instances.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports: 
     dplyr,
     imputeTS,
+    lubridate,
     sf,
     spdep
 Depends: 

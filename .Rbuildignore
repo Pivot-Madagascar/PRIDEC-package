@@ -9,3 +9,4 @@ lab_notebook_files/*
 demos/*
 data-raw/*
 ^data-raw$
+^LICENSE\.md$
