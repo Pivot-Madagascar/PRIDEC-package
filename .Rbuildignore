@@ -1,2 +1,10 @@
 ^PRIDEC\.Rproj$
 ^\.Rproj\.user$
+
+
+
+#notes used for development
+notebook_pridec_pkg.md
+lab_notebook_files/*
+demos/*
+data-raw/*
