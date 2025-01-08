@@ -25,7 +25,7 @@ prep_caseData <- function(raw_data,
   data_prep <- raw_data |>
     dplyr::group_by(orgUnit) |>
     dplyr::arrange(date) |>
-    dplyr::mutate(dplyr::across(lagged_vars,
+    dplyr::mutate(dplyr::across(dplyr::all_of(lagged_vars),
                                 ~ dplyr::lag(.x, lag_n),
                                 .names = "{.col}_lag")) |>
     dplyr::ungroup() |>
@@ -45,7 +45,7 @@ prep_caseData <- function(raw_data,
     data.frame(scale = attr(this_scale, "scaled:scale"),
                center = attr(this_scale, "scaled:center")) |>
       tibble::rownames_to_column(var = "variable") |>
-      mutate(variable = paste0(variable, "sc"))
+      dplyr::mutate(variable = paste0(variable, "sc"))
   }
 
   scale_factors <- do.call(rbind,(lapply(scaled_vars, extract_scale)))
@@ -56,15 +56,6 @@ prep_caseData <- function(raw_data,
 
   #create spatial graph for INLA
   if(!is.null(graph_poly)){
-    #add checks for INLA here
-    if (!requireNamespace("INLA", quietly = TRUE)) {
-      stop(
-        "The INLA package is required to use spatial graph functionality.
-        Installation instructions are here: https://www.r-inla.org/download-install.",
-        call. = FALSE
-      )
-    }
-
     W_orgUnit <- spdep::poly2nb(graph_poly, queen = TRUE) |>
       spdep::nb2mat(, style = "W")
 
@@ -97,7 +88,7 @@ fill_seasonal <- function(data_to_fix, data_col, group_col, verbose = FALSE){
   for(this_col in data_col){
     #apply seasonal imputation over each orgUnit individually
     this_vec <- split(data_to_fix[this_col], f = data_to_fix[group_col])
-    this_vec <- lapply(this_vec, FUN = function(x) ts(x, deltat = 1/12))
+    this_vec <- lapply(this_vec, FUN = function(x) stats::ts(x, deltat = 1/12))
     if(!verbose){
       suppressWarnings({
     data_to_fix[this_col] <- lapply(this_vec, FUN = imputeTS::na_seadec, find_frequency = TRUE,
