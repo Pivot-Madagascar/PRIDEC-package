@@ -23,7 +23,7 @@ prep_caseData <- function(raw_data,
   scaled_vars <- c(scaled_vars, paste0(lagged_vars, "_lag"))
 
   data_prep <- raw_data |>
-    dplyr::group_by(orgUnit) |>
+    dplyr::group_by(.data$orgUnit) |>
     dplyr::arrange(date) |>
     dplyr::mutate(dplyr::across(dplyr::all_of(lagged_vars),
                                 ~ dplyr::lag(.x, lag_n),
@@ -35,7 +35,7 @@ prep_caseData <- function(raw_data,
     #create month of year(month_season) and overall month (essentially date)
     dplyr::mutate(month_season = as.factor(lubridate::month(date)),
            month_num  = (lubridate::interval(min(date), date) %/% months(1))) |>
-    dplyr::mutate(orgUnit = as.factor(orgUnit))
+    dplyr::mutate(orgUnit = as.factor(.data$orgUnit))
 
 
   #fx to extract what we used to scale and center in case we need to back-transform later
@@ -45,7 +45,7 @@ prep_caseData <- function(raw_data,
     data.frame(scale = attr(this_scale, "scaled:scale"),
                center = attr(this_scale, "scaled:center")) |>
       tibble::rownames_to_column(var = "variable") |>
-      dplyr::mutate(variable = paste0(variable, "sc"))
+      dplyr::mutate(variable = paste0(.data$variable, "sc"))
   }
 
   scale_factors <- do.call(rbind,(lapply(scaled_vars, extract_scale)))
