@@ -10,12 +10,15 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Imports: 
+    cli,
     dplyr,
+    ggplot2,
     imputeTS,
     lubridate,
     rlang,
     sf,
-    spdep
+    spdep,
+    tibble
 Depends: 
     R (>= 2.10)
 LazyData: true
