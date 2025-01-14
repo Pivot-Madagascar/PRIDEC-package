@@ -19,7 +19,27 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
-## 2024-01-13
+## 2025-01-14
+
+Starting work on the modeling functions. We want to have the same language/API call for each model, so we have
+
+- `fit`: fits to a list containing analysis and assessment data (basically trains on analysis and predicts on analysis and assessment). Returns prediction intervals on both sets.
+- `evaluate`: takes a data.frame of prediction intervals and true_values and returns performance metrics (ae_median, r2, mae_scaled, interval_score, over and under estimation). Not all performance metrics are available for all models.
+- `tune`: not for all models, this allows the user to tune parameters in the model using multiple `CV_set`s
+  - this basically runs `fit` and `evaluate` multiple times to identify the best tuned model
+- `investigate`: investigates variablbes in the model (counter-factual plots, coefficients, etc.)
+
+a `CV_set` is a list object that contains an `analysis` and `assessment` data.frame that will be used to train a model and predict, respectively
+
+The `evaluate` step uses some functionality from the `scoringutils` package, but some of it isn't quite flexible enough for what I need and I am worried it is going to change, so I am going to use some intermediate functions from there. Actually, in the end I just updated the `scoringutils` version I use and am going with that since it exists for the functionality of automatically calculating scores. A future version could write these myself, but I kind of trust the `epiforecast` group to keep track of these well. Okay, actually now the only thing I am really using is the `wis` (weighted interval score), which I kind of feel like I could calculate myself using the intermediate function from `scoringutils`, so I will go back to that.
+
+
+**TO DO:**
+- document demo data (demo_malaria, demo_polygon)
+- start a naive modeling function [started but currently working on evaluation step]
+- finish evaluation code (particularly the wis calculation, although maybe best is just to write it myself and double-check with scoringutils)
+
+## 2025-01-13
 
 Working on CV split functions. I've got these written with some tests, but they aren't anything crazy.
 
@@ -33,7 +53,7 @@ Started writing documents for the demo data, but having issues with the `check` 
 - document demo data (demo_malaria, demo_polygon)
 - start a naive modeling function
 
-## 2024-01-08
+## 2025-01-08
 
 Started development in package architecture. This involves moving things over from the modeling repo. One thing I really needed to be able to do this was a demo dataset to test things on. I created a simulated dataset of malaria cases from some data in Ifanadiana, `demo_malaria`, and the spatial polygon that goes with it, `demo_polygon`. This should work for testing everything out (hopefully).
 
