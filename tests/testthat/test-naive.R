@@ -1,0 +1,17 @@
+test_that("naive fit works", {
+  data(demo_malaria)
+  data(demo_polygon)
+
+  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+                                       y_var = "n_case",
+                                       lagged_vars =  c("pev", "rain_mm", "temp_c"),
+                                       scaled_vars = c("wealth_index", "elevation",
+                                                       "LLIN_use", "time_to_district", "LLIN_wane"),
+                                       graph_poly = demo_polygon)$data_prep,
+                             month_analysis = 48,
+                             month_assess = 3)[[1]]
+
+  test_fit <- fit_naive(cv_set = cv_set,
+            y_var = "n_case",
+            group_vars = c("orgUnit", "month_season"))
+})

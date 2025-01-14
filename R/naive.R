@@ -1,0 +1,29 @@
+#' Fit a naive model to a cv_set
+#'
+#' @param cv_set list object containing analysis and assessment data.frames
+#' @param y_var string name of column of observed values
+#' @param group_vars string vector names of columns used to group means. Usually refers to month of year and orgUnit.
+#' @returns data.frame of prediction intervals and observed values containing columns for group_vars and whether data is analysis or assessment
+fit_naive <- function(cv_set, y_var, group_vars){
+
+  this_analysis <- cv_set$analysis |>
+    dplyr::rename(y_obs := all_of(y_var)) |>
+    dplyr::filter(!is.na(y_obs))
+  this_assess <- cv_set$assessment |>
+    dplyr::rename(y_obs := all_of(y_var))
+
+  this_preds <- this_analysis |>
+    dplyr::summarise(quant_0.5 = mean(y_obs),
+                     quant_0.025 = min(y_obs),
+                     quant_0.975 = max(y_obs),
+                     .by = all_of(group_vars)) |>
+    tidyr::pivot_longer(-all_of(group_vars), names_to = "quant_long", values_to = "predicted") |>
+    dplyr::mutate(quantile = as.numeric(gsub("quant_","", quant_long)))
+
+  mod_pi <- dplyr::bind_rows(dplyr::mutate(this_analysis, dataset = "analysis"),
+                             dplyr::mutate(this_assess, dataset = "assess")) |>
+    dplyr::select(all_of(c(group_vars, "y_obs", "dataset", "date"))) |>
+    dplyr::left_join(this_preds, by = group_vars, relationship = "many-to-many") |>
+    dplyr::rename(observed = y_obs) |>
+    dplyr::select(orgUnit, date, dataset, observed, predicted, quant_long, quantile)
+}
