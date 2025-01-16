@@ -16,9 +16,13 @@ Imports:
     imputeTS,
     lubridate,
     rlang,
+    scoringutils,
     sf,
     spdep,
-    tibble
+    stats,
+    tibble,
+    tidyr,
+    tidyselect
 Depends: 
     R (>= 2.10)
 LazyData: true

@@ -9,7 +9,6 @@
 `use_package()`: adds package to `Import` in `DESCRIPTION`. call functions using `package::function`
 `use_import_from()`: imports a specific function from a package to use without the `::`. Not recommended.
 
-
 `test()`: runs the code tests
 `document()`: update package documentation
 `build_readme()`: builds the README. better to use becuase it uses source version of your package
@@ -18,6 +17,16 @@
 `install()`: install the source version of the package
 
 For more info, use [R packages book](https://r-pkgs.org/).
+
+## 2025-01-16
+
+Working on the evaluation code, particularly the calculation of the WIS. My plan is to write a function myself and double check with scoringutils that it works. Eh, for now I will just stick with using `scoringutils` and I can transition to soemthing different later if I want.
+
+**TO DO**:
+- ~~write test for naive model~~
+- document demo data (demo_malaria, demo_polygon) [not sure why this isn't currently working]
+- ~~finish naive model~~
+- start ARIMAX model functions
 
 ## 2025-01-14
 

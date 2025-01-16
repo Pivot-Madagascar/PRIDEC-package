@@ -9,9 +9,13 @@ test_that("naive fit works", {
                                                        "LLIN_use", "time_to_district", "LLIN_wane"),
                                        graph_poly = demo_polygon)$data_prep,
                              month_analysis = 48,
-                             month_assess = 3)[[1]]
+                             month_assess = 3)[[4]]
 
-  test_fit <- fit_naive(cv_set = cv_set,
+  pred_intervals <- fit_naive(cv_set = cv_set,
             y_var = "n_case",
             group_vars = c("orgUnit", "month_season"))
+
+  expect_equal(colnames(pred_intervals), c("orgUnit", "date", "dataset", "observed", "predicted", "quant_long",
+                                           "quantile_level"))
+  expect_equal(sum(is.na(pred_intervals$predicted)), 0)
 })
