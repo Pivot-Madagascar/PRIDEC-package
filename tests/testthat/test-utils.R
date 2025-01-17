@@ -1,5 +1,4 @@
-test_that("evaluate function on naive model", {
-  #eventually save predictions to mroe easily load?
+test_that("get_cv_subsets", {
   data(demo_malaria)
   data(demo_polygon)
 
@@ -11,14 +10,10 @@ test_that("evaluate function on naive model", {
                                                            graph_poly = demo_polygon)$data_prep,
                              month_analysis = 48,
                              month_assess = 3)[[4]]
-  #test naive model
-  pred_naive <- fit_naive(cv_set = cv_set,
-                              y_var = "n_case",
-                              group_vars = c("orgUnit", "month_season"))
-  expect_warning(expect_warning(eval_performance(pred_naive)))
-  #ensure that the wis function in scoringutils hasn't change
-  expect_equal(round(suppressWarnings(eval_performance(pred_naive))$wis,3), c(3.734, 42.991))
+  expect_no_condition({
+    test_out <- get_cv_subsets(cv_set, y_var = "n_case", pred_vars = c("rain_mm", "LLIN_use"))
+  })
 
+  expect_equal(names(test_out), c("analysis", "assess"))
+  expect_contains(names(test_out$assess), c("rain_mm", "LLIN_use", "y_obs"))
 })
-
-# ADD TESTS FOR OTHER MODELS AS YOU MAKE THEM

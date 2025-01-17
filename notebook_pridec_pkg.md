@@ -18,6 +18,30 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-01-17
+
+Start work on ARIMAX model. The ARIMA fits to one orgUnit at a time and has a bunch of internal functions, which means I have donea  bunch of trouble-shooting.
+
+One issue is that the forecast package has a conflict with the new `scoringutils` package. I get this error when doing `load_all()`:
+
+```
+Registered S3 method overwritten by 'scoringutils':
+  method         from    
+  print.forecast forecast
+```
+
+But I don't want the `forecast` method to be overwritten because that is the package that hosts the ARIMA functions. One solution is to use the 3-colon `:::` to access functions that aren't exported. but the issue is it is a type of `print.` method. Nope that wasn't it. It is still messing up the print methods, but I have just wrapped it in `suppressWarnings` for now in the `get_arima_pi` function, but I think probably the best long term solution is to replace `scoringutils` with my own function.
+
+Running the tests, now becuase I ahve switched to using `.data$` for NSE and not having unnamed variables, it now gives me an error message that `Use of .data in tidyselect expressions was deprecated in tidyselect 1.2.0.`, so I am not sure the best way to use this within a package. Info is here:https://forum.posit.co/t/use-of-data-in-tidyselect-expressions-is-now-deprecated/150092/5
+
+So what I need to do is switch to using `all_of` plus character names of columns, like `all_of(c("s1","x2","x_new" = "x_old")). Okay, I think I have solved all of these dumb testing errors but it took way too long. I guess I could have just used base R rather than dply for this
+
+**TO DO:**
+- document demo data (demo_malaria, demo_polygon) [not sure why this isn't currently working]
+- ~~create a util function to just check the y_var, pred_var, and data arguments are okay. This can then be run for all modeling functions.~~
+- Finish ARIMAX: Evaluation function
+- start ranger/RF function 
+
 ## 2025-01-16
 
 Working on the evaluation code, particularly the calculation of the WIS. My plan is to write a function myself and double check with scoringutils that it works. Eh, for now I will just stick with using `scoringutils` and I can transition to soemthing different later if I want.

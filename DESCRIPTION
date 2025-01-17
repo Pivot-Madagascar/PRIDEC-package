@@ -12,9 +12,12 @@ RoxygenNote: 7.3.1
 Imports: 
     cli,
     dplyr,
+    forecast,
+    generics,
     ggplot2,
     imputeTS,
     lubridate,
+    purrr,
     rlang,
     scoringutils,
     sf,

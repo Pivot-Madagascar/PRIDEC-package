@@ -7,13 +7,10 @@
 fit_naive <- function(cv_set, y_var, group_vars){
 
   #to solve global function binding
-  y_obs <- NULL
-
-  this_analysis <- cv_set$analysis |>
-    dplyr::rename(y_obs := y_var) |>
-    dplyr::filter(!is.na(.data$y_obs))
-  this_assess <- cv_set$assessment |>
-    dplyr::rename(y_obs := y_var)
+  # y_obs <- NULL
+  cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = group_vars, remove_NA = TRUE)
+  this_analysis <- cv_clean$analysis
+  this_assess <- cv_clean$assess
 
   this_preds <- this_analysis |>
     dplyr::summarise(quant_0.5 = mean(.data$y_obs),
@@ -27,7 +24,6 @@ fit_naive <- function(cv_set, y_var, group_vars){
                              dplyr::mutate(this_assess, dataset = "assess")) |>
     dplyr::select(all_of(c(group_vars, "y_obs", "dataset", "date"))) |>
     dplyr::left_join(this_preds, by = group_vars, relationship = "many-to-many") |>
-    dplyr::rename(observed = .data$y_obs) |>
-    dplyr::select(.data$orgUnit, .data$date, .data$dataset, .data$observed,
-                  .data$predicted, .data$quant_long, .data$quantile_level)
+    dplyr::select(all_of(c("orgUnit", "date", "dataset", "observed" = "y_obs",
+                  "predicted", "quant_long", "quantile_level")))
 }
