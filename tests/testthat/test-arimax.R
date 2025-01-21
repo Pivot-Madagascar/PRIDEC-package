@@ -10,15 +10,20 @@ test_that("full arimax workflow works", {
                              month_analysis = 48,
                              month_assess = 3)[[8]]
 
-  #only test on one orgUnit
-  cv_set$analysis <- dplyr::filter(cv_set$analysis, orgUnit == "CSB2 FASINTSARA")
-  cv_set$assessment <- dplyr::filter(cv_set$assessment, orgUnit == "CSB2 FASINTSARA")
-
+  #only test on three orgUnits (takes some time)
+  ex_orgUnits <- c("CSB2 FASINTSARA", "CSB2 MAROHARATRA", "CSB2 IFANADIANA")
+  cv_set$analysis <- dplyr::filter(cv_set$analysis, orgUnit %in% ex_orgUnits)
+  cv_set$assessment <- dplyr::filter(cv_set$assessment, orgUnit %in% ex_orgUnits)
+  #fit
   expect_no_condition(
   test_fit <- fit_arima(cv_set,
                         y_var = "n_case",
                         pred_vars = c("rain_mm", "temp_c"))
   )
+
+  #evaluate
+  test_eval <- eval_performance(test_fit)
+  expect_equal(test_eval$wis, c(10.9910826901975, 12.0375351709772))
 })
 
 test_that("arimax fits to one orgUnit", {

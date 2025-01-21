@@ -79,8 +79,8 @@ fit_arima <- function(cv_set, y_var, pred_vars,
   this_assess <- cv_clean$assess
 
   preds_pi <- purrr::map(unique(this_analysis$orgUnit),
-                  function(x) fit_arima_OneOrgUnit(train_df = subset(this_analysis, orgUnit == x),
-                                                   test_df = subset(this_assess, orgUnit == x),
+                  function(x) fit_arima_OneOrgUnit(train_df = this_analysis[(this_analysis$orgUnit == x),],
+                                                   test_df = this_assess[(this_assess$orgUnit == x),],
                                                    pred_vars = pred_vars,
                                                    quant_levels = quant_levels)) |>
     dplyr::bind_rows()
@@ -149,7 +149,7 @@ get_arima_pi <- function(arima_mod, quant_levels,
 
   pred_pi <- arima_pis |>
     tibble::rownames_to_column(var = "month_label") |>
-    tidyr::pivot_longer(-month_label) |>
+    tidyr::pivot_longer(-all_of("month_label")) |>
     tidyr::separate(.data$name, into = c("bound", "pi_value"), sep = "_") |>
     dplyr::filter(!(.data$bound == "Point")) |>
     dplyr::mutate(pi_value = as.numeric(.data$pi_value)/100/2) |>

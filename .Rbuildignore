@@ -10,3 +10,4 @@ demos/*
 data-raw/*
 ^data-raw$
 ^LICENSE\.md$
+scratch/*

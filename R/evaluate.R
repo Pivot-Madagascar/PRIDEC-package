@@ -19,26 +19,44 @@ eval_performance <- function(pred_intervals){
                                   method = "spearman"),
               .by = c("orgUnit", "dataset"))
 
-  raw_scores <- pred_intervals |>
-    scoringutils::as_forecast_quantile(forecast_unit = c("orgUnit", "date", "dataset"),
-                                       quantile_level = "quantile_level") |>
-
-    scoringutils::score() |>
-    scoringutils::summarise_scores(by = c("dataset", "orgUnit"))
-
-
-  raw_scores <- raw_scores |>
+  raw_scores <- get_wis(pred_intervals) |>
     dplyr::right_join(med_errs, by = c("dataset", "orgUnit"))
+
 
   #mean of scores across all OrgUnits/forecasts
   score_summary <- raw_scores |>
-    dplyr::group_by(.data$dataset) |>
-    dplyr::summarise_at(c("wis", "mae", "med_ae", "mean_ae_log", "wape",
-                          "bias", "dispersion",
+    dplyr::summarise(dplyr::across(c("wis", "mae", "med_ae", "mean_ae_log", "wape",
+                          "dispersion",
                           "sp_rho", "prop_over", "prop_under"),
-                        .funs = mean, na.rm = TRUE) |>
-    dplyr::ungroup()
+                          ~ mean(.x, na.rm = TRUE)),
+                     .by = "dataset")
 
   return(score_summary)
 
 }
+
+#' Calculate Weighted Interval Score
+#'
+#' Internal function to use `wis` from `scoringutils`
+#' @param pred_df data.frame of predictions included observed, predicted and quantile_level
+get_wis <- function(pred_df){
+  #make data.frame wider
+  df_wide <- dplyr::select(pred_df, -all_of("quantile_level")) |>
+    tidyr::pivot_wider(id_cols = c("orgUnit", "date", "dataset", "observed"),
+                                names_from = "quant_long",
+                                values_from = "predicted")
+
+  scoringutils::wis(observed = df_wide$observed,
+                    # predicted = as.matrix(dplyr::select(df_wide, starts_with("quant"))),
+                    predicted = as.matrix(df_wide[, startsWith(colnames(df_wide), "quant")]),
+                    quantile_level = as.numeric(gsub("quant_", "", colnames(df_wide)[startsWith(colnames(df_wide), "quant")])),
+                    weigh = TRUE,
+                    separate_results = TRUE,
+                    na.rm = TRUE) |>
+    dplyr::bind_cols() |>
+    dplyr::bind_cols(df_wide[,c("orgUnit", "dataset")]) |>
+    dplyr::summarise(wis = mean(.data$wis, na.rm = TRUE),
+              dispersion = mean(.data$dispersion, na.rm = TRUE),
+              .by = c("orgUnit", "dataset"))
+}
+

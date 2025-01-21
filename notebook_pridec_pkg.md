@@ -18,6 +18,19 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-01-21
+
+
+Okay the current evaluation function does work on the arimax model, although it results in a lot of error messages. I think the best way to solve that is to move away from the `scoringutils` package. I decided to use the intermediate `wis` function because it already had a bunch of stuff built in that I didn't want to recreate. But I am now using it directly on the data so I don't get all those error messages. It is much slower now though becuase I didn't vectorize it, so I rewrote it to take better advantage of vectorizing it.
+
+Also cleaned up some undefined variables bits in existing functions.
+
+**TO DO:**
+- document demo data (demo_malaria, demo_polygon) [not sure why this isn't currently working]
+- ~~Finish ARIMAX: Evaluation function~~
+- start ranger/RF function 
+
+
 ## 2025-01-17
 
 Start work on ARIMAX model. The ARIMA fits to one orgUnit at a time and has a bunch of internal functions, which means I have donea  bunch of trouble-shooting.

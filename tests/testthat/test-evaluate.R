@@ -15,10 +15,10 @@ test_that("evaluate function on naive model", {
   pred_naive <- fit_naive(cv_set = cv_set,
                               y_var = "n_case",
                               group_vars = c("orgUnit", "month_season"))
-  expect_warning(expect_warning(eval_performance(pred_naive)))
-  #ensure that the wis function in scoringutils hasn't change
-  expect_equal(round(suppressWarnings(eval_performance(pred_naive))$wis,3), c(3.734, 42.991))
+  expect_no_condition(eval_performance(pred_naive))
+  #ensure that the wis function in scoringutils hasn't changed
+  expect_equal(round(eval_performance(pred_naive)$wis,3), c(3.734, 42.991))
 
 })
 
-# ADD TESTS FOR OTHER MODELS AS YOU MAKE THEM
+
