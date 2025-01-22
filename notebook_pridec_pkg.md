@@ -18,6 +18,16 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-01-22
+
+Finally got the data documentation to work. I did two things (not sure what fixed it), I changed the name of the script holding the data documentation to `data.R` and I added  string of the data name under the roxygen stuff. The issue is I can't figure out how to add multiple to the same script? Ah okay I just needed an empty line between each one and to create a seperate thing for each one. This should work okay now.
+
+
+**TO DO:**
+- ~~document demo data (demo_malaria, demo_polygon)~~
+- ~~Finish ARIMAX: Evaluation function~~
+- start ranger/RF function 
+
 ## 2025-01-21
 
 

@@ -21,5 +21,17 @@
 #'  \item{LLIN_wane}{Number of years since LLIN distribution campaign}
 #'  \item{period}{Year and month followin DHIS2 period style (YYYYMM)}
 #' }
-#' @source PRIDE-C research team
+"demo_malaria"
+
+#' Demo malaria dataset polygon
 #'
+#' Polygons to used in spatial mesh by INLA in examples
+#' @format ## `demo_polygon`
+#' A simple feature geospatial collection to be used with `sf`. This is used by the examples of INLA models.
+#' \describe{
+#'  \item{orgUnit}{DHIS2 orgUnit corresponding to primary health clinics}
+#'  \item{org_ID}{numeric id corresponding to orgUnit used internally by INLA}
+#'  \item{geom}{geometry of polygon associated with each orgUnit}
+#' }
+#' @source PRIDE-C research team
+"demo_polygon"
