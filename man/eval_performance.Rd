@@ -8,7 +8,7 @@ eval_performance(pred_intervals)
 }
 \arguments{
 \item{pred_intervals}{data.frame of prediction intervals, output from \code{fit} step.
-Must include: orgUnit, date, dataset, observed, predicted, quant_long, quantile}
+Must include: orgUnit, date, dataset, observed, predicted, quant_long, quantile_level}
 }
 \value{
 dataset of performance metrics for assessment and anlalysis datasets for that cv_set

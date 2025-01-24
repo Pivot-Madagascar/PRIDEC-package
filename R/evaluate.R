@@ -1,6 +1,6 @@
 #' Evaluate performance on a cv_set
 #' @param pred_intervals data.frame of prediction intervals, output from `fit` step.
-#'   Must include: orgUnit, date, dataset, observed, predicted, quant_long, quantile
+#'   Must include: orgUnit, date, dataset, observed, predicted, quant_long, quantile_level
 #' @returns dataset of performance metrics for assessment and anlalysis datasets for that cv_set
 eval_performance <- function(pred_intervals){
 
@@ -15,8 +15,8 @@ eval_performance <- function(pred_intervals){
                      mae = mean(abs(.data$predicted-.data$observed)),
                      prop_over = mean(.data$predicted>.data$observed),
                      prop_under = mean(.data$predicted<.data$observed),
-                     sp_rho = cor(.data$observed, .data$predicted, use = 'pairwise.complete.obs',
-                                  method = "spearman"),
+                     sp_rho = suppressWarnings(cor(.data$observed, .data$predicted, use = 'pairwise.complete.obs',
+                                  method = "spearman")),
               .by = c("orgUnit", "dataset"))
 
   raw_scores <- get_wis(pred_intervals) |>

@@ -16,4 +16,12 @@ test_that("get_cv_subsets", {
 
   expect_equal(names(test_out), c("analysis", "assess"))
   expect_contains(names(test_out$assess), c("rain_mm", "LLIN_use", "y_obs"))
+
+  #check it removes the NAs appropriately
+  test_noNA <- get_cv_subsets(cv_set, y_var = "n_case", pred_vars = c("rain_mm", "LLIN_use"),
+                              remove_NA = TRUE)
+  expect_equal(sum(is.na(dplyr::bind_rows(test_noNA)$y_obs)),0)
 })
+
+
+

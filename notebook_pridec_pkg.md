@@ -2,7 +2,7 @@
 
 ## Development workflow
 
-*All use the devtools package*
+*All use the devtools or usethis packages*
 
 `use_r()`: creates an R script with that filename to hold the function
 `use_test()`: creates an R script to hold the tests for that function
@@ -17,6 +17,23 @@
 `install()`: install the source version of the package
 
 For more info, use [R packages book](https://r-pkgs.org/).
+
+## 2025-01-24
+
+Working on Ranger RF function. This one is a little more complicated because it can involve tuning and variable importance.
+
+Okay, to get this working, there is something a bit confusing because of the nestedness of how we estimate variable importance. The best is probably to provide all the same info we provide to the initial fitting function to this one so we can call it. This can maybe be done with `...`.
+
+Also needed to create all of the visualizations while making this since it includes counter-factual plots and also to plot predictions.
+
+And I made the ranger tuning function. This can be used as the basis for tuning INLA if we want, like to follow the same API structure
+
+**TO DO:** 
+- look into log-transforming for ARIMAX: idea would be to add this as an argument to the function
+- GLM model: shouldn't be too bad to set up since there is no tuning (1/2 day?)
+- INLA model: this will probably take 1-2 days to do, especially if I want to add tuning of hyper-parameters.
+- code for launching models (running multiple)
+- code for creating ensemble
 
 ## 2025-01-22
 

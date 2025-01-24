@@ -17,7 +17,9 @@ Imports:
     ggplot2,
     imputeTS,
     lubridate,
+    pdp,
     purrr,
+    ranger,
     rlang,
     scoringutils,
     sf,
@@ -25,7 +27,8 @@ Imports:
     stats,
     tibble,
     tidyr,
-    tidyselect
+    tidyselect,
+    vip
 Depends: 
     R (>= 2.10)
 LazyData: true

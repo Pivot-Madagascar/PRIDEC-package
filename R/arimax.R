@@ -34,7 +34,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
   #get preds for historical (can only get median fit, not PIs)
   arimax_pi_analysis <- data.frame(predicted = as.numeric(arimax_mod$fitted),
                                    date = train_df$date,
-                                   observed = train_df$true_value,
+                                   observed = train_df$y_obs,
                                    quantile_level = 0.5,
                                    quant_long = "quant_0.5",
                                    orgUnit = unique(train_df$orgUnit),
@@ -44,7 +44,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                    xreg = as.matrix(test_df[pred_vars])) |>
     dplyr::mutate(orgUnit = unique(test_df$orgUnit),
            dataset = "assess") |>
-    dplyr::left_join(dplyr::select(test_df, all_of(c("observed" = "true_value", "orgUnit", "date"))),
+    dplyr::left_join(dplyr::select(test_df, all_of(c("observed" = "y_obs", "orgUnit", "date"))),
                      by = c("date", "orgUnit"))
 
   both_pi <- dplyr::bind_rows(arimax_pi_analysis, arimax_pi_assess) |>

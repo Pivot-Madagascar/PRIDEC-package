@@ -21,9 +21,14 @@ test_that("full arimax workflow works", {
                         pred_vars = c("rain_mm", "temp_c"))
   )
 
-  #evaluate
+  # ----- evaluate -------
   test_eval <- eval_performance(test_fit)
   expect_equal(test_eval$wis, c(10.9910826901975, 12.0375351709772))
+
+  # ----- visualize ------
+  multi_plot <- plot_predictions(test_fit)
+  expect_contains(class(multi_plot), "ggplot")
+
 })
 
 test_that("arimax fits to one orgUnit", {
