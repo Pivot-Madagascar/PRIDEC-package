@@ -63,7 +63,7 @@ fit_ranger <- function(cv_set, y_var, id_vars, pred_vars,
 
 #' Estimate variable importance and partial dependence plots of a ranger model
 #' @inheritParams fit_ranger
-#' @param var_scales data.frame containing centering and scaling parmaters for variables
+#' @param var_scales data.frame containing centering and scaling parameters for variables
 #' @returns list containing variable importance scores and a list of dataframes
 #'   containing data for pdp plots with each element corresponding to a variable
 inv_variables_ranger <- function(cv_set, y_var, id_vars, pred_vars,

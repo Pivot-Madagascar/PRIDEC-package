@@ -18,6 +18,19 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-01-28
+
+Added functionality to log-transform arimax. In certain instances, it seems to perform better on predictions (which makes sense because these are poisson processes). It is controlled via the `log_trans` param.
+
+Starting work on glm.nb model from the `MASS` package. I had some code from before for doing variable selection where each variable is dropped in a certain order to tune the model, but I am not going to move that over to this package. There is also some code to estimate the prediction inteval via simulations, but I will stick with doing it analytically because I think it is cleaner.
+
+**TO DO:** 
+- ~~look into log-transforming for ARIMAX: idea would be to add this as an argument to the function~~
+- GLM model: shouldn't be too bad to set up since there is no tuning (1/2 day?)
+- INLA model: this will probably take 1-2 days to do, especially if I want to add tuning of hyper-parameters.
+- code for launching models (running multiple)
+- code for creating ensemble
+
 ## 2025-01-24
 
 Working on Ranger RF function. This one is a little more complicated because it can involve tuning and variable importance.

@@ -9,7 +9,8 @@ fit_arima_OneOrgUnit(
   test_df,
   pred_vars,
   quant_levels,
-  return_model = FALSE
+  return_model = FALSE,
+  log_trans = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ fit_arima_OneOrgUnit(
 \item{quant_levels}{quantiles needed for prediction intervals (assessment only)}
 
 \item{return_model}{whether or not to return the ARIMA model, mostly used for debugging. Default = FALSE}
+
+\item{log_trans}{whether to log transform the data to help with fit. Uses log(y+1). Default = FALSE}
 }
 \value{
 dataframe of prediction intervals for analysis and assessment data

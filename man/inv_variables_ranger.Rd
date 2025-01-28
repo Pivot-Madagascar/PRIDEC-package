@@ -25,7 +25,7 @@ inv_variables_ranger(
 \item{hyper_control}{hyperparameters to use in the model, in either list or
 named vector format. Defaults are ranger defaults}
 
-\item{var_scales}{data.frame containing centering and scaling parmaters for variables}
+\item{var_scales}{data.frame containing centering and scaling parameters for variables}
 }
 \value{
 list containing variable importance scores and a list of dataframes
