@@ -4,9 +4,11 @@
 #' @param pred_vars predictor variables to include
 #' @param quant_levels quantiles needed for prediction intervals (assessment only)
 #' @param return_model whether or not to return the ARIMA model, mostly used for debugging. Default = FALSE
+#' @param log_trans whether to log transform the data to help with fit. Uses log(y+1). Default = FALSE
 #' @returns dataframe of prediction intervals for analysis and assessment data
 fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
-                                 quant_levels, return_model = FALSE){
+                                 quant_levels, return_model = FALSE,
+                                 log_trans = FALSE){
 
   #if it starts with an NA, will not return fitted for that value
   #cut data until it starts with a true value
@@ -14,6 +16,11 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
   while(first_val){
     train_df <- train_df[-1,]
     first_val <- is.na(train_df$y_obs[1])
+  }
+
+  if(log_trans){
+    train_df$y_obs <- log(train_df$y_obs +1)
+    test_df$y_obs <- log(test_df$y_obs+1)
   }
 
   this_y_ts <- stats::ts(data = train_df$y_obs,
@@ -47,8 +54,14 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
     dplyr::left_join(dplyr::select(test_df, all_of(c("observed" = "y_obs", "orgUnit", "date"))),
                      by = c("date", "orgUnit"))
 
-  both_pi <- dplyr::bind_rows(arimax_pi_analysis, arimax_pi_assess) |>
+  both_pi <- dplyr::bind_rows(arimax_pi_analysis, arimax_pi_assess)
+
+  if(log_trans){
+    both_pi$predicted <- exp(both_pi$predicted)-1
+    both_pi$observed <- exp(both_pi$observed)-1
+  }
     #truncate at zero?
+  both_pi <- both_pi |>
     dplyr::mutate(predicted = ifelse(.data$predicted<0,0, .data$predicted))
   if(return_model){
     return(list("model" = arimax_mod,
@@ -69,10 +82,12 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
 #'   intervals. Range 0-1. Default: c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25,
 #'   0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9,
 #'   0.95, 0.975, 0.99)
+#' @param log_trans whether to log transform the data to help with fit. Uses log(y+1). Default = FALSE
 #' @returns data.frame of prediction intervals on analysis and assessment data
 
 fit_arima <- function(cv_set, y_var, pred_vars,
-                         quant_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)){
+                         quant_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
+                      log_trans = FALSE){
 
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = pred_vars)
   this_analysis <- cv_clean$analysis
@@ -82,7 +97,8 @@ fit_arima <- function(cv_set, y_var, pred_vars,
                   function(x) fit_arima_OneOrgUnit(train_df = this_analysis[(this_analysis$orgUnit == x),],
                                                    test_df = this_assess[(this_assess$orgUnit == x),],
                                                    pred_vars = pred_vars,
-                                                   quant_levels = quant_levels)) |>
+                                                   quant_levels = quant_levels,
+                                                   log_trans = log_trans)) |>
     dplyr::bind_rows()
 
   return(preds_pi)

@@ -86,3 +86,39 @@ test_that("internal get_arima_pi works", {
                              xreg = as.matrix(demo_df$x1[25:27]))
   expect_type(demo_pi_x$predicted,"double")
 })
+
+test_that("arimax log transform works", {
+  data(demo_malaria)
+  data(demo_polygon)
+
+  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+                                                           y_var = "n_case",
+                                                           lagged_vars =  c("rain_mm", "temp_c"),
+                                                           scaled_vars = NULL,
+                                                           graph_poly = NULL)$data_prep,
+                             month_analysis = 48,
+                             month_assess = 3)[[8]]
+
+  #only test on three orgUnits (takes some time)
+  ex_orgUnits <- c("CSB2 IFANADIANA")
+  cv_set$analysis <- dplyr::filter(cv_set$analysis, orgUnit %in% ex_orgUnits)
+  cv_set$assessment <- dplyr::filter(cv_set$assessment, orgUnit %in% ex_orgUnits)
+  cv_clean <- get_cv_subsets(cv_set, y_var = "n_case", pred_vars = c("rain_mm", "temp_c"))
+  this_analysis <- cv_clean$analysis
+  this_assess <- cv_clean$assess
+  #fit
+  expect_no_condition({
+  fit_nolog <- fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
+                                  test_df = cv_clean$assess,
+                                  quant_levels = c(0.25,0.5,0.75),
+                                  pred_vars = c("rain_mm", "temp_c"))
+  fit_log <-fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
+                                 test_df = cv_clean$assess,
+                                 quant_levels = c(0.25,0.5,0.75),
+                                 pred_vars = c("rain_mm", "temp_c"),
+                                 log_trans = TRUE)
+  plot(fit_nolog$predicted, fit_log$predicted)
+  eval_performance(fit_nolog)
+  eval_performance(fit_log)
+  })
+})
