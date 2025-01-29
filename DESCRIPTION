@@ -16,6 +16,7 @@ Imports:
     generics,
     ggplot2,
     imputeTS,
+    INLA,
     lubridate,
     MASS,
     pdp,

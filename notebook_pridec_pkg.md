@@ -18,17 +18,34 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-01-29
+
+Working on adding INLA to the modules. So far transfered over the model and the code for variable importance. Still need to do the code for counter-factual plots and function that does both together to match the API of other models. Then we may also want to add some tuning?
+
+I also got a note about too many non-default packages and how I could move this to suggests and use them conditionally. I think this could probably be done by module (so for example add a check that if the required packages are not installed for a module to prompt that they should be). Hweover this does add more work and potnetial break points for end users that may not be as familiar with R. Something to think about but that can be updated later.
+
+**TO DO:** 
+- INLA model: 
+  - finish up counterfactual plots and explorign variables
+  - Tuning of hyperparameters (can also be later)
+- code for launching models (running multiple) [this should probably be a function]. See notes below.
+- code for creating ensemble
+
 ## 2025-01-28
 
 Added functionality to log-transform arimax. In certain instances, it seems to perform better on predictions (which makes sense because these are poisson processes). It is controlled via the `log_trans` param.
 
 Starting work on glm.nb model from the `MASS` package. I had some code from before for doing variable selection where each variable is dropped in a certain order to tune the model, but I am not going to move that over to this package. There is also some code to estimate the prediction inteval via simulations, but I will stick with doing it analytically because I think it is cleaner.
 
+I'm going to wait to do the INLA stuff until tomorrow. but in the meantime I am thinking about how to write the script to launch an ensemble of models. I have a bunhc of make scripts from the 3rd workshop, and I think I would need to turn some of them into R scripts. Or I leave it as something that is called via a sh script with arguments from the command line (probably best for interacting with ETL).
+
+For the model fitting, it could be something similar to `fit_models_template.R`, which fits for each disease. It takes a file of the data and a file containing the names of predictor variables (but maybe that could be just provided as strings), as well as the name of the disease, which is used to identify the `y_var`. It would probably also need a directory to output into (which is currently manually set). It also needs info on which variables to lag and scale, and perhaps a step to adjust to turn them into predictor variables. It would probably also take the names of the models to fit (naive, glm, ranger,inla, arimax). Maybe look at what DHIS2 does for this to get an idea, because it would likely need to be passed into a docker container.
+
 **TO DO:** 
 - ~~look into log-transforming for ARIMAX: idea would be to add this as an argument to the function~~
-- GLM model: shouldn't be too bad to set up since there is no tuning (1/2 day?)
+- ~~GLM model: shouldn't be too bad to set up since there is no tuning (1/2 day?)~~
 - INLA model: this will probably take 1-2 days to do, especially if I want to add tuning of hyper-parameters.
-- code for launching models (running multiple)
+- code for launching models (running multiple) [this should probably be a function]
 - code for creating ensemble
 
 ## 2025-01-24
