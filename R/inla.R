@@ -78,6 +78,7 @@ fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
 #' @inheritParams fit_inla
 #' @param nsims number of simulations to run. Default = 1
 #' @param seed a seed to use for reproducability. Default = 8675309
+#' @returns dataframe of variable importance scores
 calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
                                hyper_priors = list("prec.unstruct" = c(1, 5e-4),
                                                    "prec.spatial" = c(1, 5e-4),
@@ -172,6 +173,147 @@ calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
     dplyr::select(dplyr::all_of(c("variable" = "perm_var", "importance" = "imp")))
 
   return(var_imp)
+
+}
+
+#' Create counterfactual data of variables from INLA model
+#' @inheritParams fit_inla
+#' @param var_scales data.frame of center and scale factors used in variable scaling
+#' @param constant_org orgUnit to use in counterfactual plots
+#' @param constant_date date to use in counterfactual plots
+#' @returns list of dataframes of counter factual data. Each element corresponds to one predictor variable
+create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
+                                       hyper_priors = list("prec.unstruct" = c(1, 5e-4),
+                                                           "prec.spatial" = c(1, 5e-4),
+                                                           "prec.timerw1" = c(1,0.01)),
+                                       W_orgUnit, var_scales = NULL,
+                                       constant_org, constant_date){
+  #for debugging.remove
+  # y_var = "n_case"
+  # pred_vars = c("rain_mm", "temp_c")
+  # id_vars = c("date", "orgUnit")
+  # hyper_priors = list("prec.unstruct" = c(1, 5e-4),
+  #                     "prec.spatial" = c(1, 5e-4),
+  #                     "prec.timerw1" = c(1,0.01))
+  # reff_var = NULL
+  # W_orgUnit = prep_caseData(raw_data = demo_malaria,
+  #                           y_var = "n_case",
+  #                           lagged_vars =  c("rain_mm", "temp_c"),
+  #                           scaled_vars = NULL,
+  #                           graph_poly = demo_polygon)$W_graph
+  # constant_org = "CSB2 RANOMAFANA"
+  # constant_date = "2018-04-01"
+  #stop debugging code
+
+  prior_setup <- create_inla_setup(hyper_priors)
+
+  if(is.null(reff_var)){
+    reff_var <- prior_setup$reff_var
+  }
+
+  # ------ set up counterfactual data ------
+  cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars, "org_ID",
+                                                                  "month_season", "month_num"),
+                             remove_NA = TRUE)
+  this_analysis <- cv_clean$analysis
+  this_analysis$observed <- this_analysis$y_obs
+
+  counter_one <- subset(this_analysis, this_analysis$orgUnit == constant_org & this_analysis$date == constant_date)
+  counter_one$y_obs <- NA
+
+  #loop over pred_vars to create counter-data for each one
+  counter_vars <- c("org_ID", "month_season", "month_num", pred_vars)
+
+  counter_data <- purrr::map(1:length(counter_vars), function(i){
+    this_var_name <- counter_vars[i]
+    #create a grid to fit
+    var_class <- class(this_analysis[[this_var_name]])
+    if(var_class == "numeric"){
+      var_range <- range(this_analysis[this_var_name], na.rm = TRUE)
+      var_grid <- seq(var_range[1], var_range[2], length.out = 50)
+      if(nrow(unique(this_analysis[this_var_name]))<10){
+        var_grid <- unique(this_analysis[[this_var_name]])
+      }
+    } else {
+      var_grid <- unique(this_analysis[[this_var_name]])
+    }
+    this_counter <- counter_one[rep(1, length(var_grid)),]
+    this_counter[this_var_name] <- var_grid
+    this_counter$counter_variable <- this_var_name
+    return(this_counter)
+  }) |> dplyr::bind_rows()
+
+  both_datasets <- dplyr::bind_rows(mutate(this_analysis, dataset = "analysis"),
+                                    mutate(counter_data, dataset = "counter"))
+  #------run inla-------------------------------
+  formula_inla <- stats::reformulate(termlabels = c(reff_var, pred_vars),
+                                     response = "y_obs")
+
+  inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
+                              verbose = FALSE, family = 'zeroinflatednbinomial1')
+  #----transform into pdp dataframe --------
+
+  counter_preds <- both_datasets
+  counter_preds$pred <- inla_mod$summary.fitted.values$`0.5quant`
+  counter_preds <- subset(counter_preds, counter_preds$dataset == "counter")
+
+  counter_out <- purrr::map(1:length(counter_vars), function(i,...){
+    pdp_df <- dplyr::filter(counter_preds, .data$counter_variable == counter_vars[i]) |>
+      dplyr::rename(var_valuesc = counter_vars[i]) |>
+      dplyr::select(dplyr::all_of(c("variable" = "counter_variable", "var_valuesc", "yhat" = "pred"))) |>
+      dplyr::distinct()
+    if(stringr::str_sub(counter_vars[i], -2,-1)=="sc") {
+      pdp_df <- pdp_df |>
+        dplyr::left_join(var_scales, by = "variable") |>
+        dplyr::mutate(var_value = .data$var_valuesc*.data$scale + .data$center) |>
+        dplyr::select(-all_of(c("scale", "center")))
+    } else {
+      pdp_df <- pdp_df |>
+        dplyr::mutate(var_value = .data$var_valuesc)
+    }
+    return(pdp_df)
+  })
+  return(counter_out)
+}
+
+#' Estimate variable importance and partial dependence plots of a  INLA model
+#' @inheritParams fit_inla
+#' @inheritParams create_counterfactual_inla
+#' @inheritParams calc_inla_vi
+#' @param var_scales data.frame containing centering and scaling parameters for variables
+#' @returns list containing variable importance scores and a list of dataframes
+#'   containing data for pdp plots with each element corresponding to a variable
+inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
+                               hyper_priors = list("prec.unstruct" = c(1, 5e-4),
+                                                   "prec.spatial" = c(1, 5e-4),
+                                                   "prec.timerw1" = c(1,0.01)),
+                               W_orgUnit, var_scales = NULL,
+                               constant_org, constant_date,
+                               seed = 8675309,
+                               nsims = 1){
+
+  var_imp <- calc_inla_vi(cv_set = cv_set,
+               y_var = y_var,
+               pred_vars = pred_vars,
+               id_vars = id_vars,
+               reff_var = reff_var,
+               hyper_priors = hyper_priors,
+               W_orgUnit = W_orgUnit,
+               seed = seed,
+               nsims = nsims)
+
+  counter_list <- create_counterfactual_inla(cv_set = cv_set,
+                                             y_var = y_var,
+                                             pred_vars = pred_vars,
+                                             id_vars = id_vars,
+                                             reff_var = reff_var,
+                                             hyper_priors = hyper_priors,
+                                             W_orgUnit = W_orgUnit,
+                                             constant_org = constant_org,
+                                             constant_date = constant_date)
+
+  return(list("var_imp" = var_imp,
+              "counter_data" = counter_list))
 
 }
 

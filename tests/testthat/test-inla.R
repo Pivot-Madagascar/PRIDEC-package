@@ -37,6 +37,33 @@ test_that("full inla workflow works", {
                W_orgUnit = W_orgUnit)
   expect_equal(nrow(test_vi), 2)
 
+  #---- test counterfactual -------
+  test_counter <- create_counterfactual_inla(cv_set = cv_set,
+                                             y_var = "n_case",
+                                             pred_vars = c("rain_mm", "temp_c"),
+                                             id_vars = c("date", "orgUnit"),
+                                             W_orgUnit = W_orgUnit,
+                                             constant_org = "CSB2 RANOMAFANA",
+                                             constant_date = "2018-04-01")
+  expect_contains(class(test_counter[[1]]), "data.frame")
+  expect_equal(colnames(test_counter[[2]]), c("variable", "var_valuesc", "yhat", "var_value"))
+
+  expect_equal(plot_counterfactual_one(test_counter[[1]], var_label = "orgUnit"),  NULL)
+
+  expect_no_condition(plot_counterfactual_one(test_counter[[4]], var_label = "Rain (mm)"))
+
+  #---- all variable importance together--------##
+  inv_var <- inv_variables_inla(cv_set = cv_set,
+                                y_var = "n_case",
+                                pred_vars = c("rain_mm", "temp_c"),
+                                id_vars = c("date", "orgUnit"),
+                                W_orgUnit = W_orgUnit,
+                                constant_org = "CSB2 RANOMAFANA",
+                                constant_date = "2018-04-01",
+                                seed = 123,
+                                nsims = 5)
+  expect_equal(nrow(inv_var$var_imp), 2)
+  expect_equal(length(inv_var$counter_data), 5)
 })
 
 test_that("inla internal functions work",{
