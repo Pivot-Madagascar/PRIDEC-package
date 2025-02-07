@@ -11,3 +11,5 @@ data-raw/*
 ^data-raw$
 ^LICENSE\.md$
 scratch/*
+^README\\.Rmd$
+^README\.Rmd$
