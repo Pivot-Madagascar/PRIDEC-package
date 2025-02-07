@@ -30,7 +30,7 @@ calc_inla_vi(
 
 \item{hyper_priors}{priors for spatial and temporal random effects}
 
-\item{W_orgUnit}{graph of orgUnit to use in spatial structure}
+\item{W_orgUnit}{graph of orgUnit to use in spatial structure'}
 
 \item{seed}{a seed to use for reproducability. Default = 8675309}
 

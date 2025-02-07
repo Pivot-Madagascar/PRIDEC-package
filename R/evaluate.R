@@ -1,7 +1,9 @@
 #' Evaluate performance on a cv_set
 #' @param pred_intervals data.frame of prediction intervals, output from `fit` step.
 #'   Must include: orgUnit, date, dataset, observed, predicted, quant_long, quantile_level
+#'
 #' @returns dataset of performance metrics for assessment and anlalysis datasets for that cv_set
+#' @export
 eval_performance <- function(pred_intervals){
 
   #estimate med_ae_log as log(x+1) to help with zeros

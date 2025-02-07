@@ -31,7 +31,7 @@ create_counterfactual_inla(
 
 \item{hyper_priors}{priors for spatial and temporal random effects}
 
-\item{W_orgUnit}{graph of orgUnit to use in spatial structure}
+\item{W_orgUnit}{graph of orgUnit to use in spatial structure'}
 
 \item{var_scales}{data.frame of center and scale factors used in variable scaling}
 

@@ -13,6 +13,7 @@
 #' @param return_model whether or not to return ranger model object. Default  = FALSE.
 #' @returns prediction intervals on analysis and assessment data or list containing model
 #'   object and prediction intervals, if `return_model` = TRUE
+#' @export
 fit_ranger <- function(cv_set, y_var, id_vars, pred_vars,
                        hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500),
                        importance = "none",
@@ -66,6 +67,7 @@ fit_ranger <- function(cv_set, y_var, id_vars, pred_vars,
 #' @param var_scales data.frame containing centering and scaling parameters for variables
 #' @returns list containing variable importance scores and a list of dataframes
 #'   containing data for pdp plots with each element corresponding to a variable
+#' @export
 inv_variables_ranger <- function(cv_set, y_var, id_vars, pred_vars,
                                  hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500),
                                  var_scales){
@@ -127,10 +129,12 @@ inv_variables_ranger <- function(cv_set, y_var, id_vars, pred_vars,
 #' Tune a ranger random forest model
 #' @param cvfold_list a nested list of cv_sets, each with analysis and assessment
 #' @param metric metric to use to select best fit. Options are output of `eval_performance`.
-#' @param tune_grid grid of parameters to tune over, with each column values for a pameter.
-#'   If Default (NULL) will create one within teh function.
+#' @param tune_grid grid of parameters to tune over, with each column values for a parameter.
+#'   If Default (NULL) will create one within the function.
 #' @inheritParams fit_ranger
+
 #' @returns vector of best fitting parameters
+#' @export
 tune_ranger <- function(cvfold_list, metric = "wape", y_var, id_vars, pred_vars,
                         tune_grid = NULL){
   if(is.null(tune_grid)){

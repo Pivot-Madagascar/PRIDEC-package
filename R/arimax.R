@@ -1,10 +1,11 @@
-#' fit an ARIMAX model to one orgUnit
+#' Fit an ARIMAX model to one orgUnit
 #' @param train_df dataframe of analysis data
 #' @param test_df dataframe of assessment data
 #' @param pred_vars predictor variables to include
 #' @param quantile_levels quantiles needed for prediction intervals (assessment only)
 #' @param return_model whether or not to return the ARIMA model, mostly used for debugging. Default = FALSE
 #' @param log_trans whether to log transform the data to help with fit. Uses log(y+1). Default = FALSE
+#'
 #' @returns dataframe of prediction intervals for analysis and assessment data
 fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                  quantile_levels, return_model = FALSE,
@@ -83,8 +84,9 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
 #'   0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9,
 #'   0.95, 0.975, 0.99)
 #' @param log_trans whether to log transform the data to help with fit. Uses log(y+1). Default = FALSE
+#'
 #' @returns data.frame of prediction intervals on analysis and assessment data
-
+#' @export
 fit_arima <- function(cv_set, y_var, pred_vars,
                          quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
                       log_trans = FALSE){

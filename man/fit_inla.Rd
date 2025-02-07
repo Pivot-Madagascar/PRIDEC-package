@@ -39,7 +39,10 @@ Default =  c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)}
 \item{sample_pi}{whether to estimate the prediction intervals by sampling the
 posterior. Default (FALSE) uses a trick to put all error into an iid random effect.}
 
-\item{W_orgUnit}{graph of orgUnit to use in spatial structure}
+\item{W_orgUnit}{graph of orgUnit to use in spatial structure'}
+}
+\value{
+dataframe of predictions intervals
 }
 \description{
 Fit an INLA model to one cv_set and get prediction intervals

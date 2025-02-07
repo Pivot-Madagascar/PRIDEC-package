@@ -11,6 +11,9 @@ sample_preds(predicted, weight)
 
 \item{weight}{vector of weights}
 }
+\value{
+mean prediction in a list
+}
 \description{
 Utility function to get weighted means of predictions
 }

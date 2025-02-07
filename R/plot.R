@@ -1,7 +1,9 @@
 #' Plot predictions and PI ribbon with ggplot2
 #' @param pred_df data.frame of prediction intervals
 #' @param quantile_ribbon quantile levels to use for ribbon
+#'
 #' @returns ggplot object
+#' @export
 plot_predictions <- function(pred_df, quantile_ribbon = c(0.05, 0.95)){
 
   pred_df |>
@@ -28,6 +30,8 @@ plot_predictions <- function(pred_df, quantile_ribbon = c(0.05, 0.95)){
 #' @param cf_data counterfactual data frame
 #' @param var_label label used for predictor variable
 #' @param y_range range of y_variable to use to limit plots
+#'
+#' @export
 plot_counterfactual_one <-  function(cf_data, var_label, y_range = NULL){
 
   if(is.null(y_range)){
@@ -67,6 +71,8 @@ plot_counterfactual_one <-  function(cf_data, var_label, y_range = NULL){
 #' @param cf_list list of counterfactual data.frames. Names correspond to variable labels
 #' @param y_range range of y_variable to use to limit plots
 #' @returns list of plots to be plotted with `patchwork::wrap_plots`
+#'
+#' @export
 plot_counterfactual <- function(cf_list, y_range = NULL){
   #if no names, take variable from each
   if(is.null(names(cf_list))){

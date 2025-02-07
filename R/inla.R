@@ -5,8 +5,10 @@
 #' @param return_model whether or not to return the INLA model in addition to predictions
 #' @param sample_pi whether to estimate the prediction intervals by sampling the
 #'   posterior. Default (FALSE) uses a trick to put all error into an iid random effect.
-#' @param W_orgUnit graph of orgUnit to use in spatial structure
+#' @param W_orgUnit graph of orgUnit to use in spatial structure'
 #'
+#' @returns dataframe of predictions intervals
+#' @export
 fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
                      hyper_priors = list("prec.unstruct" = c(1, 5e-4),
                                          "prec.spatial" = c(1, 5e-4),
@@ -250,8 +252,10 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
 #' @inheritParams create_counterfactual_inla
 #' @inheritParams calc_inla_vi
 #' @param var_scales data.frame containing centering and scaling parameters for variables
+#'
 #' @returns list containing variable importance scores and a list of dataframes
 #'   containing data for pdp plots with each element corresponding to a variable
+#' @export
 inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
                                hyper_priors = list("prec.unstruct" = c(1, 5e-4),
                                                    "prec.spatial" = c(1, 5e-4),

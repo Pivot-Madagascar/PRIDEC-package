@@ -24,8 +24,8 @@ tune_ranger(
 
 \item{pred_vars}{vector string of predictor variables to use in model}
 
-\item{tune_grid}{grid of parameters to tune over, with each column values for a pameter.
-If Default (NULL) will create one within teh function.}
+\item{tune_grid}{grid of parameters to tune over, with each column values for a parameter.
+If Default (NULL) will create one within the function.}
 }
 \value{
 vector of best fitting parameters

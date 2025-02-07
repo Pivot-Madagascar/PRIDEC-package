@@ -3,8 +3,9 @@
 #' @param start_date date from which the folds will start, in Date class. default NULL = first date of dataset
 #' @param month_analysis number of months to include in analysis sets. Default = 48
 #' @param month_assess number of months to include in the assessment sets. Default = 3
-#' @returns list of datasets including analysis and assessment set nested in each list object
 #'
+#' @returns list of datasets including analysis and assessment set nested in each list object
+#' @export
 split_cv_rolling <- function(data_to_split, start_date = NULL,
                              month_analysis = 48, month_assess =3){
 
@@ -44,7 +45,9 @@ split_cv_rolling <- function(data_to_split, start_date = NULL,
 #' of every year
 #'
 #' @param cvdata_list list of cv folds (output of split_cv_rolling)
+#'
 #' @returns list of cv folds to be used in training ("train_data") and testing ("test_data")
+#' @export
 split_stratified <- function(cvdata_list){
 
   # 30% as test data (4 of every 12)

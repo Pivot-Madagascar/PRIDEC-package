@@ -2,7 +2,7 @@
 % Please edit documentation in R/arimax.R
 \name{fit_arima_OneOrgUnit}
 \alias{fit_arima_OneOrgUnit}
-\title{fit an ARIMAX model to one orgUnit}
+\title{Fit an ARIMAX model to one orgUnit}
 \usage{
 fit_arima_OneOrgUnit(
   train_df,
@@ -30,5 +30,5 @@ fit_arima_OneOrgUnit(
 dataframe of prediction intervals for analysis and assessment data
 }
 \description{
-fit an ARIMAX model to one orgUnit
+Fit an ARIMAX model to one orgUnit
 }

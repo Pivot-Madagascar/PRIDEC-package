@@ -14,6 +14,8 @@
 #'    log_trans. See \link[PRIDEC]{fit_arima} for more info.
 #' @param naive_configs named list of configuration for naive model. Must include: group_vars.
 #'    See \link[PRIDEC]{fit_naive} for more info.
+#'
+#' @returns Dataframe of prediction intervals for the ensembled predictions
 ensemble_forecast <- function(cv_set, y_var, id_vars,
                               quantile_levels = c(0.025,0.5,0.975),
                               inla_configs = NULL,
@@ -103,8 +105,9 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 }
 
 #'Utility function to get weighted means of predictions
-#'@param predicted vector of predicted values
-#'@param weight vector of weights
+#' @param predicted vector of predicted values
+#' @param weight vector of weights
+#' @returns mean prediction in a list
 sample_preds <- function(predicted, weight){
   list("predicted" = stats::weighted.mean(predicted, weight, na.rm = TRUE))
 }

@@ -3,7 +3,9 @@
 #' @param cv_set list object containing analysis and assessment data.frames
 #' @param y_var string name of column of observed values
 #' @param group_vars string vector names of columns used to group means. Usually refers to month of year and orgUnit.
+#'
 #' @returns data.frame of prediction intervals and observed values containing columns for group_vars and whether data is analysis or assessment
+#' @export
 fit_naive <- function(cv_set, y_var, group_vars){
 
   #to solve global function binding

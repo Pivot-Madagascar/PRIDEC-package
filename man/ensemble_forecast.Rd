@@ -41,6 +41,9 @@ log_trans. See \link[PRIDEC]{fit_arima} for more info.}
 \item{naive_configs}{named list of configuration for naive model. Must include: group_vars.
 See \link[PRIDEC]{fit_naive} for more info.}
 }
+\value{
+Dataframe of prediction intervals for the ensembled predictions
+}
 \description{
 Fit an ensemble forecast
 }

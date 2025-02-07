@@ -27,6 +27,9 @@ fit_glm_nb(
 \item{quantile_levels}{quantile levels to use when predicted via quantile regression.
 Default =  c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)}
 }
+\value{
+dataframe of prediction intervals
+}
 \description{
 Fit a negative binomial GLM to a cv_set
 }

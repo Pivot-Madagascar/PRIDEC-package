@@ -22,6 +22,8 @@ For more info, use [R packages book](https://r-pkgs.org/).
 
 Working on creating some documentation and ultimately maybe even pushing things to github. Also started writing the function for `ensemble_forecast`.  This is a stacked ensemble, but there are other ways of getting the weighted coefficients like blending via  lasso regression, but this one allows us to use the participant input.
 
+I am also working on uploading everything to github and gettinga  working website.
+
 **TO DO**:
 - ~~make map/workflow of APIs~~
 - INLA hyper-parameter tuning (later)

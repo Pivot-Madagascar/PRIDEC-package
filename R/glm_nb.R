@@ -1,7 +1,8 @@
 #' Fit a negative binomial GLM to a cv_set
 #'
 #' @inheritParams fit_ranger
-
+#' @returns dataframe of prediction intervals
+#' @export
 fit_glm_nb <- function(cv_set, y_var, id_vars, pred_vars,
                        return_model = FALSE,
                        quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)){
@@ -85,6 +86,7 @@ calc_pi_nb_analytic <- function(df, fit,
 #' @param nsim number of simulations to use in variable importance permutation. Default = 50.
 #' @returns list containing variable importance scores and a list of dataframes
 #'   containing data for counterfactual plots with each element corresponding to a variable
+#' @export
 inv_variables_glm_nb <- function(cv_set, y_var, id_vars, pred_vars, var_scales,
                                  constant_org = NULL, constant_date = NULL,
                                  nsim = 50){
