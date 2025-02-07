@@ -3,7 +3,7 @@ test_that("evaluate function on naive model", {
   data(demo_malaria)
   data(demo_polygon)
 
-  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
                                                            y_var = "n_case",
                                                            lagged_vars =  c("pev", "rain_mm", "temp_c"),
                                                            scaled_vars = c("wealth_index", "elevation",

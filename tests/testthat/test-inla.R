@@ -2,14 +2,14 @@ test_that("full inla workflow works", {
   data(demo_malaria)
   data(demo_polygon)
 
-  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
                                                            y_var = "n_case",
                                                            lagged_vars =  c("rain_mm", "temp_c"),
                                                            scaled_vars = NULL,
                                                            graph_poly = demo_polygon)$data_prep,
                              month_analysis = 48,
                              month_assess = 3)[[6]]
-  W_orgUnit <- prep_caseData(raw_data = demo_malaria,
+  W_orgUnit <- prep_data(raw_data = demo_malaria,
                              y_var = "n_case",
                              lagged_vars =  c("rain_mm", "temp_c"),
                              scaled_vars = NULL,

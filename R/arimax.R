@@ -2,12 +2,12 @@
 #' @param train_df dataframe of analysis data
 #' @param test_df dataframe of assessment data
 #' @param pred_vars predictor variables to include
-#' @param quant_levels quantiles needed for prediction intervals (assessment only)
+#' @param quantile_levels quantiles needed for prediction intervals (assessment only)
 #' @param return_model whether or not to return the ARIMA model, mostly used for debugging. Default = FALSE
 #' @param log_trans whether to log transform the data to help with fit. Uses log(y+1). Default = FALSE
 #' @returns dataframe of prediction intervals for analysis and assessment data
 fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
-                                 quant_levels, return_model = FALSE,
+                                 quantile_levels, return_model = FALSE,
                                  log_trans = FALSE){
 
   #if it starts with an NA, will not return fitted for that value
@@ -47,7 +47,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                    orgUnit = unique(train_df$orgUnit),
                                    dataset = "analysis")
 
-  arimax_pi_assess <- get_arima_pi(arima_mod = arimax_mod, quant_levels = quant_levels,
+  arimax_pi_assess <- get_arima_pi(arima_mod = arimax_mod, quantile_levels = quantile_levels,
                                    xreg = as.matrix(test_df[pred_vars])) |>
     dplyr::mutate(orgUnit = unique(test_df$orgUnit),
            dataset = "assess") |>
@@ -78,7 +78,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
 #' @param pred_vars vector string of column names of predictor variables. Note
 #'   that static variables cannot be included in an ARIMAX model and will
 #'   be automatically removed.
-#' @param quant_levels numeric vector of quantiles to use in prediction
+#' @param quantile_levels numeric vector of quantiles to use in prediction
 #'   intervals. Range 0-1. Default: c(0.01, 0.025, 0.05, 0.1, 0.15, 0.2, 0.25,
 #'   0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9,
 #'   0.95, 0.975, 0.99)
@@ -86,7 +86,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
 #' @returns data.frame of prediction intervals on analysis and assessment data
 
 fit_arima <- function(cv_set, y_var, pred_vars,
-                         quant_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
+                         quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
                       log_trans = FALSE){
 
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = pred_vars)
@@ -97,7 +97,7 @@ fit_arima <- function(cv_set, y_var, pred_vars,
                   function(x) fit_arima_OneOrgUnit(train_df = this_analysis[(this_analysis$orgUnit == x),],
                                                    test_df = this_assess[(this_assess$orgUnit == x),],
                                                    pred_vars = pred_vars,
-                                                   quant_levels = quant_levels,
+                                                   quantile_levels = quantile_levels,
                                                    log_trans = log_trans)) |>
     dplyr::bind_rows()
 
@@ -147,16 +147,16 @@ retry_arima <- function(train_df, pred_vars, this_y_ts){
 
 #' Internal function for estimating prediction intervals from ARIMAX model
 #' @param arima_mod ARIMAX model object
-#' @param quant_levels quantile levels to estimate for the prediction intervals. Numeric 0-1
+#' @param quantile_levels quantile levels to estimate for the prediction intervals. Numeric 0-1
 #' @param h Arima forecast horizon, in months. Default = 3
 #' @param xreg corresponds to exogeneous variables in ARIMAX model (optional)
 #' @returns data.frame of prediction intervals with columns date, prediction,
 #'          quantile, and quant_long. Only for assessment data.
-get_arima_pi <- function(arima_mod, quant_levels,
+get_arima_pi <- function(arima_mod, quantile_levels,
                          h = 3,
                          xreg = NULL){
 
-  arima_levels <- unique(round(sort(abs(quant_levels-0.5)*2),2))*100
+  arima_levels <- unique(round(sort(abs(quantile_levels-0.5)*2),2))*100
 
   arima_pred <- generics::forecast(arima_mod, h=h, level = arima_levels, xreg = xreg)
   arima_pis <- suppressWarnings(data.frame(arima_pred))

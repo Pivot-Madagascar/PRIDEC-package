@@ -4,12 +4,12 @@
 \alias{get_arima_pi}
 \title{Internal function for estimating prediction intervals from ARIMAX model}
 \usage{
-get_arima_pi(arima_mod, quant_levels, h = 3, xreg = NULL)
+get_arima_pi(arima_mod, quantile_levels, h = 3, xreg = NULL)
 }
 \arguments{
 \item{arima_mod}{ARIMAX model object}
 
-\item{quant_levels}{quantile levels to estimate for the prediction intervals. Numeric 0-1}
+\item{quantile_levels}{quantile levels to estimate for the prediction intervals. Numeric 0-1}
 
 \item{h}{Arima forecast horizon, in months. Default = 3}
 

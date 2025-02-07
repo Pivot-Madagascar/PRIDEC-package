@@ -18,6 +18,27 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-02-07
+
+Working on creating some documentation and ultimately maybe even pushing things to github. Also started writing the function for `ensemble_forecast`.  This is a stacked ensemble, but there are other ways of getting the weighted coefficients like blending via  lasso regression, but this one allows us to use the participant input.
+
+**TO DO**:
+- ~~make map/workflow of APIs~~
+- INLA hyper-parameter tuning (later)
+- ~~build launch model function based on map~~
+- upload to github
+- write an example vignette
+- script to create quarto document of training step (like a launching shell script)
+
+## 2025-02-06
+
+Going back to the INLA code to finish that up. Working on creating the counterfactual data function. This will then be combined with the variable importance one into one function to keep with the standard API.
+
+**TO DO**:
+- make map/workflow of APIs
+- INLA hyper-parameter tuning (later)
+- build launch model function based on map
+
 ## 2025-01-29
 
 Working on adding INLA to the modules. So far transfered over the model and the code for variable importance. Still need to do the code for counter-factual plots and function that does both together to match the API of other models. Then we may also want to add some tuning?

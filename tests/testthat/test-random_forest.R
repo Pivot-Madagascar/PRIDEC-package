@@ -2,7 +2,7 @@ test_that("full ranger RF workflow work", {
   data(demo_malaria)
   data(demo_polygon)
 
-  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
                                                            y_var = "n_case",
                                                            lagged_vars =  c("rain_mm", "temp_c"),
                                                            scaled_vars = NULL,
@@ -26,7 +26,7 @@ test_that("full ranger RF workflow work", {
   expect_equal(eval_performance(test_rf)$dataset, c("analysis", "assess"))
 
   #-----investigate variables ----
-  var_scales <- prep_caseData(raw_data = demo_malaria,
+  var_scales <- prep_data(raw_data = demo_malaria,
                                 y_var = "n_case",
                                 lagged_vars =  c("rain_mm", "temp_c"),
                                 scaled_vars = NULL,
@@ -61,7 +61,7 @@ test_that("ranger tuning",{
   data(demo_malaria)
   data(demo_polygon)
 
-  cvfold_list <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+  cvfold_list <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
                                                            y_var = "n_case",
                                                            lagged_vars =  c("rain_mm", "temp_c"),
                                                            scaled_vars = NULL,

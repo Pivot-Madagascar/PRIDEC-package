@@ -2,7 +2,7 @@ test_that("data preparation function works", {
   data(demo_malaria)
   data(demo_polygon)
 
-  test_prep <- prep_caseData(raw_data = demo_malaria,
+  test_prep <- prep_data(raw_data = demo_malaria,
                              y_var = "n_case",
                              lagged_vars =  c("pev", "rain_mm", "temp_c"),
                              scaled_vars = c("wealth_index", "elevation",

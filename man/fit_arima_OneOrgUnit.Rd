@@ -8,7 +8,7 @@ fit_arima_OneOrgUnit(
   train_df,
   test_df,
   pred_vars,
-  quant_levels,
+  quantile_levels,
   return_model = FALSE,
   log_trans = FALSE
 )
@@ -20,7 +20,7 @@ fit_arima_OneOrgUnit(
 
 \item{pred_vars}{predictor variables to include}
 
-\item{quant_levels}{quantiles needed for prediction intervals (assessment only)}
+\item{quantile_levels}{quantiles needed for prediction intervals (assessment only)}
 
 \item{return_model}{whether or not to return the ARIMA model, mostly used for debugging. Default = FALSE}
 

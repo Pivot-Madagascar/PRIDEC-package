@@ -87,21 +87,6 @@ calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
                         seed = 8675309,
                          nsims = 1){
 
-  #for debugging.remove
-  # y_var = "n_case"
-  # pred_vars = c("rain_mm", "temp_c")
-  # id_vars = c("date", "orgUnit")
-  # hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-  #                     "prec.spatial" = c(1, 5e-4),
-  #                     "prec.timerw1" = c(1,0.01))
-  # reff_var = NULL
-  # W_orgUnit = prep_caseData(raw_data = demo_malaria,
-  #                           y_var = "n_case",
-  #                           lagged_vars =  c("rain_mm", "temp_c"),
-  #                           scaled_vars = NULL,
-  #                           graph_poly = demo_polygon)$W_graph
-  #stop debugging code
-
   prior_setup <- create_inla_setup(hyper_priors)
 
   if(is.null(reff_var)){
@@ -188,22 +173,6 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
                                                            "prec.timerw1" = c(1,0.01)),
                                        W_orgUnit, var_scales = NULL,
                                        constant_org, constant_date){
-  #for debugging.remove
-  # y_var = "n_case"
-  # pred_vars = c("rain_mm", "temp_c")
-  # id_vars = c("date", "orgUnit")
-  # hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-  #                     "prec.spatial" = c(1, 5e-4),
-  #                     "prec.timerw1" = c(1,0.01))
-  # reff_var = NULL
-  # W_orgUnit = prep_caseData(raw_data = demo_malaria,
-  #                           y_var = "n_case",
-  #                           lagged_vars =  c("rain_mm", "temp_c"),
-  #                           scaled_vars = NULL,
-  #                           graph_poly = demo_polygon)$W_graph
-  # constant_org = "CSB2 RANOMAFANA"
-  # constant_date = "2018-04-01"
-  #stop debugging code
 
   prior_setup <- create_inla_setup(hyper_priors)
 

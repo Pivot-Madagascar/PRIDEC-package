@@ -11,7 +11,7 @@
 #' @returns list of cleaned data, spatial graph for INLA (if not null), and
 #'   scale and centering factors used in treatment
 #' @export
-prep_caseData <- function(raw_data,
+prep_data <- function(raw_data,
                           y_var,
                           lagged_vars,
                           scaled_vars,

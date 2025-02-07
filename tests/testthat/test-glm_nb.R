@@ -2,7 +2,7 @@ test_that("full glm_nb workflow works", {
   data(demo_malaria)
   data(demo_polygon)
 
-  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
                                                            y_var = "n_case",
                                                            lagged_vars =  c("rain_mm", "temp_c"),
                                                            scaled_vars = NULL,
@@ -27,7 +27,7 @@ test_that("glm.nb variable exploration works", {
   data(demo_malaria)
   data(demo_polygon)
 
-  cv_set <- split_cv_rolling(data_to_split = prep_caseData(raw_data = demo_malaria,
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
                                                            y_var = "n_case",
                                                            lagged_vars =  c("rain_mm", "temp_c"),
                                                            scaled_vars = NULL,
