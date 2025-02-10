@@ -13,3 +13,7 @@ data-raw/*
 scratch/*
 ^README\\.Rmd$
 ^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.github$
