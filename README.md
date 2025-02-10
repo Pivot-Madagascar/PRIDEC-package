@@ -1,4 +1,6 @@
 
+# Predicting Infectious Diseases via Environment and Climate (PRIDE-C)
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
 
@@ -6,7 +8,7 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-The goal of PRIDEC is to provide a standardized API functionality for
+The goal of PRIDE-C is to provide a standardized API functionality for
 forecasting infectious diseases from DHIS2 data.
 
 ## Installation
@@ -27,7 +29,7 @@ TThe PRIDE-C forecasting approach follows the following steps:
 2.  Model tuning and training
 3.  Forecasting
 
-![](API-workflow.png)
+![](man/figures/API-workflow.png)
 
 The example below follows the steps for fitting a Random Forest model
 using `ranger` from simulated model data.
@@ -65,10 +67,23 @@ eval_performance(rf_fit)
 #> # A tibble: 2 × 10
 #>   dataset    wis   mae med_ae mean_ae_log  wape dispersion sp_rho prop_over
 #>   <chr>    <dbl> <dbl>  <dbl>       <dbl> <dbl>      <dbl>  <dbl>     <dbl>
-#> 1 analysis  5.87  6.44  0.238      0.0175 0.149       5.10  0.964    0.197 
-#> 2 assess   24.2  32.6  31.6        1.08   0.595       2.35  0.797    0.0317
+#> 1 analysis  5.86  6.42  0.321      0.0220 0.150       5.12  0.961    0.206 
+#> 2 assess   24.4  33.1  32.2        1.08   0.608       2.34  0.814    0.0317
 #> # ℹ 1 more variable: prop_under <dbl>
 plot_predictions(rf_fit[rf_fit$orgUnit %in% sample(rf_fit$orgUnit,1),])
+#> Warning: Removed 1 row containing missing values or values outside the scale range
+#> (`geom_point()`).
 ```
 
 <img src="man/figures/README-unnamed-chunk-2-1.png" width="100%" />
+
+## Contribute to PRIDE-C
+
+As an open-source package, we welcome all contributions. Please feel
+free to file an issue or contact the developer (@mvevans89).
+
+## Funding
+
+The development and maintenance of this package is funded by a [Wellcome
+Trust Digital Technology Development
+Award](https://wellcome.org/grant-funding/schemes/digital-technology-development-awards-climate-sensitive-infectious-disease).

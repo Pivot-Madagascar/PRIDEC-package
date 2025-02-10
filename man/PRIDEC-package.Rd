@@ -8,8 +8,15 @@
 \description{
 Functions used by the Predicting Infectious Diseases via Environment and Climate (PRIDE-C) forecasting workflow to forecast infectious diseases for DHIS2 instances.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://pivot-madagascar.github.io/PRIDEC-package/}
+}
+
+}
 \author{
-\strong{Maintainer}: Michelle Evans \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: Michelle Evans \email{first.last@example.com} (\href{https://orcid.org/0000-0002-5628-0502}{ORCID})
 
 }
 \keyword{internal}

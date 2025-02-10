@@ -18,6 +18,14 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-02-10
+
+Working on setting things up on github and having a pkgdown website. I fixed the github commit error. The problem was I was using the wrong email.
+
+Setting this up as a github pages, and also making the Pivot website itself nicer.
+
+
+
 ## 2025-02-07
 
 Working on creating some documentation and ultimately maybe even pushing things to github. Also started writing the function for `ensemble_forecast`.  This is a stacked ensemble, but there are other ways of getting the weighted coefficients like blending via  lasso regression, but this one allows us to use the participant input.

@@ -2,6 +2,8 @@
 output: github_document
 ---
 
+# Predicting Infectious Diseases via Environment and Climate (PRIDE-C)
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
@@ -17,7 +19,7 @@ knitr::opts_chunk$set(
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
-The goal of PRIDEC is to provide a standardized API functionality for forecasting infectious diseases from DHIS2 data.
+The goal of PRIDE-C is to provide a standardized API functionality for forecasting infectious diseases from DHIS2 data.
 
 
 ## Installation
@@ -37,7 +39,7 @@ TThe PRIDE-C forecasting approach follows the following steps:
 2. Model tuning and training
 3. Forecasting
 
-![](API-workflow.png)
+![](man/figures/API-workflow.png)
 
 The example below follows the steps for fitting a Random Forest model using `ranger` from simulated model data.
 
@@ -69,3 +71,10 @@ plot_predictions(rf_fit[rf_fit$orgUnit %in% sample(rf_fit$orgUnit,1),])
 
 ```
 
+## Contribute to PRIDE-C
+
+As an open-source package, we welcome all contributions. Please feel free to file an issue or contact the developer (@mvevans89).
+
+## Funding
+
+The development and maintenance of this package is funded by a [Wellcome Trust Digital Technology Development Award](https://wellcome.org/grant-funding/schemes/digital-technology-development-awards-climate-sensitive-infectious-disease).

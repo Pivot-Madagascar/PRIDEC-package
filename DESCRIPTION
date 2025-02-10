@@ -3,7 +3,7 @@ Title: Disease Forecasting with PRIDE-C
 Version: 0.0.0.9000
 Authors@R: 
     person("Michelle", "Evans", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
+           comment = c(ORCID = "0000-0002-5628-0502"))
 Description: Functions used by the Predicting Infectious Diseases via Environment and Climate (PRIDE-C) forecasting workflow to forecast infectious diseases for DHIS2 instances.
 License: MIT + file LICENSE
 Encoding: UTF-8
