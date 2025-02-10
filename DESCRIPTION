@@ -6,6 +6,7 @@ Authors@R:
            comment = c(ORCID = "0000-0002-5628-0502"))
 Description: Functions used by the Predicting Infectious Diseases via Environment and Climate (PRIDE-C) forecasting workflow to forecast infectious diseases for DHIS2 instances.
 License: MIT + file LICENSE
+Additional_repositories: https://inla.r-inla-download.org/R/stable/
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
