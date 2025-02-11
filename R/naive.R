@@ -6,7 +6,7 @@
 #'
 #' @returns data.frame of prediction intervals and observed values containing columns for group_vars and whether data is analysis or assessment
 #' @export
-fit_naive <- function(cv_set, y_var, group_vars){
+fit_naive <- function(cv_set, y_var, group_vars = c("orgUnit", "month_season")){
 
   #to solve global function binding
   # y_obs <- NULL

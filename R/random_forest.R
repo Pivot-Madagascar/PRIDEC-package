@@ -20,13 +20,8 @@ fit_ranger <- function(cv_set, y_var, id_vars, pred_vars,
                        quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
                        return_model = FALSE){
 
-  #debugging stuff
-  # pred_vars <- c("rain_mm", "temp_c", "month_season", "orgUnit")
-  # id_vars <- c("orgUnit", "date")
-  # y_var = "n_case"
-  # importance = "none"
-  # hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500)
-  # quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)
+  #ensure that orgUnit and month of year are always included as predictor variables
+  pred_vars <- unique(c("orgUnit", "month_season", pred_vars))
 
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars), remove_NA = TRUE)
   this_analysis <- cv_clean$analysis

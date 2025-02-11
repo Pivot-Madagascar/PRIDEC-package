@@ -13,6 +13,9 @@ fit_glm_nb <- function(cv_set, y_var, id_vars, pred_vars,
   # y_var = "n_case"
   # quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)
 
+  #ensure that orgUnit and month of year are always included as predictor variables
+  pred_vars <- unique(c("orgUnit", "month_season", pred_vars))
+
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars),
                              remove_NA = TRUE)
   this_analysis <- cv_clean$analysis
@@ -90,6 +93,9 @@ calc_pi_nb_analytic <- function(df, fit,
 inv_variables_glm_nb <- function(cv_set, y_var, id_vars, pred_vars, var_scales,
                                  constant_org = NULL, constant_date = NULL,
                                  nsim = 50){
+
+  #ensure that orgUnit and month of year are always included as predictor variables
+  pred_vars <- unique(c("orgUnit", "month_season", pred_vars))
 
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars),
                              remove_NA = TRUE)
