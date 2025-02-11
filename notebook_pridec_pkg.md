@@ -18,12 +18,36 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-02-11
+
+I will work on a vignette of the full workflow where multiple models are trained. This will also allow me to write the full wrapper/workflow function. Okay, yes while working on this I have realized I need a wrapper `train_models` function. This takes in the data and user-provided parameters and outputs the quarto report. 
+
+Notes for self (what does train_model function do):
+- takes cv_set list, list of models to fit, list of pred_vars, y_var, results_directory
+- applies each model over each element of the list to get evaluation 
+- gets inv_var for last cv_set
+- saves model outputs somewhere
+- launches script to create quarto doc from model output
+
+This may also help streamline the `ensemble_forecast` function. Atlhough I think realistically any streamlining of that will happen within the script within the docker container, since that is where the user-input will enter.
+
+**TO DO**:
+- INLA hyper-parameter tuning (later)
+- write an example vignette of full workflow
+- script to create quarto document of training step (like a launching shell script). similar to output of workshops
+- data import and export scripts to DHIS2 (need to get d2 working first)
+
 ## 2025-02-10
 
 Working on setting things up on github and having a pkgdown website. I fixed the github commit error. The problem was I was using the wrong email.
 
 Setting this up as a github pages, and also making the Pivot website itself nicer.
 
+**TO DO**:
+- INLA hyper-parameter tuning (later)
+- write an example vignette of full workflow
+- script to create quarto document of training step (like a launching shell script). similar to output of workshops
+- data import and export scripts to DHIS2 (need to get d2 working first)
 
 
 ## 2025-02-07
