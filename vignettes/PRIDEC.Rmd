@@ -138,10 +138,5 @@ Each modeling approach follows the same training workflow:
 3. `eval_performance`: evaluation of models on `analysis` and `assessment` datasets
 4. `inv_variables_*`: investigation of variable importance scores and counterfactual plots to visualize the association with predictor variables
 
-This workflow can be launched for multiple approaches at once and returns a `quarto` report of model performance and variable investigation via the `train_model` function. 
+This workflow can be launched for multiple approaches at once and returns a `quarto` report of model performance and variable investigation via the `train_models` function. 
 
-Notes for self (what does train_model function do):
-- takes cv_set list, list of models to fit, list of pred_vars, y_var, results_directory
-- applies each model over each element of the list to get evaluation and inv_var
-- saves model outputs somewhere
-- launches script to create quarto doc from model output

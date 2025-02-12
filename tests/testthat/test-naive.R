@@ -18,4 +18,7 @@ test_that("naive fit works", {
   expect_equal(colnames(pred_intervals), c("orgUnit", "date", "dataset", "observed", "predicted", "quant_long",
                                            "quantile_level"))
   expect_equal(sum(is.na(pred_intervals$predicted)), 0)
+
+  #evaluate performance
+  eval_performance(pred_intervals)
 })

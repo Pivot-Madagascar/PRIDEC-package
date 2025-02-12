@@ -81,6 +81,7 @@ inv_variables_ranger <- function(cv_set, y_var, id_vars, pred_vars,
   }
   vi_perm <- vip::vi(rf_mod)
   names(vi_perm) <- c("variable", "importance")
+  vi_perm$importance <- vi_perm$importance/sum(vi_perm$importance)
 
   counter_df <- purrr::map(1:length(pred_vars),  function(i,...){
     this_var_name <- pred_vars[i]
@@ -97,7 +98,7 @@ inv_variables_ranger <- function(cv_set, y_var, id_vars, pred_vars,
     }
     var_grid <- data.frame(var_grid)
     colnames(var_grid) <- this_var_name
-    pdp_df <- pdp::partial(rf_mod, train = cv_set$analysis,
+    pdp_df <- pdp::partial(rf_mod, train = stats::na.omit(cv_set$analysis),
                            pred.var = this_var_name,
                            pred.grid = var_grid) |>
       dplyr::mutate(variable = this_var_name)

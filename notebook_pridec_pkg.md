@@ -18,6 +18,23 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-02-12
+
+Working on the `train_models` workflow, which fits multiple models and then outputs 1: a directory where the results are saved or 2: a quarto doc containing info on the model performance. Okay, I have gotten this working for fitting naive, RF, and Arima. Now I need to add INLA and GLM_NB. then add the quarto doc creation (can use the template from before).
+
+**TO DO**:
+- write an example vignette of full workflow [in progress]
+- script to create quarto document of training step (like a launching shell script). similar to output of workshops. This is the  `train_models` function now.
+- variable importance functions for arimax [done]
+
+
+**on back-burner**:
+- data import and export scripts to DHIS2 (need to get d2 working first)
+- INLA hyper-parameter tuning (later)
+- variable investigation for naive fit (do we need this?)
+- functionality for running `train_models` in parallel (future_map vs map)
+
+
 ## 2025-02-11
 
 I will work on a vignette of the full workflow where multiple models are trained. This will also allow me to write the full wrapper/workflow function. Okay, yes while working on this I have realized I need a wrapper `train_models` function. This takes in the data and user-provided parameters and outputs the quarto report. 

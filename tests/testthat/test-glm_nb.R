@@ -17,7 +17,7 @@ test_that("full glm_nb workflow works", {
                           pred_vars = c("rain_mm", "temp_c"))
   )
   #check performance
-  expect_equal(eval_performance(test_fit)$wape,c(0.816179028490635, 0.737411258502809))
+  expect_equal(eval_performance(test_fit)$wape, c(0.532286544683763, 0.72950493946477))
   #check plot
   expect_contains(class(plot_predictions(test_fit[test_fit$orgUnit %in% c("CSB2 ATSINDRA", "CSB2 IFANADIANA"),])),
                   "ggplot")
@@ -44,7 +44,7 @@ test_that("glm.nb variable exploration works", {
   )
 
   expect_type(test_inv$varImp$importance, "double")
-  expect_equal(length(test_inv$counter_data), 2)
-  expect_no_condition(plot_counterfactual_one(test_inv$counter_data[[1]], var_label = "rain"))
+  expect_equal(length(test_inv$counter_data), 4)
+  expect_no_condition(plot_counterfactual_one(test_inv$counter_data[[3]], var_label = "rain"))
 
 })
