@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   PRIDEC: PRIDEC.html
-last_built: 2025-02-11T12:33Z
+last_built: 2025-02-12T17:37Z
 urls:
   reference: https://pivot-madagascar.github.io/PRIDEC-package/reference
   article: https://pivot-madagascar.github.io/PRIDEC-package/articles
