@@ -107,6 +107,83 @@ fit_arima <- function(cv_set, y_var, pred_vars,
 
 }
 
+#' Investigate variables from ARIMAX model
+#' @inheritParams fit_arima
+#' @param var_scales data.frame of centering and scaling values for predictor variables
+#' @returns list of variable importance and data for counter-factual plots
+inv_variables_arima <- function(cv_set, y_var, pred_vars,
+                                var_scales){
+
+  cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = pred_vars)
+  this_analysis <- cv_clean$analysis
+  this_assess <- cv_clean$assess
+
+  #----- get coefficients for each arima model ----------
+  coef_output <- purrr::map(unique(this_analysis$orgUnit),
+                     function(x){
+                       arima_mod <- fit_arima_OneOrgUnit(train_df = this_analysis[this_analysis$orgUnit == x,],
+                                                         test_df = this_assess[this_assess$orgUnit == x,],
+                                                         pred_vars = pred_vars,
+                                                         quantile_levels = 0.5,
+                                                         return_model = TRUE,
+                                                         log_trans = FALSE)
+                       this_coefs <- data.frame("coef" = stats::coef(arima_mod$model)) |>
+                         tibble::rownames_to_column(var = "variable") |>
+                         dplyr::filter(.data$variable %in% pred_vars) |>
+                         dplyr::mutate(orgUnit = x) |>
+                         dplyr::mutate(importance = abs(.data$coef)/sum(abs(.data$coef)))
+                       return(this_coefs)
+                     }) |> dplyr::bind_rows()
+
+  #--- variable importance based on coefficients --------
+  var_imp <- coef_output |>
+    dplyr::summarise(importance = mean(.data$importance),
+              .by = "variable")
+
+  #------ counter-factual data ---------------
+  counter_vars <- pred_vars
+  counter_data <- purrr::map(1:length(counter_vars), function(i){
+    this_var_name <- counter_vars[i]
+    #create a grid to fit
+    var_class <- class(this_analysis[[this_var_name]])
+    if(var_class == "numeric"){
+      var_range <- range(this_analysis[this_var_name], na.rm = TRUE)
+      var_grid <- seq(var_range[1], var_range[2], length.out = 50)
+      if(nrow(unique(this_analysis[this_var_name]))<10){
+        var_grid <- unique(this_analysis[[this_var_name]])
+      }
+    } else {
+      var_grid <- unique(this_analysis[[this_var_name]])
+    }
+    this_counter <- data.frame(var_value = var_grid,
+                               variable = this_var_name)
+    return(this_counter)
+  }) |> dplyr::bind_rows()
+
+  mean_coefs <- coef_output |>
+    dplyr::summarise(coef = median(.data$coef),
+              .by = "variable")
+
+  y_obs_mean <- mean(this_analysis$y_obs, na.rm = TRUE)
+
+    counter_output <- dplyr::left_join(counter_data,
+                              mean_coefs[,c("variable", "coef")],
+                              by = "variable")
+    counter_output$yhat <- counter_output$var_value*counter_output$coef + y_obs_mean
+    counter_output <- counter_output[,-which(colnames(counter_output)=="coef")]
+    colnames(counter_output)[which(colnames(counter_output) == "var_value")] <- "var_valuesc"
+
+    counter_output <- dplyr::left_join(counter_output, var_scales, by = "variable") |>
+      dplyr::mutate(scale = ifelse(is.na(.data$scale),1,.data$scale)) |>
+      dplyr::mutate(center = ifelse(is.na(.data$center), 0 ,.data$center)) |>
+      dplyr::mutate(var_value = .data$var_valuesc*.data$scale + .data$center) |>
+      dplyr::select(-all_of(c("scale", "center")))
+
+    counter_output <- split(counter_output, f = counter_output$variable)
+
+    return(list("var_imp" = var_imp,
+                "counter_data" = counter_output))
+}
 
 
 #' Internal function to iteratively fit an ARIMAX model

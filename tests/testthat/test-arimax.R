@@ -29,6 +29,23 @@ test_that("full arimax workflow works", {
   multi_plot <- plot_predictions(test_fit)
   expect_contains(class(multi_plot), "ggplot")
 
+  #---- variable investigation --------------
+  var_scales <- prep_data(raw_data = demo_malaria,
+                          y_var = "n_case",
+                          lagged_vars =  c("rain_mm", "temp_c"),
+                          scaled_vars = NULL,
+                          graph_poly = NULL)$scale_factors
+  inv_var_test <- inv_variables_arima(cv_set,
+                                      y_var = "n_case",
+                                      pred_vars = c("rain_mm", "temp_c"),
+                                      var_scales = var_scales)
+
+  expect_equal(colnames(inv_var_test$var_imp), c("variable", "importance"))
+  expect_equal(length(inv_var_test$counter_data), 2)
+  expect_equal(class(inv_var_test$counter_data[[1]]), "data.frame")
+
+  plot_counterfactual(inv_var_test$counter_data)
+
 })
 
 test_that("arimax fits to one orgUnit", {
