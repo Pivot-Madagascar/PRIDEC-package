@@ -173,7 +173,7 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
                                        hyper_priors = list("prec.unstruct" = c(1, 5e-4),
                                                            "prec.spatial" = c(1, 5e-4),
                                                            "prec.timerw1" = c(1,0.01)),
-                                       W_orgUnit, var_scales = NULL,
+                                       W_orgUnit, var_scales,
                                        constant_org, constant_date){
 
   prior_setup <- create_inla_setup(hyper_priors)
@@ -260,7 +260,7 @@ inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_var
                                hyper_priors = list("prec.unstruct" = c(1, 5e-4),
                                                    "prec.spatial" = c(1, 5e-4),
                                                    "prec.timerw1" = c(1,0.01)),
-                               W_orgUnit, var_scales = NULL,
+                               W_orgUnit, var_scales,
                                constant_org, constant_date,
                                seed = 8675309,
                                nsims = 1){
@@ -283,7 +283,8 @@ inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_var
                                              hyper_priors = hyper_priors,
                                              W_orgUnit = W_orgUnit,
                                              constant_org = constant_org,
-                                             constant_date = constant_date)
+                                             constant_date = constant_date,
+                                             var_scales = var_scales)
 
   return(list("var_imp" = var_imp,
               "counter_data" = counter_list))

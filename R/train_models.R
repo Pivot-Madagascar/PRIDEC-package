@@ -22,16 +22,17 @@ train_models <- function(prep_output,
                          model_configs){
 
   # for debugging and testing
-  tune = NULL
-  y_var = "n_case"
-  pred_vars = c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
-                "wealth_indexsc", "elevationsc",
-                "time_to_districtsc")
-  id_vars = c("orgUnit", "date")
+  # tune = NULL
+  # y_var = "n_case"
+  # pred_vars = c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
+  #               "wealth_indexsc", "elevationsc",
+  #               "time_to_districtsc")
+  # id_vars = c("orgUnit", "date")
+  # results_dir = NULL
 
 
 
-
+  #move this outside the function
   if(is.null(results_dir)){
     results_dir <- paste(tempdir(), "pridec-output", sep = "/")
   }
@@ -60,8 +61,8 @@ train_models <- function(prep_output,
                                   dplyr::mutate(cv_fold = x)) |>
         dplyr::bind_rows()
 
-      saveRDS(naive_preds, paste(results_dir, "/naive_preds.Rdata"))
-      saveRDS(naive_perf, paste(results_dir, "/naive_perf.Rdata"))
+      saveRDS(naive_preds, paste0(results_dir, "/naive_preds.Rdata"))
+      saveRDS(naive_perf, paste0(results_dir, "/naive_perf.Rdata"))
   }
 
   # ------- random forest (ranger) ------------
@@ -85,9 +86,9 @@ train_models <- function(prep_output,
                                            pred_vars = rf_pred_vars,
                                            var_scales = prep_output$scale_factors)
 
-    saveRDS(ranger_preds, paste(results_dir, "/ranger_preds.Rdata"))
-    saveRDS(ranger_perf, paste(results_dir, "/ranger_perf.Rdata"))
-    saveRDS(ranger_inv_var, paste(results_dir, "/ranger_inv_var.Rdata"))
+    saveRDS(ranger_preds, paste0(results_dir, "/ranger_preds.Rdata"))
+    saveRDS(ranger_perf, paste0(results_dir, "/ranger_perf.Rdata"))
+    saveRDS(ranger_inv_var, paste0(results_dir, "/ranger_inv_var.Rdata"))
   }
 
   #--------------Arima ------------
@@ -121,12 +122,97 @@ train_models <- function(prep_output,
                                              pred_vars = arima_vars,
                                              var_scales = prep_output$scale_factors)
 
-      saveRDS(arima_preds, paste(results_dir, "/arima_preds.Rdata"))
-      saveRDS(arima_perf, paste(results_dir, "/arima_perf.Rdata"))
-      saveRDS(arima_inv_var, paste(results_dir, "/arima_inv_var.Rdata"))
+      saveRDS(arima_preds, paste0(results_dir, "/arima_preds.Rdata"))
+      saveRDS(arima_perf, paste0(results_dir, "/arima_perf.Rdata"))
+      saveRDS(arima_inv_var, paste0(results_dir, "/arima_inv_var.Rdata"))
 
   }
 
+  #----------------------glm_nb ---------------------
+  if("glm_nb" %in% models){
+
+    glm_preds <- purrr::map(cv_setList,
+               .f= ~fit_glm_nb(cv_set = .x,
+                              y_var = y_var,
+                              pred_vars = pred_vars,
+                              id_vars = c("date", "orgUnit")))
+
+    glm_perf <- purrr::map(1:length(glm_preds),
+                           \(x) eval_performance(glm_preds[[x]]) |>
+                             dplyr::mutate(cv_fold = x)) |>
+      dplyr::bind_rows()
+
+    glm_inv_var <- inv_variables_glm_nb(cv_set = cv_setList[[length(cv_setList)]],
+                                        y_var = y_var,
+                                        pred_vars = pred_vars,
+                                        id_vars = c("date", "orgUnit"),
+                                        nsim = 50,
+                                        var_scales = prep_output$scale_factors)
+
+    saveRDS(glm_preds, paste0(results_dir, "/glm_preds.Rdata"))
+    saveRDS(glm_perf, paste0(results_dir, "/glm_perf.Rdata"))
+    saveRDS(glm_inv_var, paste0(results_dir, "/glm_inv_var.Rdata"))
+  }
+
+  # ----------------------inla--------------------
+  if("inla" %in% models){
+
+    inla_preds <- purrr::map(cv_setList,
+                            .f= ~fit_inla(cv_set = .x,
+                                            y_var = y_var,
+                                            pred_vars = pred_vars,
+                                            id_vars = c("date", "orgUnit"),
+                                          W_orgUnit = prep_output$W_graph))
+
+    inla_perf <- purrr::map(1:length(inla_preds),
+                            \(x) eval_performance(inla_preds[[x]]) |>
+                              dplyr::mutate(cv_fold = x)) |>
+      dplyr::bind_rows()
+
+    #use first orgUnit alphabetically and median date for inv_variables
+    inv_org <- unique(cv_setList[[1]]$analysis$orgUnit)[1]
+    all_dates <- unique(cv_setList[[1]]$analysis$date)
+    inv_date <- all_dates[floor(length(all_dates)/2)]
+
+    inla_inv_var <- inv_variables_inla(cv_set = cv_setList[[1]],
+                                       y_var = y_var,
+                                       pred_vars = pred_vars,
+                                       id_vars = c("date", "orgUnit"),
+                                       W_orgUnit = prep_output$W_graph,
+                                       constant_org = inv_org,
+                                       constant_date = inv_date,
+                                       seed = 8675309,
+                                       nsims = 5,
+                                       var_scales = prep_output$scale_factors)
+
+    saveRDS(inla_preds, paste0(results_dir, "/inla_preds.Rdata"))
+    saveRDS(inla_perf, paste0(results_dir, "/inla_perf.Rdata"))
+    saveRDS(inla_inv_var, paste0(results_dir, "/inla_inv_var.Rdata"))
+
+  }
+
+  #-------save supporting files ----------------#
+  #save polygons for mapping
+  #needs to be updated to be dynamic
+  saveRDS(demo_polygon, paste0(results_dir, "/orgPolygon.Rdata"))
+  saveRDS(prep_output, paste0(results_dir, "/prep_output.Rdata"))
+  var_info <- list("y_var" = y_var,
+                   "pred_vars" = pred_vars)
+  saveRDS(var_info, paste0(results_dir, "/var_info.Rdata"))
+
+}
+
+#' Function to create quarto doc from model outputs
+#' @param results_dir path to directory where model outputs are saved
+#' @param html_filename where you want the html file to be saved
+create_pridec_quarto <- function(results_dir,
+                                 html_filename){
+
+  #for debug
+  results_dir <- "scratch/demo_trainModelResults"
+  html_filename <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/quarto-out-test.html"
 
 
 }
+
+

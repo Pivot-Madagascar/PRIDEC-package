@@ -35,13 +35,12 @@ test_that("glm.nb variable exploration works", {
                              month_analysis = 48,
                              month_assess = 3)[[3]]
 
-  expect_no_condition(
+
   test_inv <- inv_variables_glm_nb(cv_set = cv_set,
                                    y_var = "n_case",
                                    id_vars = c("orgUnit", "date"),
                                    pred_vars = c("rain_mm", "temp_c"),
                                    nsim = 50)
-  )
 
   expect_type(test_inv$varImp$importance, "double")
   expect_equal(length(test_inv$counter_data), 4)

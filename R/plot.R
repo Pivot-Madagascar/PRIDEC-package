@@ -54,6 +54,18 @@ plot_counterfactual_one <-  function(cf_data, var_label, y_range = NULL){
     ggplot2::ylab("Nombre de cas") +
     ggplot2::coord_cartesian(ylim = c(y_range[1],y_range[2]+5)) +
     ggplot2::xlab(var_label)
+
+  if(class(cf_data$var_value) == "character"){
+    if(any(nchar(cf_data$var_value)>5)){
+    p1 <- p1 +
+      theme(axis.text.x = element_text(angle = 90))
+    }
+    if(any(nchar(cf_data$var_value)>10)){
+      p1 <- p1 +
+        theme(axis.text.x = element_blank())
+    }
+  }
+
   } else {
     cf_data$var_value <- c("Non", "Oui")[cf_data$var_value + 1]
 
@@ -76,7 +88,7 @@ plot_counterfactual_one <-  function(cf_data, var_label, y_range = NULL){
 plot_counterfactual <- function(cf_list, y_range = NULL){
   #if no names, take variable from each
   if(is.null(names(cf_list))){
-    names(cf_list) <- unlist(lapply(lapply(cf_list, "[", , "variable"), "[", 1))
+    names(cf_list) <-  unlist(lapply((lapply(cf_list, "[", , "variable")), unique))
   }
   pdp_plots <- purrr::map2(cf_list, names(cf_list), \(x, idx)
                            plot_counterfactual_one(cf_data = x, var_label = idx, y_range = y_range))

@@ -13,7 +13,7 @@ create_counterfactual_inla(
   hyper_priors = list(prec.unstruct = c(1, 5e-04), prec.spatial = c(1, 5e-04),
     prec.timerw1 = c(1, 0.01)),
   W_orgUnit,
-  var_scales = NULL,
+  var_scales,
   constant_org,
   constant_date
 )
