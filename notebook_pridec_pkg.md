@@ -18,6 +18,32 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-02-25
+
+Continuing quarto template. Finding some issues with underlying functions and making note of it here to change later.
+
+I'm mostly just not sure the best way to render this quarto doc from a function. Like, does it need to be copied from somewhere? Or could all the text just be read in and saved as a text object in R? This is something to look into.
+
+**TO DO:**
+- add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]
+- arima model doesn't save cv_fold info. actually none of them do [this is not solved within the quarto doc since we don't use this elsewhere]
+- add cli to `train_model` to return some log and output. Maybe create a log in the results_dir
+- figure out how to actually render quarto doc
+- fix how I am setting height in the figure out in quarto template
+
+
+## 2025-02-24
+
+Working on the quarto template. I think probably I will want this to be called with a seperate function that just takes the results_dir from the first one that trains the models.
+
+
+**TO DO:**
+- add code to turn any negative variable importance to zero and ensure it all sums to 1
+
+## 2025-02-19
+
+Working on the `train_models` workflow. Finished the models for inla and glm_nb. I think I then just need to launch and create the quarto doc from this function. Probably the easiest is to test the quarto doc function itself, given the `results_dir`. I ran some code to make a demo of this in the scratch directory
+
 ## 2025-02-12
 
 Working on the `train_models` workflow, which fits multiple models and then outputs 1: a directory where the results are saved or 2: a quarto doc containing info on the model performance. Okay, I have gotten this working for fitting naive, RF, and Arima. Now I need to add INLA and GLM_NB. then add the quarto doc creation (can use the template from before).
