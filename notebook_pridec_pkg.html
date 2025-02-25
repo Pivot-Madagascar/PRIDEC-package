@@ -41,6 +41,21 @@
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="id_2025-02-25">2025-02-25<a class="anchor" aria-label="anchor" href="#id_2025-02-25"></a></h2>
+<p>Continuing quarto template. Finding some issues with underlying functions and making note of it here to change later.</p>
+<p>I’m mostly just not sure the best way to render this quarto doc from a function. Like, does it need to be copied from somewhere? Or could all the text just be read in and saved as a text object in R? This is something to look into.</p>
+<p><strong>TO DO:</strong> - add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model] - arima model doesn’t save cv_fold info. actually none of them do [this is not solved within the quarto doc since we don’t use this elsewhere] - add cli to <code>train_model</code> to return some log and output. Maybe create a log in the results_dir - figure out how to actually render quarto doc - fix how I am setting height in the figure out in quarto template</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-02-24">2025-02-24<a class="anchor" aria-label="anchor" href="#id_2025-02-24"></a></h2>
+<p>Working on the quarto template. I think probably I will want this to be called with a seperate function that just takes the results_dir from the first one that trains the models.</p>
+<p><strong>TO DO:</strong> - add code to turn any negative variable importance to zero and ensure it all sums to 1</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-02-19">2025-02-19<a class="anchor" aria-label="anchor" href="#id_2025-02-19"></a></h2>
+<p>Working on the <code>train_models</code> workflow. Finished the models for inla and glm_nb. I think I then just need to launch and create the quarto doc from this function. Probably the easiest is to test the quarto doc function itself, given the <code>results_dir</code>. I ran some code to make a demo of this in the scratch directory</p>
+</div>
+<div class="section level2">
 <h2 id="id_2025-02-12">2025-02-12<a class="anchor" aria-label="anchor" href="#id_2025-02-12"></a></h2>
 <p>Working on the <code>train_models</code> workflow, which fits multiple models and then outputs 1: a directory where the results are saved or 2: a quarto doc containing info on the model performance. Okay, I have gotten this working for fitting naive, RF, and Arima. Now I need to add INLA and GLM_NB. then add the quarto doc creation (can use the template from before).</p>
 <p><strong>TO DO</strong>: - write an example vignette of full workflow [in progress] - script to create quarto document of training step (like a launching shell script). similar to output of workshops. This is the <code>train_models</code> function now. - variable importance functions for arimax [done]</p>
