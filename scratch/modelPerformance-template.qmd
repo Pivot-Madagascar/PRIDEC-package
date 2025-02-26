@@ -315,8 +315,10 @@ patchwork::wrap_plots(plot_counterfactual(base_counter), nrow = 2)
 
 #### ARIMA
 
-```{r, fig.height= length(counter_data$arima)*3, out.height=length(counter_data$arima)*3}
+```{r}
 #| output: true
+#| fig-height: !expr length(counter_data$arima)
+#| out-height: !expr paste0(length(counter_data$arima), "in")
 
 wrap_plots(plot_counterfactual(counter_data$arima),
            ncol = 3)
@@ -324,8 +326,10 @@ wrap_plots(plot_counterfactual(counter_data$arima),
 
 #### GLM
 
-```{r, fig.height= length(counter_data$glm)*3, out.height=length(counter_data$glm)*3}
+```{r}
 #| output: true
+#| fig-height: !expr length(counter_data$glm)
+#| out-height: !expr paste0(length(counter_data$glm), "in")
 
 patchwork::wrap_plots(plot_counterfactual(counter_data$glm), 
                      ncol = 3)
@@ -336,8 +340,9 @@ patchwork::wrap_plots(plot_counterfactual(counter_data$glm),
 
 ```{r}
 #| output: true
-#| fig-height: 14
-#| out-height: 14in
+#| fig-height: !expr length(counter_data$inla)
+#| out-height: !expr paste0(length(counter_data$inla), "in")
+#| 
 patchwork::wrap_plots(plot_counterfactual(counter_data$inla), 
                      ncol = 3)
 
@@ -347,8 +352,9 @@ patchwork::wrap_plots(plot_counterfactual(counter_data$inla),
 
 ```{r}
 #| output: true
-#| fig-height: 14
-#| out-height: 14in
+#| fig-height: !expr length(counter_data$ranger)
+#| out-height: !expr paste0(length(counter_data$ranger), "in")
+
 patchwork::wrap_plots(plot_counterfactual(counter_data$ranger), 
                      ncol = 3)
 ```
@@ -425,20 +431,22 @@ model_cols <- c("naive" = paletteer_d("khroma::bright")[1],
 
 #### Naive
 
-```{r, fig.height=fig_height, out.height=fig_height}
+```{r}
 #| output: true
-#| 
+#| fig-height: !expr fig_height
+#| out-height: !expr paste0(fig_height, "in")
+
 plot_oneModel(pred_forecast, model_name = "naive", 
               model_color = model_cols[1])
 ```
 
 #### ARIMA
 
-```{r, fig.height=fig_height, out.height=fig_height}
-#| fig-height: 14
-#| out-height: 14in
+```{r}
 #| output: true
-#| 
+#| fig-height: !expr fig_height
+#| out-height: !expr paste0(fig_height, "in")
+
 plot_oneModel(pred_forecast, model_name = "arima", 
               model_color = model_cols[2])
 ```
@@ -446,10 +454,10 @@ plot_oneModel(pred_forecast, model_name = "arima",
 #### GLM
 
 ```{r}
-#| fig-height: 14
-#| out-height: 14in
+#| fig-height: !expr fig_height
+#| out-height: !expr paste0(fig_height, "in")
 #| output: true
-#| 
+
 plot_oneModel(pred_forecast, model_name = "glm", 
               model_color = model_cols[3])
 ```
@@ -457,10 +465,10 @@ plot_oneModel(pred_forecast, model_name = "glm",
 #### INLA
 
 ```{r}
-#| fig-height: 14
-#| out-height: 14in
+#| fig-height: !expr fig_height
+#| out-height: !expr paste0(fig_height, "in")
 #| output: true
-#| 
+
 plot_oneModel(pred_forecast, model_name = "inla", 
               model_color = model_cols[4])
 ```
@@ -468,10 +476,10 @@ plot_oneModel(pred_forecast, model_name = "inla",
 #### RF
 
 ```{r}
-#| fig-height: 14
-#| out-height: 14in
+#| fig-height: !expr fig_height
+#| out-height: !expr paste0(fig_height, "in")
 #| output: true
-#| 
+
 plot_oneModel(pred_forecast, model_name = "ranger", 
               model_color = model_cols[5])
 ```
@@ -479,8 +487,8 @@ plot_oneModel(pred_forecast, model_name = "ranger",
 #### Tous 
 
 ```{r}
-#| fig-height: 14
-#| out-height: 14in
+#| fig-height: !expr fig_height
+#| out-height: !expr paste0(fig_height, "in")
 #| output: true
 
 pred_forecast |>

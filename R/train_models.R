@@ -17,7 +17,7 @@ train_models <- function(prep_output,
                          y_var,
                          pred_vars,
                          id_vars = c("orgUnit", "date"),
-                         results_dir = NULL,
+                         results_dir,
                          tune = NULL,
                          model_configs){
 
@@ -33,10 +33,10 @@ train_models <- function(prep_output,
 
 
   #move this outside the function
-  if(is.null(results_dir)){
-    results_dir <- paste(tempdir(), "pridec-output", sep = "/")
-  }
-
+  # if(is.null(results_dir)){
+  #   results_dir <- paste(tempdir(), "pridec-output", sep = "/")
+  # }
+  #
   if(!dir.exists(results_dir)){
     dir.create(results_dir)
   }
@@ -203,13 +203,13 @@ train_models <- function(prep_output,
 }
 
 #' Function to create quarto doc from model outputs
-#' @param results_dir path to directory where model outputs are saved
-#' @param html_filename where you want the html file to be saved
+#' @param results_dir path to directory where model outputs are saved. cannot be relative
+#' @param html_filename where you want the html file to be saved. cannot be relative
 create_pridec_quarto <- function(results_dir,
                                  html_filename){
 
   #for debug
-  results_dir <- "scratch/demo_trainModelResults"
+  results_dir <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
   html_filename <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/quarto-out-test.html"
 
 

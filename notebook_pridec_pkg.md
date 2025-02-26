@@ -27,12 +27,24 @@ Okay adjusting the variable importance functions so theyd o not return negative 
 - inla was already okay
 - ranger is already okay
 
+**Quarto doc**
+
+okay the way to set height dynamically is to use the following
+
+```
+#| output: true
+#| fig-height: !expr num_plots*2
+#| out-height: !expr paste0(num_plots*2, "in")
+```
+
+essentially putting `!expr` before the r code.
+
 **TO DO:**
 - ~~add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]~~
 - ~~arima model doesn't save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don't use this elsewhere]~~
 - add cli to `train_model` to return some log and output. Maybe create a log in the results_dir
 - figure out how to actually render quarto doc
-- fix how I am setting height in the figure out in quarto template
+- ~~fix how I am setting height in the figure out in quarto template~~
 
 ## 2025-02-25
 
