@@ -41,10 +41,25 @@
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="id_2025-02-26">2025-02-26<a class="anchor" aria-label="anchor" href="#id_2025-02-26"></a></h2>
+<p>Okay adjusting the variable importance functions so theyd o not return negative importance and so that the values are normalized to sum to 1. Also adding tests for this.</p>
+<ul><li>arima is okay.</li>
+<li>glm has been fixed.</li>
+<li>inla was already okay</li>
+<li>ranger is already okay</li>
+</ul><p><strong>Quarto doc</strong></p>
+<p>okay the way to set height dynamically is to use the following</p>
+<pre><code><span><span class="co">#| output: true</span></span>
+<span><span class="co">#| fig-height: !expr num_plots*2</span></span>
+<span><span class="co">#| out-height: !expr paste0(num_plots*2, "in")</span></span></code></pre>
+<p>essentially putting <code>!expr</code> before the r code.</p>
+<p><strong>TO DO:</strong> - <del>add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]</del> - <del>arima model doesn’t save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don’t use this elsewhere]</del> - add cli to <code>train_model</code> to return some log and output. Maybe create a log in the results_dir - figure out how to actually render quarto doc - <del>fix how I am setting height in the figure out in quarto template</del></p>
+</div>
+<div class="section level2">
 <h2 id="id_2025-02-25">2025-02-25<a class="anchor" aria-label="anchor" href="#id_2025-02-25"></a></h2>
 <p>Continuing quarto template. Finding some issues with underlying functions and making note of it here to change later.</p>
 <p>I’m mostly just not sure the best way to render this quarto doc from a function. Like, does it need to be copied from somewhere? Or could all the text just be read in and saved as a text object in R? This is something to look into.</p>
-<p><strong>TO DO:</strong> - add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model] - arima model doesn’t save cv_fold info. actually none of them do [this is not solved within the quarto doc since we don’t use this elsewhere] - add cli to <code>train_model</code> to return some log and output. Maybe create a log in the results_dir - figure out how to actually render quarto doc - fix how I am setting height in the figure out in quarto template</p>
+<p><strong>TO DO:</strong> - add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model] - <del>arima model doesn’t save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don’t use this elsewhere]</del> - add cli to <code>train_model</code> to return some log and output. Maybe create a log in the results_dir - figure out how to actually render quarto doc - fix how I am setting height in the figure out in quarto template</p>
 </div>
 <div class="section level2">
 <h2 id="id_2025-02-24">2025-02-24<a class="anchor" aria-label="anchor" href="#id_2025-02-24"></a></h2>
