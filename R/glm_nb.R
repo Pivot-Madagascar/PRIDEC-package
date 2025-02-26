@@ -146,7 +146,9 @@ inv_variables_glm_nb <- function(cv_set, y_var, id_vars, pred_vars, var_scales,
   vi_glm <- vip::vi(glm_mod, method = "permute", target = "y_obs", nsim = nsim,
                     metric = "mae", pred_wrapper = pfun,
                     train = this_analysis[,c("y_obs", counter_vars)]) |>
-    dplyr::filter(.data$Variable %in% counter_vars)
+    dplyr::filter(.data$Variable %in% counter_vars) |>
+    dplyr::mutate(Importance = ifelse(.data$Importance<0, 0, .data$Importance)) |>
+    dplyr::mutate(Importance = .data$Importance/sum(.data$Importance))
   colnames(vi_glm) <- tolower(colnames(vi_glm))
 
   # ---- create counterfactual data -----

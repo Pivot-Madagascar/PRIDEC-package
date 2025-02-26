@@ -45,5 +45,7 @@ test_that("glm.nb variable exploration works", {
   expect_type(test_inv$varImp$importance, "double")
   expect_equal(length(test_inv$counter_data), 4)
   expect_no_condition(plot_counterfactual_one(test_inv$counter_data[[3]], var_label = "rain"))
+  expect_equal(sum(test_inv$varImp$importance),1)
+  expect_true(all(test_inv$varImp$importance>=0))
 
 })

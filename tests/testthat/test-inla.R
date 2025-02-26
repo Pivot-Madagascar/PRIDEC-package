@@ -36,6 +36,8 @@ test_that("full inla workflow works", {
                id_vars = c("date", "orgUnit"),
                W_orgUnit = W_orgUnit)
   expect_equal(nrow(test_vi), 2)
+  expect_equal(sum(test_vi$importance),1)
+  expect_true(all(test_vi$importance>=0))
 
   #---- test counterfactual -------
   test_counter <- create_counterfactual_inla(cv_set = cv_set,

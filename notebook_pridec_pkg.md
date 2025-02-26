@@ -18,6 +18,22 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-02-26
+
+Okay adjusting the variable importance functions so theyd o not return negative importance and so that the values are normalized to sum to 1. Also adding tests for this.
+
+- arima is okay. 
+- glm has been fixed.
+- inla was already okay
+- ranger is already okay
+
+**TO DO:**
+- ~~add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]~~
+- ~~arima model doesn't save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don't use this elsewhere]~~
+- add cli to `train_model` to return some log and output. Maybe create a log in the results_dir
+- figure out how to actually render quarto doc
+- fix how I am setting height in the figure out in quarto template
+
 ## 2025-02-25
 
 Continuing quarto template. Finding some issues with underlying functions and making note of it here to change later.
@@ -26,7 +42,7 @@ I'm mostly just not sure the best way to render this quarto doc from a function.
 
 **TO DO:**
 - add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]
-- arima model doesn't save cv_fold info. actually none of them do [this is not solved within the quarto doc since we don't use this elsewhere]
+- ~~arima model doesn't save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don't use this elsewhere]~~
 - add cli to `train_model` to return some log and output. Maybe create a log in the results_dir
 - figure out how to actually render quarto doc
 - fix how I am setting height in the figure out in quarto template

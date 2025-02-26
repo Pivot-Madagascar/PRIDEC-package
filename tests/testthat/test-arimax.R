@@ -44,6 +44,8 @@ test_that("full arimax workflow works", {
   expect_equal(length(inv_var_test$counter_data), 2)
   expect_equal(class(inv_var_test$counter_data[[1]]), "data.frame")
 
+  expect_equal(sum(inv_var_test$var_imp$importance), 1)
+
   plot_counterfactual(inv_var_test$counter_data)
 
 })

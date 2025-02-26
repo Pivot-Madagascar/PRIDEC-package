@@ -39,6 +39,8 @@ test_that("full ranger RF workflow work", {
   )
   expect_equal(nrow(test_inv$var_imp),4)
   expect_contains(names(test_inv$counter_data[[1]]), c("var_valuesc", "yhat", "variable", "var_value"))
+  expect_equal(sum(test_inv$var_imp$importance),1)
+  expect_true(all(test_inv$var_imp$importance>=0))
 
   #----- visualization -------
   #predictions
