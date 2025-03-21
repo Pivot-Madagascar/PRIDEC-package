@@ -7,9 +7,9 @@
 create_pridec_quarto(results_dir, html_filename)
 }
 \arguments{
-\item{results_dir}{path to directory where model outputs are saved}
+\item{results_dir}{path to directory where model outputs are saved. cannot be relative}
 
-\item{html_filename}{where you want the html file to be saved}
+\item{html_filename}{where you want the html file to be saved. cannot be relative}
 }
 \description{
 Function to create quarto doc from model outputs

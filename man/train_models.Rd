@@ -10,7 +10,7 @@ train_models(
   y_var,
   pred_vars,
   id_vars = c("orgUnit", "date"),
-  results_dir = NULL,
+  results_dir,
   tune = NULL,
   model_configs
 )

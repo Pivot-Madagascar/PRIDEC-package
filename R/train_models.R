@@ -20,6 +20,7 @@ train_models <- function(prep_output,
                          results_dir,
                          tune = NULL,
                          model_configs){
+  cli::cli_h1("PRIDE-C Train Models Workflow")
 
   # for debugging and testing
   # tune = NULL
@@ -29,6 +30,8 @@ train_models <- function(prep_output,
   #               "time_to_districtsc")
   # id_vars = c("orgUnit", "date")
   # results_dir = NULL
+  # models = c("naive", "arimax", "ranger")
+  # results_dir = paste(tempdir(), "pridec-output", sep = "/")
 
 
 
@@ -38,9 +41,18 @@ train_models <- function(prep_output,
   # }
   #
   if(!dir.exists(results_dir)){
+   cli::cli_alert_warning(paste0("{.file ", results_dir, "}", " does not exist. Creating now."))
     dir.create(results_dir)
   }
 
+  #create log file within directory
+  lc_filename <- paste0(results_dir, "/log.log")
+  file.create(lc_filename)
+  log_con <- file(lc_filename,
+                  open = "a")
+  cli::cli_alert_info(paste0("Saving log to: {.file ", lc_filename, "}"))
+  cli::cli_text("Fitting the following models:\n",
+          paste(models, collapse = " | "))
 
   cv_setList <- split_cv_rolling(prep_output$data_prep,
                                  month_analysis = 60,
@@ -48,7 +60,12 @@ train_models <- function(prep_output,
 
   #---- Naive ------
   if("naive" %in% models){
-    #predictions
+    cat(paste("Beginning naive model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
+    cli::cli_h2("NAIVE model fit")
+    cli::cli_text(paste0("Beginning naive model fit at ", round(Sys.time())))
+
+
       naive_preds <- purrr::map(1:length(cv_setList),
                                 \(x) fit_naive(cv_set = cv_setList[[x]],
                                                y_var = y_var,
@@ -63,10 +80,21 @@ train_models <- function(prep_output,
 
       saveRDS(naive_preds, paste0(results_dir, "/naive_preds.Rdata"))
       saveRDS(naive_perf, paste0(results_dir, "/naive_perf.Rdata"))
+
+      cat(paste("Finished naive model fit at", round(Sys.time())),
+          file = log_con, sep = "\n")
+      cli::cli_alert_success(paste0("Finished naive model fit at ", round(Sys.time())))
   }
 
   # ------- random forest (ranger) ------------
   if("ranger" %in% models){
+    cli::cli_h2("RANGER model fit")
+    cli::cli_text(paste0("Beginning ranger model fit at ", round(Sys.time())))
+    #add message for configs?
+    cat(paste("Beginning ranger model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
+
+
     rf_pred_vars <- unique(c(pred_vars, "month_num", "month_season", "orgUnit"))
 
     ranger_preds <- purrr::map(1:length(cv_setList),
@@ -89,11 +117,21 @@ train_models <- function(prep_output,
     saveRDS(ranger_preds, paste0(results_dir, "/ranger_preds.Rdata"))
     saveRDS(ranger_perf, paste0(results_dir, "/ranger_perf.Rdata"))
     saveRDS(ranger_inv_var, paste0(results_dir, "/ranger_inv_var.Rdata"))
+
+    cat(paste("Completed ranger model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
+    cli::cli_alert_success(paste0("Completed ranger model fit at ", round(Sys.time())))
   }
 
-  #--------------Arima ------------
+  #--------------Arimax ------------
 
   if("arimax" %in% models){
+
+    cli::cli_h2("ARIMAX model fit")
+    cli::cli_text(paste0("Beginning arimax model fit at ", round(Sys.time())))
+    #add message for configs?
+    cat(paste("Beginning arimax model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
 
     #identify dynamic pred_vars
     arima_vars <- prep_output$data_prep[,c(pred_vars, "orgUnit")]
@@ -104,7 +142,7 @@ train_models <- function(prep_output,
       colMeans()
     arima_vars <- names(arima_vars)[arima_vars>3]
 
-
+    #add counter to this because it can take so long
       arima_preds <- purrr::map(cv_setList,
                                 .f= ~fit_arima(cv_set = .x,
                                                 y_var = y_var,
@@ -126,10 +164,18 @@ train_models <- function(prep_output,
       saveRDS(arima_perf, paste0(results_dir, "/arima_perf.Rdata"))
       saveRDS(arima_inv_var, paste0(results_dir, "/arima_inv_var.Rdata"))
 
+      cli::cli_alert_success(paste0("Completed arimax model fit at ", round(Sys.time())))
+      cat(paste("Completed arimax model fit at", round(Sys.time())),
+          file = log_con, sep = "\n")
   }
 
   #----------------------glm_nb ---------------------
   if("glm_nb" %in% models){
+
+    cli::cli_h2("GLM model fit")
+    cli::cli_text(paste0("Beginning glm model fit at ", round(Sys.time())))
+    cat(paste("Beginning glm model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
 
     glm_preds <- purrr::map(cv_setList,
                .f= ~fit_glm_nb(cv_set = .x,
@@ -152,10 +198,19 @@ train_models <- function(prep_output,
     saveRDS(glm_preds, paste0(results_dir, "/glm_preds.Rdata"))
     saveRDS(glm_perf, paste0(results_dir, "/glm_perf.Rdata"))
     saveRDS(glm_inv_var, paste0(results_dir, "/glm_inv_var.Rdata"))
+
+    cli::cli_alert_success(paste0("Completed glm model fit at ", round(Sys.time())))
+    cat(paste("Completed glm model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
   }
 
   # ----------------------inla--------------------
   if("inla" %in% models){
+
+    cli::cli_h2("INLA model fit")
+    cli::cli_text(paste0("Beginning inla model fit at ", round(Sys.time())))
+    cat(paste("Beginning inla model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
 
     inla_preds <- purrr::map(cv_setList,
                             .f= ~fit_inla(cv_set = .x,
@@ -189,6 +244,11 @@ train_models <- function(prep_output,
     saveRDS(inla_perf, paste0(results_dir, "/inla_perf.Rdata"))
     saveRDS(inla_inv_var, paste0(results_dir, "/inla_inv_var.Rdata"))
 
+    cli::cli_alert_success(paste0("Completed inla model fit at ", round(Sys.time())))
+    cat(paste("Completed inla model fit at", round(Sys.time())),
+        file = log_con, sep = "\n")
+
+
   }
 
   #-------save supporting files ----------------#
@@ -199,6 +259,10 @@ train_models <- function(prep_output,
   var_info <- list("y_var" = y_var,
                    "pred_vars" = pred_vars)
   saveRDS(var_info, paste0(results_dir, "/var_info.Rdata"))
+
+  cli::cli_alert_success(paste0("Completed training ", length(models), " models at ", round(Sys.time())))
+  cat(paste0("Completed training ", length(models), " models at ", round(Sys.time())),
+      file = log_con, sep = "\n")
 
 }
 

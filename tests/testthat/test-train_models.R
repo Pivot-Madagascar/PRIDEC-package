@@ -20,7 +20,7 @@ test_that("train model works", {
                              "wealth_indexsc", "elevationsc",
                              "time_to_districtsc"),
                id_vars = c("orgUnit", "date"),
-               results_dir = "scratch/demo_trainModelResults",
+               results_dir = "scratch/demo_trainModelResults2",
                model_configs = NULL)
 
 

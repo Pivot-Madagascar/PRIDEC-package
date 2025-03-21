@@ -18,9 +18,41 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-03-21
+
+Working on the `train_models` function, specifically creating a log that is saved in the `results_dir`. I think we probably also want to add some nice messages to this. This could be done via the `cli` package but could also just be a message that prints.
+
+While testing this I found a wierd bug in teh split_cv_rolling that is within the `train_models` function (line 56):
+
+```
+Error in cv_list[[i]] <- list(analysis = data_to_split[analysis_inds,  : 
+  attempt to select less than one element in integerOneIndex
+```
+
+Yeah the error was because it didn't create enough splits?? I think I fixed the issue though.
+
+Added some nice cli output and a log to the train_models. I do think I should add a counter to the ARIMAX, or maybe even all the models as they go through the cv_set because some of them can take quite a while.
+
+I am getting an odd error int he train_models function for the INLA step:
+
+```
+Error in inla.core.safe(formula = formula, family = family, contrasts = contrasts,  : 
+  There are one or more NA's in 'group' where 'idx' in f(idx,...) is not NA: idx = 'month_season'
+The inla program failed and the maximum number of tries has been reached.
+```
+
+To look at next time.
+
+**TO DO:**
+- figure out how to  render quarto doc from already trained model. this will then be combined in a wrapper function that does the whole workflow (or is this just a call to a docker container?)
+- update `train_models` to actually use model_configs and tuning
+- add counter to log for ARIMAX in `train_models`. could eventually add to all of them
+- fix error with INLA in `train_models` function
+
+
 ## 2025-02-26
 
-Okay adjusting the variable importance functions so theyd o not return negative importance and so that the values are normalized to sum to 1. Also adding tests for this.
+Okay adjusting the variable importance functions so they do not return negative importance and so that the values are normalized to sum to 1. Also adding tests for this.
 
 - arima is okay. 
 - glm has been fixed.
@@ -42,9 +74,11 @@ essentially putting `!expr` before the r code.
 **TO DO:**
 - ~~add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]~~
 - ~~arima model doesn't save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don't use this elsewhere]~~
-- add cli to `train_model` to return some log and output. Maybe create a log in the results_dir
-- figure out how to actually render quarto doc
 - ~~fix how I am setting height in the figure out in quarto template~~
+- add cli to `train_models` to return some log and output. Maybe create a log in the results_dir
+- figure out how to actually render quarto doc
+- update `train_models` to actually use model_configs and tuning
+
 
 ## 2025-02-25
 
