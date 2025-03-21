@@ -41,8 +41,23 @@
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="id_2025-03-21">2025-03-21<a class="anchor" aria-label="anchor" href="#id_2025-03-21"></a></h2>
+<p>Working on the <code>train_models</code> function, specifically creating a log that is saved in the <code>results_dir</code>. I think we probably also want to add some nice messages to this. This could be done via the <code>cli</code> package but could also just be a message that prints.</p>
+<p>While testing this I found a wierd bug in teh split_cv_rolling that is within the <code>train_models</code> function (line 56):</p>
+<pre><code>Error in cv_list[[i]] &lt;- list(analysis = data_to_split[analysis_inds,  :
+  attempt to select less than one element in integerOneIndex</code></pre>
+<p>Yeah the error was because it didn’t create enough splits?? I think I fixed the issue though.</p>
+<p>Added some nice cli output and a log to the train_models. I do think I should add a counter to the ARIMAX, or maybe even all the models as they go through the cv_set because some of them can take quite a while.</p>
+<p>I am getting an odd error int he train_models function for the INLA step:</p>
+<pre><code>Error in inla.core.safe(formula = formula, family = family, contrasts = contrasts,  :
+  There are one or more NA's in 'group' where 'idx' in f(idx,...) is not NA: idx = 'month_season'
+The inla program failed and the maximum number of tries has been reached.</code></pre>
+<p>To look at next time.</p>
+<p><strong>TO DO:</strong> - figure out how to render quarto doc from already trained model. this will then be combined in a wrapper function that does the whole workflow (or is this just a call to a docker container?) - update <code>train_models</code> to actually use model_configs and tuning - add counter to log for ARIMAX in <code>train_models</code>. could eventually add to all of them - fix error with INLA in <code>train_models</code> function</p>
+</div>
+<div class="section level2">
 <h2 id="id_2025-02-26">2025-02-26<a class="anchor" aria-label="anchor" href="#id_2025-02-26"></a></h2>
-<p>Okay adjusting the variable importance functions so theyd o not return negative importance and so that the values are normalized to sum to 1. Also adding tests for this.</p>
+<p>Okay adjusting the variable importance functions so they do not return negative importance and so that the values are normalized to sum to 1. Also adding tests for this.</p>
 <ul><li>arima is okay.</li>
 <li>glm has been fixed.</li>
 <li>inla was already okay</li>
@@ -53,7 +68,7 @@
 <span><span class="co">#| fig-height: !expr num_plots*2</span></span>
 <span><span class="co">#| out-height: !expr paste0(num_plots*2, "in")</span></span></code></pre>
 <p>essentially putting <code>!expr</code> before the r code.</p>
-<p><strong>TO DO:</strong> - <del>add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]</del> - <del>arima model doesn’t save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don’t use this elsewhere]</del> - add cli to <code>train_model</code> to return some log and output. Maybe create a log in the results_dir - figure out how to actually render quarto doc - <del>fix how I am setting height in the figure out in quarto template</del></p>
+<p><strong>TO DO:</strong> - <del>add code to turn any negative variable importance to zero and ensure it all sums to 1 [this will need to be done for each model]</del> - <del>arima model doesn’t save cv_fold info. actually none of them do [this is now solved within the quarto doc since we don’t use this elsewhere]</del> - <del>fix how I am setting height in the figure out in quarto template</del> - add cli to <code>train_models</code> to return some log and output. Maybe create a log in the results_dir - figure out how to actually render quarto doc - update <code>train_models</code> to actually use model_configs and tuning</p>
 </div>
 <div class="section level2">
 <h2 id="id_2025-02-25">2025-02-25<a class="anchor" aria-label="anchor" href="#id_2025-02-25"></a></h2>
