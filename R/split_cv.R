@@ -7,7 +7,7 @@
 #' @returns list of datasets including analysis and assessment set nested in each list object
 #' @export
 split_cv_rolling <- function(data_to_split, start_date = NULL,
-                             month_analysis = 48, month_assess =3){
+                             month_analysis = 48, month_assess = 3){
 
   #check that enough data is available to make at least one cv split
   if(!(length(unique(data_to_split$date))>=(month_analysis+month_assess))){
@@ -26,10 +26,17 @@ split_cv_rolling <- function(data_to_split, start_date = NULL,
   #count number of folds possible
   num_folds <- lubridate::interval(start_date + months(month_analysis) + months(month_assess),
                                    max(data_to_split$date)) %/% months(1)
+  if(num_folds==0){
+    num_folds <- 1
+  }
   cv_list <- list()
   for(i in 1:num_folds){
-    analysis_inds <- dplyr::between(data_to_split$date, start_date + months(i - 1), start_date + months(i - 2) + months(month_analysis))
-    assess_inds <- dplyr::between(data_to_split$date, start_date + months(i - 2) + months(month_analysis) + months(1), start_date + months(i - 2) + months(month_analysis) + months(month_assess))
+    analysis_inds <- dplyr::between(data_to_split$date,
+                                    start_date + months(i - 1),
+                                    start_date + months(i - 2) + months(month_analysis))
+    assess_inds <- dplyr::between(data_to_split$date,
+                                  start_date + months(i - 2) + months(month_analysis) + months(1),
+                                  start_date + months(i - 2) + months(month_analysis) + months(month_assess))
 
     cv_list[[i]] <- list(analysis = data_to_split[analysis_inds,],
                          assessment = data_to_split[assess_inds,])
