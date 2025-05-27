@@ -45,4 +45,6 @@ test_that("ensemble forecast works", {
 
   plot_predictions(stack_forecast, quantile_ribbon = c(0.025, 0.975))
 
+  eval_performance(stack_forecast)
+
 })

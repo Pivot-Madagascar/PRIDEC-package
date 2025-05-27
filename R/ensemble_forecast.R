@@ -24,6 +24,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
                               arimax_configs = NULL,
                               naive_configs = NULL){
 
+  cli::cli_h1("PRIDE-C Forecast Workflow")
   true_data <-  do.call(rbind, get_cv_subsets(cv_set, y_var = y_var,
                                pred_vars = c(id_vars),
                                remove_NA = FALSE))
@@ -31,6 +32,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   out_list <- list()
   if(!is.null(inla_configs)){
+    cli::cli_h2("INLA Forecast")
     pred_inla <- fit_inla(cv_set = cv_set,
                           y_var = y_var,
                           pred_vars = inla_configs$pred_vars,
@@ -46,6 +48,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   } else  out_list$inla <- NULL
 
   if(!is.null(glm_nb_configs)){
+    cli::cli_h2("GLM Forecast")
     pred_glm_nb <- fit_glm_nb(cv_set = cv_set,
                           y_var = y_var,
                           pred_vars = glm_nb_configs$pred_vars,
@@ -57,6 +60,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   } else out_list$glm_nb <- NULL
 
   if(!is.null(ranger_configs)){
+    cli::cli_h2("RANGER Forecast")
     pred_ranger <- fit_ranger(cv_set = cv_set,
                               y_var = y_var,
                               pred_vars = ranger_configs$pred_vars,
@@ -69,6 +73,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   } else out_list$ranger <- NULL
 
   if(!is.null(arimax_configs)){
+    cli::cli_h2("ARIMAX Forecast")
     pred_arimax <- fit_arima(cv_set = cv_set,
                               y_var = y_var,
                               pred_vars = arimax_configs$pred_vars,
@@ -80,6 +85,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   } else out_list$arimax <- NULL
 
   if(!is.null(naive_configs)){
+    cli::cli_h2("Naive Forecast")
     pred_naive <- fit_naive(cv_set = cv_set,
                              y_var = y_var,
                              group_vars = naive_configs$group_vars)
@@ -88,6 +94,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
     out_list$naive <- pred_naive
   } else out_list$naive<- NULL
 
+  cli::cli_h2("Creating stacked ensemble")
   #combine to get ensemble based on weights
   model_stack <- split(dplyr::bind_rows(out_list), f = ~ orgUnit + date + quant_long) |>
     purrr::map(\(x) sample_preds(predicted = x$predicted,

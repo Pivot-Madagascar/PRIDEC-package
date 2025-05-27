@@ -18,6 +18,32 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-05-27
+
+I think the train models is mostly okay, but needs to be updated to take model configs and tuning. I currently use the defaults for all of this, so maybe not a huge deal.
+
+I also need to create the actual forecasting function (basically the train function but only over the last fold of data, and then the ensembling of them all together).
+
+**INLA bug in train_model**
+
+The error message arises during the `inv_variables_inla` function, wtih the `create_counterfactual_inla` within that. The issue is the counter data seems to be NA or missing somehow. Oh it is just randomly missing data :) I've updated the code in the `train_models` function to not choose an orgUnit and date combo that is missing.
+
+
+**Forecasting function**
+
+Ideally would be similar to `train_model` function, they just add the ensemble weights. And then it only uses the most recent bit in the cv_list (or maybe this can be more manual, like they just provide all the data and then it predicts n months in advance). Oh I have totally already made this! Nevermind. Just rechecked that it runs and added a little more user prompts in case the model takes a long time.
+
+
+**TO DO:**
+- ~~function to forecast (`ensemble_forecast`)~~
+- update "quick start" guide
+
+*Back burner*:
+- figure out how to  render quarto doc from already trained model. this will then be combined in a wrapper function that does the whole workflow (or is this just a call to a docker container?)
+- update `train_models` to actually use model_configs and tuning
+- add counter to log for ARIMAX in `train_models`. could eventually add to all of them
+- ~~fix error with INLA in `train_models` function~~
+
 ## 2025-03-21
 
 Working on the `train_models` function, specifically creating a log that is saved in the `results_dir`. I think we probably also want to add some nice messages to this. This could be done via the `cli` package but could also just be a message that prints.
