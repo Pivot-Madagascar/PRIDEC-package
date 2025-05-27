@@ -44,9 +44,10 @@
 <span>  <span class="va">y_var</span>,</span>
 <span>  <span class="va">pred_vars</span>,</span>
 <span>  id_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"orgUnit"</span>, <span class="st">"date"</span><span class="op">)</span>,</span>
-<span>  <span class="va">results_dir</span>,</span>
+<span>  results_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tune <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  <span class="va">model_configs</span></span>
+<span>  model_configs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  report_configs <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -85,11 +86,15 @@ If NULL, temporary directory will be used</p></dd>
 element in list should match model name. See <a href="ensemble_forecast.html">ensemble_forecast</a>
 for more info.</p></dd>
 
+
+<dt id="arg-report-configs-">report_configs.<a class="anchor" aria-label="anchor" href="#arg-report-configs-"></a></dt>
+<dd><p>Optional configurations for quarto_report provided as a named list. Options are:
+html_filename, doc_title, lang</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>saves model outputs to <code>results_dir</code> if specified. Creates a quarto doc of
-model outputs</p>
+    <p>saves model outputs to <code>results_dir</code>. Creates a quarto doc of model outputs saved in <code>results_dir</code></p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
