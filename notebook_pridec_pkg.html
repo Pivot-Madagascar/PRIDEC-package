@@ -41,6 +41,17 @@
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="id_2025-05-27">2025-05-27<a class="anchor" aria-label="anchor" href="#id_2025-05-27"></a></h2>
+<p>I think the train models is mostly okay, but needs to be updated to take model configs and tuning. I currently use the defaults for all of this, so maybe not a huge deal.</p>
+<p>I also need to create the actual forecasting function (basically the train function but only over the last fold of data, and then the ensembling of them all together).</p>
+<p><strong>INLA bug in train_model</strong></p>
+<p>The error message arises during the <code>inv_variables_inla</code> function, wtih the <code>create_counterfactual_inla</code> within that. The issue is the counter data seems to be NA or missing somehow. Oh it is just randomly missing data :) I’ve updated the code in the <code>train_models</code> function to not choose an orgUnit and date combo that is missing.</p>
+<p><strong>Forecasting function</strong></p>
+<p>Ideally would be similar to <code>train_model</code> function, they just add the ensemble weights. And then it only uses the most recent bit in the cv_list (or maybe this can be more manual, like they just provide all the data and then it predicts n months in advance). Oh I have totally already made this! Nevermind. Just rechecked that it runs and added a little more user prompts in case the model takes a long time.</p>
+<p><strong>TO DO:</strong> - <del>function to forecast (<code>ensemble_forecast</code>)</del> - update “quick start” guide</p>
+<p><em>Back burner</em>: - figure out how to render quarto doc from already trained model. this will then be combined in a wrapper function that does the whole workflow (or is this just a call to a docker container?) - update <code>train_models</code> to actually use model_configs and tuning - add counter to log for ARIMAX in <code>train_models</code>. could eventually add to all of them - <del>fix error with INLA in <code>train_models</code> function</del></p>
+</div>
+<div class="section level2">
 <h2 id="id_2025-03-21">2025-03-21<a class="anchor" aria-label="anchor" href="#id_2025-03-21"></a></h2>
 <p>Working on the <code>train_models</code> function, specifically creating a log that is saved in the <code>results_dir</code>. I think we probably also want to add some nice messages to this. This could be done via the <code>cli</code> package but could also just be a message that prints.</p>
 <p>While testing this I found a wierd bug in teh split_cv_rolling that is within the <code>train_models</code> function (line 56):</p>
@@ -206,7 +217,7 @@ The inla program failed and the maximum number of tries has been reached.</code>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
     </footer></div>
