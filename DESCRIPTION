@@ -9,7 +9,7 @@ License: MIT + file LICENSE
 Additional_repositories: https://inla.r-inla-download.org/R/stable/
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Imports: 
     cli,
     dplyr,

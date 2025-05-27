@@ -4,12 +4,16 @@
 \alias{create_pridec_quarto}
 \title{Function to create quarto doc from model outputs}
 \usage{
-create_pridec_quarto(results_dir, html_filename)
+create_pridec_quarto(results_dir, html_filename, lang = "fr", doc_title = NULL)
 }
 \arguments{
-\item{results_dir}{path to directory where model outputs are saved. cannot be relative}
+\item{results_dir}{path to directory where model outputs are saved}
 
-\item{html_filename}{where you want the html file to be saved. cannot be relative}
+\item{html_filename}{where you want the html file to be saved, including path}
+
+\item{doc_title}{title for HTML report. Default: "PRIDEC Rapport de Performance"}
+
+\item{language}{which language template to use. currently only  "fr" available}
 }
 \description{
 Function to create quarto doc from model outputs

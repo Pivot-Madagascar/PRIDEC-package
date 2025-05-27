@@ -33,6 +33,12 @@ The error message arises during the `inv_variables_inla` function, wtih the `cre
 
 Ideally would be similar to `train_model` function, they just add the ensemble weights. And then it only uses the most recent bit in the cv_list (or maybe this can be more manual, like they just provide all the data and then it predicts n months in advance). Oh I have totally already made this! Nevermind. Just rechecked that it runs and added a little more user prompts in case the model takes a long time.
 
+**Creating report of model performance based on training**
+
+Rendering the quarto doc is a bit of pain due to its limitations on workign directories. So far, my best option is to copy some files over to the current wd, render the doc, and then delete them, then save the output wherever it is specified. The function works, I just need to figure out the best way to wrap this together with the creation of a temporary directory and the `model_train` function. I do think the `model_train` function should spit it out regardless.
+
+Okay, it generally works, but the report itself needs to be debugged a bit for some special use cases (not using all the models, having less than one cv_set, etc.)
+
 
 **TO DO:**
 - ~~function to forecast (`ensemble_forecast`)~~

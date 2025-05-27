@@ -14,8 +14,7 @@ test_that("train model works", {
                            graph_poly = demo_polygon)
   #for debugging
   train_models(prep_output,
-               # models = c("naive", "inla", "arimax", "glm_nb", "ranger"),
-               models = c("inla"),
+               models = c("naive", "inla", "arimax", "glm_nb", "ranger"),
                y_var = "n_case",
                pred_vars = c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
                              "wealth_indexsc", "elevationsc",

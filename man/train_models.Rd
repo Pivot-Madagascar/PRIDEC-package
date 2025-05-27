@@ -10,9 +10,10 @@ train_models(
   y_var,
   pred_vars,
   id_vars = c("orgUnit", "date"),
-  results_dir,
+  results_dir = NULL,
   tune = NULL,
-  model_configs
+  model_configs = NULL,
+  report_configs = NULL
 )
 }
 \arguments{
@@ -33,10 +34,12 @@ If NULL, temporary directory will be used}
 \item{model_configs}{Optional list of configurations for each model. Name of
 element in list should match model name. See \link[PRIDEC]{ensemble_forecast}
 for more info.}
+
+\item{report_configs.}{Optional configurations for quarto_report provided as a named list. Options are:
+html_filename, doc_title, lang}
 }
 \value{
-saves model outputs to \code{results_dir} if specified. Creates a quarto doc of
-model outputs
+saves model outputs to \code{results_dir}. Creates a quarto doc of model outputs saved in \code{results_dir}
 }
 \description{
 Run full train_model workflow using multiple modeling approaches

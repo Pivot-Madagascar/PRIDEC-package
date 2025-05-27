@@ -10,16 +10,18 @@
 #' @param model_configs Optional list of configurations for each model. Name of
 #'   element in list should match model name. See \link[PRIDEC]{ensemble_forecast}
 #'   for more info.
-#' @returns saves model outputs to `results_dir` if specified. Creates a quarto doc of
-#'   model outputs
+#' @param report_configs. Optional configurations for quarto_report provided as a named list. Options are:
+#'   html_filename, doc_title, lang
+#' @returns saves model outputs to `results_dir`. Creates a quarto doc of model outputs saved in `results_dir`
 train_models <- function(prep_output,
                          models,
                          y_var,
                          pred_vars,
                          id_vars = c("orgUnit", "date"),
-                         results_dir,
+                         results_dir = NULL,
                          tune = NULL,
-                         model_configs){
+                         model_configs = NULL,
+                         report_configs = NULL){
   cli::cli_h1("PRIDE-C Train Models Workflow")
 
   # for debugging and testing
@@ -36,13 +38,22 @@ train_models <- function(prep_output,
 
 
   #move this outside the function
-  # if(is.null(results_dir)){
-  #   results_dir <- paste(tempdir(), "pridec-output", sep = "/")
-  # }
-  #
+  if(is.null(results_dir)){
+    results_dir <- paste(tempdir(), "pridec-output", sep = "/")
+  }
+
   if(!dir.exists(results_dir)){
    cli::cli_alert_warning(paste0("{.file ", results_dir, "}", " does not exist. Creating now."))
     dir.create(results_dir)
+  }
+
+  if(is.null(report_configs)){
+    report_configs <- list("html_filename" = NULL,
+                           "lang" = "fr",
+                           "doc_title" = NULL)
+  }
+  if(is.null(report_configs$html_filename)){
+    report_configs$html_filename <- file.path(results_dir, "quarto-report.html")
   }
 
   #create log file within directory
@@ -51,6 +62,11 @@ train_models <- function(prep_output,
   log_con <- file(lc_filename,
                   open = "a")
   cli::cli_alert_info(paste0("Saving log to: {.file ", lc_filename, "}"))
+
+  cli::cli_alert_info(paste0("Saving HTML Report at: {.file", report_configs$html_filename, "}"))
+  cat(paste0("Saving quarto report at ", report_configs$html_filename),
+      file = log_con, sep = "\n")
+
   cli::cli_text("Fitting the following models:\n",
           paste(models, collapse = " | "))
 
@@ -267,18 +283,59 @@ train_models <- function(prep_output,
   cat(paste0("Completed training ", length(models), " models at ", round(Sys.time())),
       file = log_con, sep = "\n")
 
+
+
+  cli::cli_h2("Creating report of model performance")
+  cat(paste0("Creating quarto report at ", round(Sys.time())),
+      file = log_con, sep = "\n")
+
+  create_pridec_quarto(results_dir = results_dir,
+                       html_filename = report_configs$html_filename,
+                       lang = report_configs$lang,
+                       doc_title = report_configs$doc_title)
+
+  cli::cli_alert_success(paste0("Finished model training workflow at ", round(Sys.time())))
+  cat(paste0("Finished model training workflow at ", round(Sys.time())),
+      file = log_con, sep = "\n")
+
 }
 
 #' Function to create quarto doc from model outputs
-#' @param results_dir path to directory where model outputs are saved. cannot be relative
-#' @param html_filename where you want the html file to be saved. cannot be relative
+#' @param results_dir path to directory where model outputs are saved
+#' @param html_filename where you want the html file to be saved, including path
+#' @param language which language template to use. currently only  "fr" available
+#' @param doc_title title for HTML report. Default: "PRIDEC Rapport de Performance"
 create_pridec_quarto <- function(results_dir,
-                                 html_filename){
+                                 html_filename,
+                                 lang = "fr",
+                                 doc_title = NULL){
 
   #for debug
-  results_dir <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
-  html_filename <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/quarto-out-test.html"
+  # results_dir <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
+  # html_filename <- "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/quarto-out-test.html"
+  # lang = "fr"
+  # doc_title = NULL
 
+  if(is.null(doc_title)){
+    doc_title <- "PRIDEC Rapport de Performance"
+  }
+
+  template_file <- system.file(paste0("quarto_templates/modelPerformance-template_", lang,".qmd"),
+                               package = "PRIDEC")
+
+  file.copy(template_file, to = "tmp_template.qmd",
+            overwrite = TRUE)
+
+  quarto::quarto_render(
+    input = "tmp_template.qmd",
+    output_file = "tmp_quarto-out.html",
+    execute_params = list(results_dir = results_dir),
+    quarto_args = c("--metadata", paste0("title=", doc_title))
+  )
+  file.copy("tmp_quarto-out.html", to = html_filename,
+            overwrite = TRUE)
+  file.remove("tmp_template.qmd")
+  file.remove("tmp_quarto-out.html")
 
 }
 
