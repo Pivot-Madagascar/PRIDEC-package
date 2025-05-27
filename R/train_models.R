@@ -224,12 +224,15 @@ train_models <- function(prep_output,
                               dplyr::mutate(cv_fold = x)) |>
       dplyr::bind_rows()
 
-    #use first orgUnit alphabetically and median date for inv_variables
-    inv_org <- unique(cv_setList[[1]]$analysis$orgUnit)[1]
-    all_dates <- unique(cv_setList[[1]]$analysis$date)
+    #use first orgUnit alphabetically and median date for inv_variables in last cv_set
+    n_cv <- length(cv_setList)
+    inv_org <- sort(unique(cv_setList[[n_cv]]$analysis$orgUnit))[1]
+    org_df <- subset(cv_setList[[n_cv]]$analysis, orgUnit == inv_org)
+    org_df <- org_df[!is.na(org_df[[y_var]]),]
+    all_dates <- sort(unique(org_df$date))
     inv_date <- all_dates[floor(length(all_dates)/2)]
 
-    inla_inv_var <- inv_variables_inla(cv_set = cv_setList[[1]],
+    inla_inv_var <- inv_variables_inla(cv_set = cv_setList[[n_cv]],
                                        y_var = y_var,
                                        pred_vars = pred_vars,
                                        id_vars = c("date", "orgUnit"),

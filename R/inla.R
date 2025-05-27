@@ -192,6 +192,14 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
   counter_one <- subset(this_analysis, this_analysis$orgUnit == constant_org & this_analysis$date == constant_date)
   counter_one$y_obs <- NA
 
+  #throw error message if the constant_org and constant_date aren't working
+  if(nrow(counter_one)!=1){
+    cli::cli_abort(c(
+      "The combination of {.var constant_org} and {.var constant_date} has an NA in the y_var column.",
+      "Please supply new values for these constants."
+    ))
+  }
+
   #loop over pred_vars to create counter-data for each one
   counter_vars <- c("org_ID", "month_season", "month_num", pred_vars)
 

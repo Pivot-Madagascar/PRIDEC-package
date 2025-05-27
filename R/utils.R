@@ -18,7 +18,7 @@ get_cv_subsets <- function(cv_set, y_var, pred_vars = NULL, remove_NA = FALSE){
     this_analysis <- this_analysis[!is.na(this_analysis$y_obs),]
   }
 
-  this_assess <<- cv_set$assessment
+  this_assess <- cv_set$assessment
   names(this_assess)[names(this_assess) == y_var] <- "y_obs"
   this_assess <- this_assess[unique(c("y_obs", "orgUnit", "date", pred_vars))]
   this_assess$dataset <- "assess"
