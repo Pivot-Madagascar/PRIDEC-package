@@ -58,11 +58,11 @@ plot_counterfactual_one <-  function(cf_data, var_label, y_range = NULL){
   if(class(cf_data$var_value) == "character"){
     if(any(nchar(cf_data$var_value)>5)){
     p1 <- p1 +
-      theme(axis.text.x = element_text(angle = 90))
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     }
     if(any(nchar(cf_data$var_value)>10)){
       p1 <- p1 +
-        theme(axis.text.x = element_blank())
+        ggplot2::theme(axis.text.x = ggplot2::element_blank())
     }
   }
 
