@@ -19,9 +19,11 @@ Imports:
     imputeTS,
     INLA,
     lubridate,
+    magrittr,
     MASS,
     pdp,
     purrr,
+    quarto,
     ranger,
     rlang,
     scoringutils,
@@ -34,7 +36,7 @@ Imports:
     tidyselect,
     vip
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1.0)
 LazyData: true
 Suggests: 
     knitr,
