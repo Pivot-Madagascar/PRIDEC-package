@@ -56,6 +56,13 @@ prep_data <- function(raw_data,
 
   #create spatial graph for INLA
   if(!is.null(graph_poly)){
+    if(!c("org_ID") %in% colnames(graph_poly)){
+      stop("Catchment polygon requires column `org_ID`.")
+    }
+    if(!c("orgUnit") %in% colnames(graph_poly)){
+      stop("Catchment polygon requires column `orgUnit`.")
+    }
+
     W_orgUnit <- spdep::poly2nb(graph_poly, queen = TRUE) |>
       spdep::nb2mat(, style = "W")
 
