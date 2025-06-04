@@ -14,9 +14,59 @@
 `build_readme()`: builds the README. better to use becuase it uses source version of your package
 `load_all()`: builds and loads package locally
 `check()`: runs through all the CRAN and other tests to make sure it is okay
-`install()`: install the source version of the package
+`install(keep_source = TRUE)`: install the source version of the package. `keep_source = T` helps with formatting for debugging
 
 For more info, use [R packages book](https://r-pkgs.org/).
+
+## 2025-06-04
+
+Applying the ensemble forecast to all the CSB data. REalized I need to seperately make the forecast `cv_set` so that it keeps future data and also months from the past that had NAs, so that we have historic predictions without missing data.
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary
+- update "quick start" guide
+- ~~add time markers to ensemble_forecast~~
+- create forecast data with future months
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+
+
+## 2025-06-03
+
+Continuing to solve issues as we test this out on our real data. I think I have solved the issue with the arimax directly in the package.
+
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary
+- update "quick start" guide
+- add time markers to ensemble_forecast
+- create forecast data with future months
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+- ~~add counter to log for ARIMAX in `train_models`. could eventually add to all of them~~
+- change how dplyr pipes are written so debugging the code is not such a nested nightmare: this is solved by using `install(keep_source = TRUE)`
+
+## 2025-05-29
+
+Testing the package on our real data!! This has obviously revealed lots of tiny things that need to be fixed.
+
+One issue is that the native pipe turns into nested function calls and line breaks get removed in the compiled code. This makes it super difficult to debug. I guess this means I need to rewrite most of my code to not use pipes...
+
+There is an issue with factors. When they are loaded in to the ARIMAX model they throw an error in the prediction stage. I think I can add something specifically to this function to catch that, but for now, just don't use factors.
+
+Currently the report only works if we have all the models fit. This is kind of a pain because it makes it harder to evaluate the models and sometimes certain models just throw errors. Ideally this could be something that is deduced based on the model outputs in the `results_dir` in teh quarto documnent itself
+
+Okay, I tested all the models on a subset of malaria CSB data and the only one that isn't working is the ARIMAX data. So now I will try the other four models on a longer time series to see if that works still. That works!
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary
+- update "quick start" guide
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+- add counter to log for ARIMAX in `train_models`. could eventually add to all of them
 
 ## 2025-05-27
 

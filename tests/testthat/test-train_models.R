@@ -1,6 +1,7 @@
 test_that("train model works", {
   #don't run this on CRAN, it will take ages
-  skip('skip train_models because it takes a long time to run')
+  skip()
+  library(here)
   data(demo_malaria)
   data(demo_polygon)
 
@@ -15,13 +16,20 @@ test_that("train model works", {
   #for debugging
   train_models(prep_output,
                models = c("naive", "inla", "arimax", "glm_nb", "ranger"),
+               # models = c("arimax"),
                y_var = "n_case",
                pred_vars = c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
                              "wealth_indexsc", "elevationsc",
                              "time_to_districtsc"),
                id_vars = c("orgUnit", "date"),
-               results_dir = "scratch/test_trainModels",
+               results_dir = here::here("scratch/testthat_trainModels"),
+               create_report = TRUE,
                model_configs = NULL)
+
+  #clean up results directory
+  unlink(here::here("scratch/testthat_trainModels"), recursive = TRUE)
+
+
 
 
 })

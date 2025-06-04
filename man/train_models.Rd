@@ -13,6 +13,7 @@ train_models(
   results_dir = NULL,
   tune = NULL,
   model_configs = NULL,
+  create_report = FALSE,
   report_configs = NULL
 )
 }
@@ -35,7 +36,9 @@ If NULL, temporary directory will be used}
 element in list should match model name. See \link[PRIDEC]{ensemble_forecast}
 for more info.}
 
-\item{report_configs.}{Optional configurations for quarto_report provided as a named list. Options are:
+\item{create_report}{Whether to create the HTML report. Default = FALSE}
+
+\item{report_configs}{Optional configurations for quarto_report provided as a named list. Options are:
 html_filename, doc_title, lang}
 }
 \value{

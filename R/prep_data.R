@@ -19,6 +19,7 @@ prep_data <- function(raw_data,
                           graph_poly = NULL){
 
   raw_data$date <- as.Date(paste0(raw_data$period, "01"), format = "%Y%m%d")
+
   #update scaled variables to also include lagged variables
   scaled_vars <- c(scaled_vars, paste0(lagged_vars, "_lag"))
 

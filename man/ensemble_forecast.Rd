@@ -13,7 +13,8 @@ ensemble_forecast(
   glm_nb_configs = NULL,
   ranger_configs = NULL,
   arimax_configs = NULL,
-  naive_configs = NULL
+  naive_configs = NULL,
+  return_individual_models = FALSE
 )
 }
 \arguments{
@@ -40,9 +41,11 @@ log_trans. See \link[PRIDEC]{fit_arima} for more info.}
 
 \item{naive_configs}{named list of configuration for naive model. Must include: group_vars.
 See \link[PRIDEC]{fit_naive} for more info.}
+
+\item{return_individual_models}{whether to return intermediate predictions from each model type. Default = FALSE}
 }
 \value{
-Dataframe of prediction intervals for the ensembled predictions
+Dataframe of prediction intervals for the ensemble predictions
 }
 \description{
 Fit an ensemble forecast

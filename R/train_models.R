@@ -10,9 +10,11 @@
 #' @param model_configs Optional list of configurations for each model. Name of
 #'   element in list should match model name. See \link[PRIDEC]{ensemble_forecast}
 #'   for more info.
-#' @param report_configs. Optional configurations for quarto_report provided as a named list. Options are:
+#' @param create_report Whether to create the HTML report. Default = FALSE
+#' @param report_configs Optional configurations for quarto_report provided as a named list. Options are:
 #'   html_filename, doc_title, lang
 #' @returns saves model outputs to `results_dir`. Creates a quarto doc of model outputs saved in `results_dir`
+#' @export
 train_models <- function(prep_output,
                          models,
                          y_var,
@@ -21,7 +23,9 @@ train_models <- function(prep_output,
                          results_dir = NULL,
                          tune = NULL,
                          model_configs = NULL,
+                         create_report = FALSE,
                          report_configs = NULL){
+
   cli::cli_h1("PRIDE-C Train Models Workflow")
 
   # for debugging and testing
@@ -35,7 +39,8 @@ train_models <- function(prep_output,
   # models = c("naive", "arimax", "ranger")
   # results_dir = paste(tempdir(), "pridec-output", sep = "/")
 
-
+  #create logical for if fitting all 5 models
+  fitting_five_models <- sum((c("naive", "ranger", "inla", "glm_nb", "arimax") %in% models))==5
 
   #move this outside the function
   if(is.null(results_dir)){
@@ -62,10 +67,14 @@ train_models <- function(prep_output,
   log_con <- file(lc_filename,
                   open = "a")
   cli::cli_alert_info(paste0("Saving log to: {.file ", lc_filename, "}"))
-
-  cli::cli_alert_info(paste0("Saving HTML Report at: {.file", report_configs$html_filename, "}"))
+  if(create_report & fitting_five_models){
+  cli::cli_alert_info(paste0("Saving HTML Report at: {.file ", report_configs$html_filename, "}"))
   cat(paste0("Saving quarto report at ", report_configs$html_filename),
       file = log_con, sep = "\n")
+  } else {
+    cli::cli_alert_info(paste0("No HTML report being created."))
+    cat("No HTML report created", file = log_con, sep = "\n")
+  }
 
   cli::cli_text("Fitting the following models:\n",
           paste(models, collapse = " | "))
@@ -159,11 +168,17 @@ train_models <- function(prep_output,
     arima_vars <- names(arima_vars)[arima_vars>3]
 
     #add counter to this because it can take so long
-      arima_preds <- purrr::map(cv_setList,
-                                .f= ~fit_arima(cv_set = .x,
-                                                y_var = y_var,
-                                                pred_vars = arima_vars,
-                                               log_trans = TRUE))
+      arima_preds <- purrr::imap(cv_setList,
+                                .f= function(x, y){
+                                  cat(paste("Fitting ARIMAX CV", y, "at", round(Sys.time())),
+                                      file = log_con, sep = "\n")
+
+                                  this_fit <- fit_arima(cv_set = x,
+                                            y_var = y_var,
+                                            pred_vars = arima_vars,
+                                            log_trans = TRUE)
+                                  return(this_fit)
+                                })
 
       arima_perf <- purrr::map(1:length(arima_preds),
                  \(x) eval_performance(arima_preds[[x]]) |>
@@ -279,12 +294,14 @@ train_models <- function(prep_output,
                    "pred_vars" = pred_vars)
   saveRDS(var_info, paste0(results_dir, "/var_info.Rdata"))
 
-  cli::cli_alert_success(paste0("Completed training ", length(models), " models at ", round(Sys.time())))
+  cli::cli_h2(paste0("Completed training ", length(models), " models at ", round(Sys.time())))
   cat(paste0("Completed training ", length(models), " models at ", round(Sys.time())),
       file = log_con, sep = "\n")
 
+  # --------------------Create quarto report ------------------------- #
+  if(create_report){
 
-
+  if(fitting_five_models){
   cli::cli_h2("Creating report of model performance")
   cat(paste0("Creating quarto report at ", round(Sys.time())),
       file = log_con, sep = "\n")
@@ -293,8 +310,14 @@ train_models <- function(prep_output,
                        html_filename = report_configs$html_filename,
                        lang = report_configs$lang,
                        doc_title = report_configs$doc_title)
+  } else {
+    cli::cli_alert_warning("Cannot create HTML report unless all 5 models are fit.
+                           Please retrain with all 5 models to output report.")
+  }
 
-  cli::cli_alert_success(paste0("Finished model training workflow at ", round(Sys.time())))
+  }
+
+  cli::cli_h2(paste0("Finished model training workflow at ", round(Sys.time())))
   cat(paste0("Finished model training workflow at ", round(Sys.time())),
       file = log_con, sep = "\n")
 
