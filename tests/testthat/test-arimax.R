@@ -58,6 +58,7 @@ test_that("arimax fits to one orgUnit", {
   demo_df$true_value <- demo_df$y_obs
   demo_df$x1 <- (sin(2*pi/12*lubridate::month(demo_df$date))*3 +rnorm(nrow(demo_df)))
   demo_df$x2 <- (cos(2*pi/12*lubridate::month(demo_df$date))*12 +rnorm(nrow(demo_df)))
+  demo_df$x3 <- 1
 
   expect_no_condition(
     test_x1 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
@@ -73,6 +74,16 @@ test_that("arimax fits to one orgUnit", {
                                      quantile_levels = 0.5)
   )
 
+  #testing providing more xreg variables than needed
+  expect_warning(
+    test_x3 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
+                                  test_df = demo_df[49:51,],
+                                  pred_vars = c("x1", "x2", "x3"),
+                                  quantile_levels = 0.5)
+  )
+
+  expect_equal(nrow(test_x3[test_x3$dataset=="assess",]), 3)
+
 
 })
 
@@ -82,6 +93,7 @@ test_that("internal get_arima_pi works", {
                                         length.out = 27))
   demo_df$y_obs<- (sin(2*pi/12*lubridate::month(demo_df$date))+5)*10 + rnorm(nrow(demo_df), sd = 2)
   demo_df$x1 <- (sin(2*pi/12*lubridate::month(demo_df$date))*3 +rnorm(nrow(demo_df)))
+  demo_df$x2 <- (sin(2*pi/8*lubridate::month(demo_df$date))*3 +rnorm(nrow(demo_df)))
 
   this_y_ts <- stats::ts(data = demo_df$y_obs[1:24],
                          start = c(lubridate::year(min(demo_df$date)),
@@ -99,11 +111,13 @@ test_that("internal get_arima_pi works", {
                          frequency = 12)
   demo_arimax <- forecast::auto.arima(this_y_ts,
                                       xreg = this_x_ts)
+
   demo_pi_x <- get_arima_pi(demo_arimax,
                              quantile_levels = c(0.25, 0.5, 0.75),
                              h = 3,
                              xreg = as.matrix(demo_df$x1[25:27]))
   expect_type(demo_pi_x$predicted,"double")
+
 })
 
 test_that("arimax log transform works", {

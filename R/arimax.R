@@ -33,11 +33,13 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
   #any static variables are removed from the pred_vars list
   n_unique_pred <- sapply(lapply(train_df[pred_vars], FUN = unique, MARGIN = 2), length)
   if(any(n_unique_pred<2)){
-    warning(paste("Static variable found in ARIMA model:", pred_vars[n_unique_pred<2], "\nFitting without static variables."))
+    warning(paste("Static variable found in ARIMA model:", pred_vars[n_unique_pred<2], ". Fitting without static variable.\n"))
     pred_vars <- pred_vars[n_unique_pred>1]
   }
 
-  arimax_mod <- retry_arima(train_df = train_df, pred_vars = pred_vars, this_y_ts = this_y_ts)
+  arimax_run <- retry_arima(train_df = train_df, pred_vars = pred_vars, this_y_ts = this_y_ts)
+  arimax_mod <- arimax_run$model
+  arimax_vars <- arimax_run$xreg_vars
 
   #get preds for historical (can only get median fit, not PIs)
   arimax_pi_analysis <- data.frame(predicted = as.numeric(arimax_mod$fitted),
@@ -49,7 +51,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                    dataset = "analysis")
 
   arimax_pi_assess <- get_arima_pi(arima_mod = arimax_mod, quantile_levels = quantile_levels,
-                                   xreg = as.matrix(test_df[pred_vars])) |>
+                                   xreg = as.matrix(test_df[arimax_vars])) |>
     dplyr::mutate(orgUnit = unique(test_df$orgUnit),
            dataset = "assess") |>
     dplyr::left_join(dplyr::select(test_df, all_of(c("observed" = "y_obs", "orgUnit", "date"))),
@@ -205,23 +207,25 @@ retry_arima <- function(train_df, pred_vars, this_y_ts){
 
   while(length(new_pred_vars)>0){
     try({
-      this_x_ts <- stats::ts(data = train_df[pred_vars],
+      this_x_ts <- stats::ts(data = train_df[new_pred_vars],
                       start = c(lubridate::year(train_df$date[1]),
                                 lubridate::month(train_df$date[1])),
                       frequency = 12)
 
       arimax_mod <- forecast::auto.arima(this_y_ts,
                                xreg = this_x_ts)
-      return(arimax_mod)
+      return(list("model" = arimax_mod,
+             "xreg_vars" = new_pred_vars))
     }, silent = TRUE)
-    cli::cli_alert_warning(paste("Error fitting ARIMAX. Dropping", new_pred_vars[length(new_pred_vars)],
+    cli::cli_alert_warning(paste("Unable to fit ARIMAX. Dropping", new_pred_vars[length(new_pred_vars)],
                                   "and refitting."))
     new_pred_vars <- new_pred_vars[-length(new_pred_vars)]
   }
 
   #If still fails
   cli::cli_alert_warning("ARIMAX cannot fit with exogenous variables. Fitting ARIMA without xreg.")
-  return(arima_mod)
+  return(list("model" = arima_mod,
+         "xreg_vars" = NULL))
 }
 
 #' Internal function for estimating prediction intervals from ARIMAX model
