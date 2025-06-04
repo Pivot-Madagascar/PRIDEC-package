@@ -6,16 +6,16 @@
 #' @export
 plot_predictions <- function(pred_df, quantile_ribbon = c(0.05, 0.95)){
 
-  pred_df |>
-    dplyr::filter(.data$quant_long %in% paste0("quant_", c(0.5, quantile_ribbon))) |>
-    dplyr::mutate(quant_label = dplyr::case_when(
-      .data$quantile_level == 0.5 ~ "median",
-      .data$quantile_level < 0.5 ~ "lowPI",
-      .data$quantile_level >0.5 ~ "uppPI"
-    )) |>
-    dplyr::select(-all_of(c("quantile_level", "quant_long"))) |>
-    tidyr::pivot_wider(names_from = "quant_label", values_from = "predicted") |>
-    ggplot2::ggplot(ggplot2::aes(x = .data$date)) +
+  plot_data <- dplyr::filter(pred_df, .data$quant_long %in% paste0("quant_", c(0.5, quantile_ribbon)))
+  plot_data <- dplyr::mutate(plot_data, quant_label = dplyr::case_when(
+    .data$quantile_level == 0.5 ~ "median",
+    .data$quantile_level < 0.5 ~ "lowPI",
+    .data$quantile_level >0.5 ~ "uppPI"
+  ))
+  plot_data <- subset(plot_data, select=-c(quantile_level, quant_long))
+  plot_data <- tidyr::pivot_wider(plot_data, names_from = "quant_label", values_from = "predicted")
+
+    ggplot2::ggplot(data = plot_data, ggplot2::aes(x = .data$date)) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin = .data$lowPI, ymax = .data$uppPI, fill = .data$dataset),
                            alpha = 0.2) +
       ggplot2::geom_line(ggplot2::aes(y = .data$observed), linewidth = 0.5, color ="gray50") +
