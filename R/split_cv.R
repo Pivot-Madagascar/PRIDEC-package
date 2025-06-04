@@ -74,3 +74,42 @@ split_stratified <- function(cvdata_list){
   return(list("train_data" = train_data,
               "test_data" = test_data))
 }
+
+
+#' Create data to use for forecast
+#' @param all_data data.frame that contains the data used to train the model
+#' @param forecast_start_date start date of forecast
+#' @param month_analysis how many months of analysis to include
+#' @param month_assess how many months of forecasting (assessment to include)
+#'
+#' @returns list containing analysis and assessment set
+#' @export
+split_cv_forecast <- function(data_to_split,
+                              forecast_start_date,
+                              month_analysis,
+                              month_assess){
+
+  # check whether needed dates are in data
+  date_range <- unique(data_to_split$date)
+  begin_date <- forecast_start_date - months(month_analysis)
+  end_date <- forecast_start_date+months(month_assess-1)
+  if(!(begin_date %in% date_range) | !(end_date %in% date_range)){
+    range_two <- range(date_range)
+    cli::cli_abort(c("The data must contain the requested date range.",
+                     "i" = "The dataset contains months {range_two[1]} thru {range_two[2]} months of data, but you specified
+                     a start date of {begin_date} and end date of {end_date}. Update {.var forecast_start_date},
+                     {.var month_analysis}, or {.var month_assess} to fall within the available date range."))
+  }
+
+  analysis_inds <- dplyr::between(data_to_split$date,
+                                  begin_date,
+                                  forecast_start_date - 1)
+  assess_inds <- dplyr::between(data_to_split$date,
+                                begin_date,
+                                end_date)
+
+  cv_list <- list(analysis = data_to_split[analysis_inds,],
+                  assessment = data_to_split[assess_inds,])
+
+  return(cv_list)
+}

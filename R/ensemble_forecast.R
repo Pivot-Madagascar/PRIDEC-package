@@ -14,17 +14,22 @@
 #'    log_trans. See \link[PRIDEC]{fit_arima} for more info.
 #' @param naive_configs named list of configuration for naive model. Must include: group_vars.
 #'    See \link[PRIDEC]{fit_naive} for more info.
+#' @param return_individual_models whether to return intermediate predictions from each model type. Default = FALSE
 #'
-#' @returns Dataframe of prediction intervals for the ensembled predictions
+#' @returns Dataframe of prediction intervals for the ensemble predictions
+#' @export
 ensemble_forecast <- function(cv_set, y_var, id_vars,
                               quantile_levels = c(0.025,0.5,0.975),
                               inla_configs = NULL,
                               glm_nb_configs = NULL,
                               ranger_configs = NULL,
                               arimax_configs = NULL,
-                              naive_configs = NULL){
+                              naive_configs = NULL,
+                              return_individual_models = FALSE){
 
   cli::cli_h1("PRIDE-C Forecast Workflow")
+  start_time <- Sys.time()
+  cli::cli_text(paste0("Started: ", round(Sys.time())))
   true_data <-  do.call(rbind, get_cv_subsets(cv_set, y_var = y_var,
                                pred_vars = c(id_vars),
                                remove_NA = FALSE))
@@ -33,6 +38,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   out_list <- list()
   if(!is.null(inla_configs)){
     cli::cli_h2("INLA Forecast")
+    cli::cli_text(paste0("Started: ", round(Sys.time())))
     pred_inla <- fit_inla(cv_set = cv_set,
                           y_var = y_var,
                           pred_vars = inla_configs$pred_vars,
@@ -49,6 +55,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   if(!is.null(glm_nb_configs)){
     cli::cli_h2("GLM Forecast")
+    cli::cli_text(paste0("Started: ", round(Sys.time())))
     pred_glm_nb <- fit_glm_nb(cv_set = cv_set,
                           y_var = y_var,
                           pred_vars = glm_nb_configs$pred_vars,
@@ -61,6 +68,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   if(!is.null(ranger_configs)){
     cli::cli_h2("RANGER Forecast")
+    cli::cli_text(paste0("Started: ", round(Sys.time())))
     pred_ranger <- fit_ranger(cv_set = cv_set,
                               y_var = y_var,
                               pred_vars = ranger_configs$pred_vars,
@@ -74,6 +82,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   if(!is.null(arimax_configs)){
     cli::cli_h2("ARIMAX Forecast")
+    cli::cli_text(paste0("Started: ", round(Sys.time())))
     pred_arimax <- fit_arima(cv_set = cv_set,
                               y_var = y_var,
                               pred_vars = arimax_configs$pred_vars,
@@ -86,6 +95,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   if(!is.null(naive_configs)){
     cli::cli_h2("Naive Forecast")
+    cli::cli_text(paste0("Started: ", round(Sys.time())))
     pred_naive <- fit_naive(cv_set = cv_set,
                              y_var = y_var,
                              group_vars = naive_configs$group_vars)
@@ -108,7 +118,14 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   stack_out <- dplyr::left_join(model_stack, true_data, by = id_vars)
 
-  return(stack_out)
+  cli::cli_alert_info(paste0("Finished ensemble stack. Time elapsed: ",
+                             round(as.numeric(Sys.time() - start_time, units = "secs")), " seconds."))
+  if(return_individual_models){
+    return(list(mod_outputs = out_list,
+                stack = stack_out))
+  } else {
+    return(stack_out)
+  }
 }
 
 #'Utility function to get weighted means of predictions
