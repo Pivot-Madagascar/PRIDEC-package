@@ -9,6 +9,7 @@ test_that("full inla workflow works", {
                                                            graph_poly = demo_polygon)$data_prep,
                              month_analysis = 48,
                              month_assess = 3)[[6]]
+
   W_orgUnit <- prep_data(raw_data = demo_malaria,
                              y_var = "n_case",
                              lagged_vars =  c("rain_mm", "temp_c"),
@@ -19,7 +20,8 @@ test_that("full inla workflow works", {
                        y_var = "n_case",
                        pred_vars = c("rain_mm", "temp_c"),
                        id_vars = c("orgUnit", "date"),
-                       W_orgUnit = W_orgUnit)
+                       W_orgUnit = W_orgUnit,
+                       verbose = FALSE)
   expect_contains(colnames(test_fit), c("observed", "predicted", "quantile_level"))
 
   expect_no_condition(eval_performance(test_fit))
@@ -68,11 +70,33 @@ test_that("full inla workflow works", {
   expect_equal(length(inv_var$counter_data), 5)
 })
 
+test_that("inla works without spatial structure",{
+  data(demo_malaria)
+  data(demo_polygon)
+
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
+                                                       y_var = "n_case",
+                                                       lagged_vars =  c("rain_mm", "temp_c"),
+                                                       scaled_vars = NULL,
+                                                       graph_poly = demo_polygon)$data_prep,
+                             month_analysis = 48,
+                             month_assess = 3)[[6]]
+
+  test_fit <- fit_inla(cv_set = cv_set,
+                       y_var = "n_case",
+                       pred_vars = c("rain_mm", "temp_c"),
+                       id_vars = c("orgUnit", "date"),
+                       W_orgUnit = NULL)
+  expect_contains(colnames(test_fit), c("observed", "predicted", "quantile_level"))
+
+  expect_no_condition(eval_performance(test_fit))
+})
+
 test_that("inla internal functions work",{
 
   expect_equal(names(create_inla_setup(hyper_priors = list("prec.unstruct" = c(1, 5e-4),
                                         "prec.spatial" = c(1, 5e-4),
-                                        "prec.timerw1" = c(1,0.01)))),
+                                        "prec.timerw1" = c(1,0.01)), W_orgUnit = NULL)),
                c("prior_sp", "prior_time", "reff_var", "pi_var"))
 
   expect_no_condition(get_inla_pi_sample(inla_post_sample = rnorm(1e4,0,1),

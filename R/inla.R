@@ -5,7 +5,8 @@
 #' @param return_model whether or not to return the INLA model in addition to predictions
 #' @param sample_pi whether to estimate the prediction intervals by sampling the
 #'   posterior. Default (FALSE) uses a trick to put all error into an iid random effect.
-#' @param W_orgUnit graph of orgUnit to use in spatial structure'
+#' @param W_orgUnit graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.
+#' @param verbose whether to run the INLA model verbosely. Default = FALSE
 #'
 #' @returns dataframe of predictions intervals
 #' @export
@@ -16,9 +17,10 @@ fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
                      return_model = FALSE,
                      quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
                      sample_pi = FALSE,
-                     W_orgUnit){
+                     W_orgUnit = NULL,
+                     verbose = FALSE){
 
-  prior_setup <- create_inla_setup(hyper_priors)
+  prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
   if(is.null(reff_var)){
     reff_var <- prior_setup$reff_var
@@ -46,7 +48,7 @@ fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
                               response = "y_obs")
 
   inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
-                              verbose = FALSE, family = 'zeroinflatednbinomial1')
+                              verbose = verbose, family = 'zeroinflatednbinomial1')
 
   # ----- prediction intervals -------------------
   id_dataframe <- both_datasets[,c("orgUnit", "date", "dataset", "observed")]
@@ -89,7 +91,7 @@ calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
                         seed = 8675309,
                          nsims = 1){
 
-  prior_setup <- create_inla_setup(hyper_priors)
+  prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
   if(is.null(reff_var)){
     reff_var <- prior_setup$reff_var
@@ -176,7 +178,7 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
                                        W_orgUnit, var_scales,
                                        constant_org, constant_date){
 
-  prior_setup <- create_inla_setup(hyper_priors)
+  prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
   if(is.null(reff_var)){
     reff_var <- prior_setup$reff_var
@@ -299,7 +301,7 @@ inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_var
 
 }
 
-create_inla_setup <- function(hyper_priors){
+create_inla_setup <- function(hyper_priors, W_orgUnit){
   prior_sp <- list(
     #iid, default = c(1, 5e-4)
     prec.unstruct = list(
@@ -322,11 +324,10 @@ create_inla_setup <- function(hyper_priors){
     )
   )
 
-  reff_var <- c("f(month_season, model = 'rw1', cyclic = T, group = org_ID,
-      control.group = list(model = 'iid'), scale.model = TRUE,
-      hyper = prior_setup$prior_time)",
-                "f(org_ID, model = 'bym', graph = W_orgUnit, scale.model = TRUE,
-                                 hyper = prior_setup$prior_sp)")
+  reff_var <- c("f(month_season, model = 'rw1', cyclic = T, group = org_ID, control.group = list(model = 'iid'), scale.model = TRUE, hyper = prior_setup$prior_time)")
+  if(!(is.null(W_orgUnit))){
+    reff_var <- c(reff_var, "f(org_ID, model = 'bym', graph = W_orgUnit, scale.model = TRUE, hyper = prior_setup$prior_sp)")
+  }
 
   pi_var <- c("f(idx, model = 'iid', hyper = list(prec = list(param = c(1,0.01))))")
 

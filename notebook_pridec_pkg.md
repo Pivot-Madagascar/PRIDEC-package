@@ -18,14 +18,27 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
-## 2025-06-04
+## 2025-06-06
 
-Applying the ensemble forecast to all the CSB data. REalized I need to seperately make the forecast `cv_set` so that it keeps future data and also months from the past that had NAs, so that we have historic predictions without missing data.
+Running into issues when applying the INLA model to a spatial model that isn't all contiguous (like for our CHW data which is just a subset of fokontany). I think I need to add an option where if the spatial polygon is `null`, then it doesn't fit the spatial model and hopefully this will solve the issue for this. I've added that, but the issue was actually something with the `INLA` package itself. It may be good in the future to wrap fitting models in some kind of `tryCatch` so it doesn't stop the whole process.
+
+Updated the INLA workflow to allow for fitting without the spatial model by providing `NULL` to `W_orgUnit`. Also updated INLA because I was having issues with my libc6.
 
 **TO DO:**
 - update quarto doc to only use subset of models if necessary
 - update "quick start" guide
-- ~~add time markers to ensemble_forecast~~
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+
+## 2025-06-04
+
+Applying the ensemble forecast to all the CSB data. Realized I need to seperately make the forecast `cv_set` so that it keeps future data and also months from the past that had NAs, so that we have historic predictions without missing data.
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary
+- update "quick start" guide
+- ~~add time markers to ensemble_forecast
 - create forecast data with future months
 
 *Back burner*:

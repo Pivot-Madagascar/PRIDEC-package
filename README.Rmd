@@ -67,7 +67,7 @@ rf_fit <- fit_ranger(cv_set,
 
 #evaluate model fit
 eval_performance(rf_fit)
-plot_predictions(rf_fit[rf_fit$orgUnit %in% sample(rf_fit$orgUnit,1),])
+plot_predictions(rf_fit[rf_fit$orgUnit %in% sample(rf_fit$orgUnit,1),]) 
 
 ```
 

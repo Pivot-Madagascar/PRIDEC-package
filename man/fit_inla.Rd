@@ -15,7 +15,8 @@ fit_inla(
   return_model = FALSE,
   quantile_levels = c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99),
   sample_pi = FALSE,
-  W_orgUnit
+  W_orgUnit = NULL,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -39,7 +40,9 @@ Default =  c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)}
 \item{sample_pi}{whether to estimate the prediction intervals by sampling the
 posterior. Default (FALSE) uses a trick to put all error into an iid random effect.}
 
-\item{W_orgUnit}{graph of orgUnit to use in spatial structure'}
+\item{W_orgUnit}{graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.}
+
+\item{verbose}{whether to run the INLA model verbosely. Default = FALSE}
 }
 \value{
 dataframe of predictions intervals
