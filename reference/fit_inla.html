@@ -49,7 +49,8 @@
 <span>  return_model <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  quantile_levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.025</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>, <span class="fl">0.975</span>, <span class="fl">0.99</span><span class="op">)</span>,</span>
 <span>  sample_pi <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  <span class="va">W_orgUnit</span></span>
+<span>  W_orgUnit <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,7 +97,11 @@ posterior. Default (FALSE) uses a trick to put all error into an iid random effe
 
 
 <dt id="arg-w-orgunit">W_orgUnit<a class="anchor" aria-label="anchor" href="#arg-w-orgunit"></a></dt>
-<dd><p>graph of orgUnit to use in spatial structure'</p></dd>
+<dd><p>graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>whether to run the INLA model verbosely. Default = FALSE</p></dd>
 
 </dl></div>
     <div class="section level2">

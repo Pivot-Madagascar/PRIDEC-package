@@ -84,8 +84,9 @@
 <span>                        graph_poly <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Registered S3 method overwritten by 'quantmod':</span></span>
 <span><span class="co">#&gt;   method            from</span></span>
-<span><span class="co">#&gt;   as.zoo.data.frame zoo</span></span>
-<span><span class="co">#create a cv_fold of assessment (historical) and analysis (forecast) data</span></span>
+<span><span class="co">#&gt;   as.zoo.data.frame zoo</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#create a cv_fold of assessment (historical) and analysis (forecast) data</span></span>
 <span><span class="va">cv_set</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/split_cv_rolling.html">split_cv_rolling</a></span><span class="op">(</span><span class="va">data_clean</span><span class="op">$</span><span class="va">data_prep</span>, </span>
 <span>                           month_analysis <span class="op">=</span> <span class="fl">48</span>, </span>
 <span>                           month_assess<span class="op">=</span><span class="fl">3</span><span class="op">)</span><span class="op">[[</span><span class="fl">20</span><span class="op">]</span><span class="op">]</span></span>
@@ -104,12 +105,11 @@
 <span><span class="co">#&gt; # A tibble: 2 × 10</span></span>
 <span><span class="co">#&gt;   dataset    wis   mae med_ae mean_ae_log  wape dispersion sp_rho prop_over</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 analysis  5.86  6.42  0.321      0.0220 0.150       5.12  0.961    0.206 </span></span>
-<span><span class="co">#&gt; 2 assess   24.4  33.1  32.2        1.08   0.608       2.34  0.814    0.0317</span></span>
-<span><span class="co">#&gt; # ℹ 1 more variable: prop_under &lt;dbl&gt;</span></span>
-<span><span class="fu"><a href="reference/plot_predictions.html">plot_predictions</a></span><span class="op">(</span><span class="va">rf_fit</span><span class="op">[</span><span class="va">rf_fit</span><span class="op">$</span><span class="va">orgUnit</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">rf_fit</span><span class="op">$</span><span class="va">orgUnit</span>,<span class="fl">1</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning: Removed 1 row containing missing values or values outside the scale range</span></span>
-<span><span class="co">#&gt; (`geom_point()`).</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 analysis  5.86  6.70  0.155      0.0137 0.155       5.07  0.963    0.207 </span></span>
+<span><span class="co">#&gt; 2 assess   24.4  33.3  32.7        1.09   0.611       2.36  0.821    0.0317</span></span>
+<span><span class="co">#&gt; # ℹ 1 more variable: prop_under &lt;dbl&gt;</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_predictions.html">plot_predictions</a></span><span class="op">(</span><span class="va">rf_fit</span><span class="op">[</span><span class="va">rf_fit</span><span class="op">$</span><span class="va">orgUnit</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">rf_fit</span><span class="op">$</span><span class="va">orgUnit</span>,<span class="fl">1</span><span class="op">)</span>,<span class="op">]</span><span class="op">)</span> </span></code></pre></div>
 <p><img src="reference/figures/README-unnamed-chunk-2-1.png" width="100%"></p>
 </div>
 <div class="section level2">

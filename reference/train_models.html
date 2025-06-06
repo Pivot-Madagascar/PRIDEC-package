@@ -47,6 +47,7 @@
 <span>  results_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tune <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  model_configs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  create_report <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  report_configs <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -87,7 +88,11 @@ element in list should match model name. See <a href="ensemble_forecast.html">en
 for more info.</p></dd>
 
 
-<dt id="arg-report-configs-">report_configs.<a class="anchor" aria-label="anchor" href="#arg-report-configs-"></a></dt>
+<dt id="arg-create-report">create_report<a class="anchor" aria-label="anchor" href="#arg-create-report"></a></dt>
+<dd><p>Whether to create the HTML report. Default = FALSE</p></dd>
+
+
+<dt id="arg-report-configs">report_configs<a class="anchor" aria-label="anchor" href="#arg-report-configs"></a></dt>
 <dd><p>Optional configurations for quarto_report provided as a named list. Options are:
 html_filename, doc_title, lang</p></dd>
 

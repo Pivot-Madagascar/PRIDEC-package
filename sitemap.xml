@@ -33,6 +33,7 @@
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/inv_variables_glm_nb.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/inv_variables_inla.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/inv_variables_ranger.html</loc></url>
+<url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/pipe.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/plot_counterfactual.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/plot_counterfactual_one.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/plot_predictions.html</loc></url>
@@ -41,6 +42,7 @@
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/run_inla_config.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/sample_fixed_posteriors.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/sample_preds.html</loc></url>
+<url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/split_cv_forecast.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/split_cv_rolling.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/split_stratified.html</loc></url>
 <url><loc>https://pivot-madagascar.github.io/PRIDEC-package/reference/train_models.html</loc></url>

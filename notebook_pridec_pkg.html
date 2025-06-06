@@ -37,8 +37,37 @@
 <h2 id="development-workflow">Development workflow<a class="anchor" aria-label="anchor" href="#development-workflow"></a></h2>
 <p><em>All use the devtools or usethis packages</em></p>
 <p><code>use_r()</code>: creates an R script with that filename to hold the function <code>use_test()</code>: creates an R script to hold the tests for that function <code>use_package()</code>: adds package to <code>Import</code> in <code>DESCRIPTION</code>. call functions using <code>package::function</code> <code>use_import_from()</code>: imports a specific function from a package to use without the <code>::</code>. Not recommended.</p>
-<p><code>test()</code>: runs the code tests <code>document()</code>: update package documentation <code>build_readme()</code>: builds the README. better to use becuase it uses source version of your package <code>load_all()</code>: builds and loads package locally <code>check()</code>: runs through all the CRAN and other tests to make sure it is okay <code>install()</code>: install the source version of the package</p>
+<p><code>test()</code>: runs the code tests <code>document()</code>: update package documentation <code>build_readme()</code>: builds the README. better to use becuase it uses source version of your package <code>load_all()</code>: builds and loads package locally <code>check()</code>: runs through all the CRAN and other tests to make sure it is okay <code>install(keep_source = TRUE)</code>: install the source version of the package. <code>keep_source = T</code> helps with formatting for debugging</p>
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-06-06">2025-06-06<a class="anchor" aria-label="anchor" href="#id_2025-06-06"></a></h2>
+<p>Running into issues when applying the INLA model to a spatial model that isn’t all contiguous (like for our CHW data which is just a subset of fokontany). I think I need to add an option where if the spatial polygon is <code>null</code>, then it doesn’t fit the spatial model and hopefully this will solve the issue for this. I’ve added that, but the issue was actually something with the <code>INLA</code> package itself. It may be good in the future to wrap fitting models in some kind of <code>tryCatch</code> so it doesn’t stop the whole process.</p>
+<p>Updated the INLA workflow to allow for fitting without the spatial model by providing <code>NULL</code> to <code>W_orgUnit</code>. Also updated INLA because I was having issues with my libc6.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary - update “quick start” guide</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-06-04">2025-06-04<a class="anchor" aria-label="anchor" href="#id_2025-06-04"></a></h2>
+<p>Applying the ensemble forecast to all the CSB data. Realized I need to seperately make the forecast <code>cv_set</code> so that it keeps future data and also months from the past that had NAs, so that we have historic predictions without missing data.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary - update “quick start” guide - ~~add time markers to ensemble_forecast - create forecast data with future months</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-06-03">2025-06-03<a class="anchor" aria-label="anchor" href="#id_2025-06-03"></a></h2>
+<p>Continuing to solve issues as we test this out on our real data. I think I have solved the issue with the arimax directly in the package.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary - update “quick start” guide - add time markers to ensemble_forecast - create forecast data with future months</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning - <del>add counter to log for ARIMAX in <code>train_models</code>. could eventually add to all of them</del> - change how dplyr pipes are written so debugging the code is not such a nested nightmare: this is solved by using <code>install(keep_source = TRUE)</code></p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-05-29">2025-05-29<a class="anchor" aria-label="anchor" href="#id_2025-05-29"></a></h2>
+<p>Testing the package on our real data!! This has obviously revealed lots of tiny things that need to be fixed.</p>
+<p>One issue is that the native pipe turns into nested function calls and line breaks get removed in the compiled code. This makes it super difficult to debug. I guess this means I need to rewrite most of my code to not use pipes…</p>
+<p>There is an issue with factors. When they are loaded in to the ARIMAX model they throw an error in the prediction stage. I think I can add something specifically to this function to catch that, but for now, just don’t use factors.</p>
+<p>Currently the report only works if we have all the models fit. This is kind of a pain because it makes it harder to evaluate the models and sometimes certain models just throw errors. Ideally this could be something that is deduced based on the model outputs in the <code>results_dir</code> in teh quarto documnent itself</p>
+<p>Okay, I tested all the models on a subset of malaria CSB data and the only one that isn’t working is the ARIMAX data. So now I will try the other four models on a longer time series to see if that works still. That works!</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary - update “quick start” guide</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning - add counter to log for ARIMAX in <code>train_models</code>. could eventually add to all of them</p>
 </div>
 <div class="section level2">
 <h2 id="id_2025-05-27">2025-05-27<a class="anchor" aria-label="anchor" href="#id_2025-05-27"></a></h2>
