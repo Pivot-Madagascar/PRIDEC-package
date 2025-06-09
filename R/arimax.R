@@ -26,7 +26,7 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
 
   this_y_ts <- stats::ts(data = train_df$y_obs,
                   start = c(lubridate::year(min(train_df$date)),
-                            lubridate::month(min(train_df$date[1]))),
+                            lubridate::month(min(train_df$date))),
                   frequency = 12)
 
   #check that pred_vars are not static
@@ -238,6 +238,10 @@ retry_arima <- function(train_df, pred_vars, this_y_ts){
 get_arima_pi <- function(arima_mod, quantile_levels,
                          h = 3,
                          xreg = NULL){
+
+  if(!is.null(xreg)){
+    h <- nrow(xreg)
+  }
 
   arima_levels <- unique(round(sort(abs(quantile_levels-0.5)*2),2))*100
 

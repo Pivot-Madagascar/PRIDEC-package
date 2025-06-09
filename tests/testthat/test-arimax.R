@@ -84,6 +84,12 @@ test_that("arimax fits to one orgUnit", {
 
   expect_equal(nrow(test_x3[test_x3$dataset=="assess",]), 3)
 
+  # testing having overlapping train and test dfs
+  test_x4 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
+                                  test_df = demo_df[40:51,],
+                                  pred_vars = c("x1", "x2", "x3"),
+                                  quantile_levels = c(0.025,0.5, 0.975))
+  plot_predictions(test_x4, quantile_ribbon = c(0.025,0.5, 0.975))
 
 })
 

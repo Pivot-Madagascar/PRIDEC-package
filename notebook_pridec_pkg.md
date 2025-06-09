@@ -18,15 +18,31 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-06-09
+
+The quantiles on the naive model are fixed at 0.025 and 0.0975, which is causing issues when stacking into an ensemble. I will update the stacked `ensemble_forecast` function to help fix this. Done.
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary based on what is in `results_dir`
+- update "quick start" guide with training and forecasting steps
+- fix `split_cv_forecast` to take a horizon and forecast start date argument
+- control number of cores used in model fitting
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+
 ## 2025-06-06
 
 Running into issues when applying the INLA model to a spatial model that isn't all contiguous (like for our CHW data which is just a subset of fokontany). I think I need to add an option where if the spatial polygon is `null`, then it doesn't fit the spatial model and hopefully this will solve the issue for this. I've added that, but the issue was actually something with the `INLA` package itself. It may be good in the future to wrap fitting models in some kind of `tryCatch` so it doesn't stop the whole process.
 
 Updated the INLA workflow to allow for fitting without the spatial model by providing `NULL` to `W_orgUnit`. Also updated INLA because I was having issues with my libc6.
 
+**ARIMAX issue**: I was having an issue with the ARIMAX model when the training and testing data overlap because ti by defautl will project forward from the end of the training data and I don't know if that is changable. So I guess my question for myself was why did I want the data to be overlapping in the `ensemble_forecast` code? This is done in the special `split_cv_forecast` function because the original `split_cv` function was only included months where we had observations and the future by definition does not, so this was like a mnually way to split it. Maybe the easiest is just to change this function so it has a start date and a horizon, and then all the data before it is used in the training? I can also add something to the arimax function, but I think it is fine as is. Yes it is because the `xreg` overrides the `h` argumnet in the forecast part of the `get_arima_pi` function.
+
 **TO DO:**
-- update quarto doc to only use subset of models if necessary
-- update "quick start" guide
+- update quarto doc to only use subset of models if necessary based on what is in `results_dir`
+- update "quick start" guide with training and forecasting steps
+- fix `split_cv_forecast` to take a horizon and forecast start date argument
 
 *Back burner*:
 - update `train_models` to actually use model_configs and tuning

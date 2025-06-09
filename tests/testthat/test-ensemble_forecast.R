@@ -3,7 +3,7 @@ test_that("ensemble forecast works", {
   data(demo_polygon)
 
   cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
-                                                       y_var = "n_case",
+                                                       y_var = "n_ case",
                                                        lagged_vars =  c("rain_mm", "temp_c"),
                                                        scaled_vars = NULL,
                                                        graph_poly = demo_polygon)$data_prep,
@@ -36,6 +36,7 @@ test_that("ensemble forecast works", {
   stack_forecast <- ensemble_forecast(cv_set = cv_set,
                                       y_var = "n_case",
                                       id_vars = c("orgUnit", "date"),
+                                      quantile_levels = c(0.25,0.5,0.75),
                                       inla_configs = inla_configs,
                                       glm_nb_configs = glm_nb_configs,
                                       ranger_configs = ranger_configs,
@@ -43,7 +44,9 @@ test_that("ensemble forecast works", {
                                       naive_configs = naive_configs)
   expect_contains(colnames(stack_forecast), c("orgUnit", "predicted", "observed", "quantile_level"))
 
-  plot_predictions(stack_forecast, quantile_ribbon = c(0.025, 0.975))
+  # expect_error(plot_predictions(stack_forecast, quantile_ribbon = c(0.025, 0.975)), regexp = NULL)
+
+  plot_predictions(stack_forecast, quantile_ribbon = c(0.25, 0.75))
 
   eval_performance(stack_forecast)
 
