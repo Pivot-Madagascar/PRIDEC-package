@@ -98,15 +98,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
     cli::cli_text(paste0("Started: ", round(Sys.time())))
     pred_naive <- fit_naive(cv_set = cv_set,
                              y_var = y_var,
-                             group_vars = naive_configs$group_vars) |>
-      #update quantiles to match rest of models
-      dplyr::mutate(quantile_level = dplyr::case_when(
-        .data$quantile_level < 0.5 ~ min(quantile_levels),
-        .data$quantile_level > 0.5 ~ max(quantile_levels),
-        TRUE ~ 0.5
-      )) |>
-      dplyr::mutate(quant_long = paste0("quant_", quantile_level))
-    #update quantiles to match rest of models
+                            quantile_levels = quantile_levels,
+                             group_vars = naive_configs$group_vars)
     pred_naive$model <- "naive"
     pred_naive$weight <- naive_configs$weight
     out_list$naive <- pred_naive

@@ -6,7 +6,8 @@
 #'
 #' @returns data.frame of prediction intervals and observed values containing columns for group_vars and whether data is analysis or assessment
 #' @export
-fit_naive <- function(cv_set, y_var, group_vars = c("orgUnit", "month_season")){
+fit_naive <- function(cv_set, y_var, group_vars = c("orgUnit", "month_season"),
+                      quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)){
 
   #to solve global function binding
   # y_obs <- NULL
@@ -15,12 +16,14 @@ fit_naive <- function(cv_set, y_var, group_vars = c("orgUnit", "month_season")){
   this_assess <- cv_clean$assess
 
   this_preds <- this_analysis |>
-    dplyr::summarise(quant_0.5 = mean(.data$y_obs),
-                     quant_0.025 = min(.data$y_obs),
-                     quant_0.975 = max(.data$y_obs),
+    dplyr::summarise(quantiles = list(quantile(.data$y_obs,
+                                               probs = quantile_levels,
+                                               na.rm = TRUE)),
                      .by = all_of(group_vars)) |>
-    tidyr::pivot_longer(-all_of(group_vars), names_to = "quant_long", values_to = "predicted") |>
-    dplyr::mutate(quantile_level = as.numeric(gsub("quant_","", .data$quant_long)))
+    tidyr::unnest_longer(quantiles, values_to = "predicted", indices_to = "quantile_level") |>
+    dplyr::mutate(quantile_level = as.numeric(gsub("%", "", quantile_level))/100) |>
+    dplyr::mutate(quant_long = paste0("quant_", quantile_level)) |>
+    dplyr::mutate(predicted = round(predicted))
 
   mod_pi <- dplyr::bind_rows(dplyr::mutate(this_analysis, dataset = "analysis"),
                              dplyr::mutate(this_assess, dataset = "assess")) |>

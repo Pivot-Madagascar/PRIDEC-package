@@ -17,7 +17,7 @@ test_that("evaluate function on naive model", {
                               group_vars = c("orgUnit", "month_season"))
   expect_no_condition(eval_performance(pred_naive))
   #ensure that the wis function in scoringutils hasn't changed
-  expect_equal(round(eval_performance(pred_naive)$wis,3), c(3.734, 42.991))
+  expect_equal(round(eval_performance(pred_naive)$wis,3), c(5.622, 48.527))
 
 })
 

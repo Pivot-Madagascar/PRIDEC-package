@@ -4,7 +4,12 @@
 \alias{fit_naive}
 \title{Fit a naive model to a cv_set}
 \usage{
-fit_naive(cv_set, y_var, group_vars = c("orgUnit", "month_season"))
+fit_naive(
+  cv_set,
+  y_var,
+  group_vars = c("orgUnit", "month_season"),
+  quantile_levels = c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99)
+)
 }
 \arguments{
 \item{cv_set}{list object containing analysis and assessment data.frames}

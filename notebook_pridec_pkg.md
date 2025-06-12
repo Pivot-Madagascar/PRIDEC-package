@@ -18,6 +18,10 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-06-13
+
+Updated `fit_naive` to no longer use the min and max no matter what, but to actually calculate the quantiles based on what is provided. Checked this didn't upset other functions that rely on this. It seems to be fine.
+
 ## 2025-06-09
 
 The quantiles on the naive model are fixed at 0.025 and 0.0975, which is causing issues when stacking into an ensemble. I will update the stacked `ensemble_forecast` function to help fix this. Done.
