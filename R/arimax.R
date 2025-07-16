@@ -11,6 +11,11 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                  quantile_levels, return_model = FALSE,
                                  log_trans = FALSE){
 
+  #ensure that dates of the train and test df do not overlap
+  if(any(test_df$date %in% train_df$date)){
+    stop("Train and testing dataframes contain overlapping dates. Please provide non-overlapping dates for ARIMA model.")
+  }
+
   #if it starts with an NA, will not return fitted for that value
   #cut data until it starts with a true value
   first_val <- is.na(train_df$y_obs[1])
@@ -96,6 +101,9 @@ fit_arima <- function(cv_set, y_var, pred_vars,
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = pred_vars)
   this_analysis <- cv_clean$analysis
   this_assess <- cv_clean$assess
+  # ARIMA requires that the assessment period falls directly after analysis period
+  # remove rows from assess that are in analysis (should jsut be the newer dates)
+  this_assess <- dplyr::anti_join(this_assess, this_analysis, by = c("date", "orgUnit"))
 
   preds_pi <- purrr::map(unique(this_analysis$orgUnit),
                   function(x) fit_arima_OneOrgUnit(train_df = this_analysis[(this_analysis$orgUnit == x),],
@@ -119,6 +127,9 @@ inv_variables_arima <- function(cv_set, y_var, pred_vars,
   cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = pred_vars)
   this_analysis <- cv_clean$analysis
   this_assess <- cv_clean$assess
+  # ARIMA requires that the assessment period falls directly after analysis period
+  # remove rows from assess that are in analysis (should jsut be the newer dates)
+  this_assess <- dplyr::anti_join(this_assess, this_analysis, by = c("date", "orgUnit"))
 
   #----- get coefficients for each arima model ----------
   coef_output <- purrr::map(unique(this_analysis$orgUnit),

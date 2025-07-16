@@ -46,7 +46,7 @@ test_that("full arimax workflow works", {
 
   expect_equal(sum(inv_var_test$var_imp$importance), 1)
 
-  plot_counterfactual(inv_var_test$counter_data)
+  # plot_counterfactual(inv_var_test$counter_data)
 
 })
 
@@ -59,6 +59,7 @@ test_that("arimax fits to one orgUnit", {
   demo_df$x1 <- (sin(2*pi/12*lubridate::month(demo_df$date))*3 +rnorm(nrow(demo_df)))
   demo_df$x2 <- (cos(2*pi/12*lubridate::month(demo_df$date))*12 +rnorm(nrow(demo_df)))
   demo_df$x3 <- 1
+  demo_df$x4 <- "A"
 
   expect_no_condition(
     test_x1 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
@@ -75,21 +76,44 @@ test_that("arimax fits to one orgUnit", {
   )
 
   #testing providing more xreg variables than needed
+  #also tests removal of static variable
   expect_warning(
     test_x3 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
                                   test_df = demo_df[49:51,],
                                   pred_vars = c("x1", "x2", "x3"),
-                                  quantile_levels = 0.5)
+                                  quantile_levels = 0.5),
+    "Fitting without static variable"
   )
-
   expect_equal(nrow(test_x3[test_x3$dataset=="assess",]), 3)
 
+  #testing removal of static variables
+  # expect_warning(
+  #   fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
+  #                                   test_df = demo_df[49:51,],
+  #                                   pred_vars = c("x1", "x4"),
+  #                                   quantile_levels = 0.5),
+  #   "Fitting without static variable"
+  # )
+
+
   # testing having overlapping train and test dfs
-  test_x4 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
+  expect_error(fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
                                   test_df = demo_df[40:51,],
-                                  pred_vars = c("x1", "x2", "x3"),
+                                  pred_vars = c("x1", "x2"),
                                   quantile_levels = c(0.025,0.5, 0.975))
-  plot_predictions(test_x4, quantile_ribbon = c(0.025,0.5, 0.975))
+  )
+  #this should get fixed if fed directly to fit_arima instead
+  expect_no_error({
+    analysis_df <- demo_df[1:48,]
+    analysis_df$dataset <- "analysis"
+    assess_df <- demo_df[40:51,]
+    analysis_df$dataset <- "assess"
+    cv_set <- list("analysis" = analysis_df,
+                   "assessment" = assess_df)
+    fit_arima(cv_set = cv_set,
+              y_var = "y_obs",
+              pred_vars = c("x1", "x2"))
+  })
 
 })
 
@@ -156,8 +180,37 @@ test_that("arimax log transform works", {
                                  quantile_levels = c(0.25,0.5,0.75),
                                  pred_vars = c("rain_mm", "temp_c"),
                                  log_trans = TRUE)
-  plot(fit_nolog$predicted, fit_log$predicted)
+  # plot(fit_nolog$predicted, fit_log$predicted)
   eval_performance(fit_nolog)
   eval_performance(fit_log)
   })
+})
+
+test_that("arimax can forecast retrospectively", {
+  #check that it doesn't add too far into the future when forecasting
+  data(demo_malaria)
+
+  data_prep_list <- prep_data(raw_data = demo_malaria[demo_malaria$orgUnit %in% sample(demo_malaria$orgUnit,3),],
+                              y_var = "n_case",
+                              lagged_vars =  c("rain_mm", "temp_c"),
+                              scaled_vars = NULL,
+                              graph_poly = demo_polygon)
+
+  cv_set <- split_cv_forecast(data_to_split = data_prep_list$data_prep,
+                            forecast_start_date = as.Date("2023-09-01"),
+                            month_analysis = 48,
+                            month_assess = 3)
+
+  pred_arimax <- fit_arima(cv_set = cv_set,
+                           y_var = "n_case",
+                           pred_vars = c("rain_mm_lagsc", "temp_c_lagsc"),
+                           log_trans = TRUE,
+                           quantile_levels = c(0.025,0.5,0.95))
+
+  # the dates of the assessment predictions should not go past the dates in cv_set$assess
+  assess_dates <- unique(cv_set$assessment$date)
+  forecast_dates <- unique(pred_arimax$date[pred_arimax$dataset == "assess"])
+  expect_true(all(forecast_dates %in% assess_dates))
+
+  # plot_predictions(pred_arimax)
 })
