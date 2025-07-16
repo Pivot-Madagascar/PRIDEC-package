@@ -3,7 +3,7 @@ test_that("ensemble forecast works", {
   data(demo_polygon)
 
   cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
-                                                       y_var = "n_ case",
+                                                       y_var = "n_case",
                                                        lagged_vars =  c("rain_mm", "temp_c"),
                                                        scaled_vars = NULL,
                                                        graph_poly = demo_polygon)$data_prep,
