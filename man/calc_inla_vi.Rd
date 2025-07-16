@@ -14,7 +14,8 @@ calc_inla_vi(
     prec.timerw1 = c(1, 0.01)),
   W_orgUnit,
   seed = 8675309,
-  nsims = 1
+  nsims = 1,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ calc_inla_vi(
 \item{seed}{a seed to use for reproducability. Default = 8675309}
 
 \item{nsims}{number of simulations to run. Default = 1}
+
+\item{n_cores}{number of cores to use (integer). Defaults to number of available cores minus 2.}
 }
 \value{
 dataframe of variable importance scores

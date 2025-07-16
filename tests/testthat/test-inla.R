@@ -21,7 +21,8 @@ test_that("full inla workflow works", {
                        pred_vars = c("rain_mm", "temp_c"),
                        id_vars = c("orgUnit", "date"),
                        W_orgUnit = W_orgUnit,
-                       verbose = FALSE)
+                       verbose = FALSE,
+                       n_cores = 10)
   expect_contains(colnames(test_fit), c("observed", "predicted", "quantile_level"))
 
   expect_no_condition(eval_performance(test_fit))

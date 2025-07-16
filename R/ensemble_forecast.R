@@ -47,7 +47,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
                           hyper_priors = inla_configs$hyper_priors,
                           quantile_levels = quantile_levels,
                           sample_pi = inla_configs$sample_pi,
-                          W_orgUnit = inla_configs$W_orgUnit)
+                          W_orgUnit = inla_configs$W_orgUnit,
+                          n_cores = inla_configs$n_cores)
     pred_inla$model <- "inla"
     pred_inla$weight <- inla_configs$weight
     out_list$inla <- pred_inla

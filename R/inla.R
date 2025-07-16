@@ -7,6 +7,7 @@
 #'   posterior. Default (FALSE) uses a trick to put all error into an iid random effect.
 #' @param W_orgUnit graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.
 #' @param verbose whether to run the INLA model verbosely. Default = FALSE
+#' @param n_cores number of cores to use (integer). Defaults to number of available cores minus 2.
 #'
 #' @returns dataframe of predictions intervals
 #' @export
@@ -18,7 +19,8 @@ fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
                      quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
                      sample_pi = FALSE,
                      W_orgUnit = NULL,
-                     verbose = FALSE){
+                     verbose = FALSE,
+                     n_cores = NULL){
 
   prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
@@ -48,7 +50,8 @@ fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
                               response = "y_obs")
 
   inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
-                              verbose = verbose, family = 'zeroinflatednbinomial1')
+                              verbose = verbose, family = 'zeroinflatednbinomial1',
+                              n_cores = n_cores)
 
   # ----- prediction intervals -------------------
   id_dataframe <- both_datasets[,c("orgUnit", "date", "dataset", "observed")]
@@ -89,7 +92,8 @@ calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
                                                    "prec.timerw1" = c(1,0.01)),
                          W_orgUnit,
                         seed = 8675309,
-                         nsims = 1){
+                         nsims = 1,
+                        n_cores = NULL){
 
   prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
@@ -138,7 +142,8 @@ calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
                                      response = "y_obs")
 
   inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
-                              verbose = FALSE, family = 'zeroinflatednbinomial1')
+                              verbose = FALSE, family = 'zeroinflatednbinomial1',
+                              n_cores = n_cores)
 
   #---- calculate importance via performance on permuted data ------
   permute_out <- both_datasets[,c(id_vars, "y_obs", "observed",
@@ -176,7 +181,8 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
                                                            "prec.spatial" = c(1, 5e-4),
                                                            "prec.timerw1" = c(1,0.01)),
                                        W_orgUnit, var_scales,
-                                       constant_org, constant_date){
+                                       constant_org, constant_date,
+                                       n_cores = NULL){
 
   prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
@@ -231,7 +237,8 @@ create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL
                                      response = "y_obs")
 
   inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
-                              verbose = FALSE, family = 'zeroinflatednbinomial1')
+                              verbose = FALSE, family = 'zeroinflatednbinomial1',
+                              n_cores = n_cores)
   #----transform into pdp dataframe --------
 
   counter_preds <- both_datasets
@@ -273,7 +280,8 @@ inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_var
                                W_orgUnit, var_scales,
                                constant_org, constant_date,
                                seed = 8675309,
-                               nsims = 1){
+                               nsims = 1,
+                               n_cores = NULL){
 
   var_imp <- calc_inla_vi(cv_set = cv_set,
                y_var = y_var,
@@ -283,7 +291,8 @@ inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_var
                hyper_priors = hyper_priors,
                W_orgUnit = W_orgUnit,
                seed = seed,
-               nsims = nsims)
+               nsims = nsims,
+               n_cores = n_cores)
 
   counter_list <- create_counterfactual_inla(cv_set = cv_set,
                                              y_var = y_var,
@@ -294,7 +303,8 @@ inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_var
                                              W_orgUnit = W_orgUnit,
                                              constant_org = constant_org,
                                              constant_date = constant_date,
-                                             var_scales = var_scales)
+                                             var_scales = var_scales,
+                                             n_cores = n_cores)
 
   return(list("var_imp" = var_imp,
               "counter_data" = counter_list))
@@ -405,13 +415,19 @@ get_inla_pi <- function(inla_marginal, quantile_levels, id_df){
 #' @param family family of model to fit. Default = "zeroinflatednbinomial1"
 #' @param config whetehr or not to use config for control.compute step. Default = TRUE
 #' @param verbose whether fitting should be verbose. Default = TRUE
+#' @param n_cores number of cores to use. If null uses available cores - 2
 run_inla_config <- function(formula, data,  family = "zeroinflatednbinomial1",
-                            config = T, verbose = T){
+                            config = T, verbose = T, n_cores = NULL){
+  if(is.null(n_cores)){
+    n_cores <- parallel::detectCores() - 2
+  }
+
   model <- INLA::inla(formula = formula, data = data, family = family,
                       control.inla = list(strategy = 'adaptive', force.diagonal = T),
                       control.compute = list(dic = T, config = config,
                                              waic = T, return.marginals.predictor = T),
                       control.predictor = list(link = 1, compute = T),
+                      num.threads = n_cores,
                       verbose = verbose)
 
   # model <- inla.rerun(model) #rerun from hyperparameters above, for publication

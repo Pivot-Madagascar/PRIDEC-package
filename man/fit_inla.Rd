@@ -16,7 +16,8 @@ fit_inla(
   quantile_levels = c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99),
   sample_pi = FALSE,
   W_orgUnit = NULL,
-  verbose = FALSE
+  verbose = FALSE,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ posterior. Default (FALSE) uses a trick to put all error into an iid random effe
 \item{W_orgUnit}{graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.}
 
 \item{verbose}{whether to run the INLA model verbosely. Default = FALSE}
+
+\item{n_cores}{number of cores to use (integer). Defaults to number of available cores minus 2.}
 }
 \value{
 dataframe of predictions intervals

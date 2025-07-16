@@ -17,7 +17,8 @@ inv_variables_inla(
   constant_org,
   constant_date,
   seed = 8675309,
-  nsims = 1
+  nsims = 1,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ inv_variables_inla(
 \item{seed}{a seed to use for reproducability. Default = 8675309}
 
 \item{nsims}{number of simulations to run. Default = 1}
+
+\item{n_cores}{number of cores to use (integer). Defaults to number of available cores minus 2.}
 }
 \value{
 list containing variable importance scores and a list of dataframes

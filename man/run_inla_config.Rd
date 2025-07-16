@@ -10,7 +10,8 @@ run_inla_config(
   data,
   family = "zeroinflatednbinomial1",
   config = T,
-  verbose = T
+  verbose = T,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ run_inla_config(
 \item{config}{whetehr or not to use config for control.compute step. Default = TRUE}
 
 \item{verbose}{whether fitting should be verbose. Default = TRUE}
+
+\item{n_cores}{number of cores to use. If null uses available cores - 2}
 }
 \description{
 Configuration for an INLA model

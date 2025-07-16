@@ -15,7 +15,8 @@ create_counterfactual_inla(
   W_orgUnit,
   var_scales,
   constant_org,
-  constant_date
+  constant_date,
+  n_cores = NULL
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ create_counterfactual_inla(
 \item{constant_org}{orgUnit to use in counterfactual plots}
 
 \item{constant_date}{date to use in counterfactual plots}
+
+\item{n_cores}{number of cores to use (integer). Defaults to number of available cores minus 2.}
 }
 \value{
 list of dataframes of counter factual data. Each element corresponds to one predictor variable

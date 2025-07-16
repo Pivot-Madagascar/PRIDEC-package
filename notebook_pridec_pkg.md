@@ -22,6 +22,17 @@ For more info, use [R packages book](https://r-pkgs.org/).
 
 Okay, I think the issue is introduced in the `run_ensemble_forecast` step of the workflow. But it needs to be solved with the `split_cv_forecast` and the `ensemble_forecast` functions. Okay, actually i think it is an issue in the arimax function itself because of how it uses the prediction for the analysis and assessment part, by combining them into one dataframe it thinks we have many years in teh future of data. One way to address this could be to use the `fable` package which may allow me to fit "forecast" historical data?But first I will maybe try a hacky thing to just use `setdiff` to amke sure they don't repeat each other. This is done and tests are added.
 
+Also added functionality for choosing the number of cores for INLA models.
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary based on what is in `results_dir`
+- update "quick start" guide with training and forecasting steps
+- ~~fix `split_cv_forecast` to take a horizon and forecast start date argument~~
+- ~~control number of cores used in model fitting~~
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+
 
 
 ## 2025-07-15
