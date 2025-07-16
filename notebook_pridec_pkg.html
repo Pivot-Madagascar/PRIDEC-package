@@ -41,10 +41,31 @@
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="id_2025-07-16">2025-07-16<a class="anchor" aria-label="anchor" href="#id_2025-07-16"></a></h2>
+<p>Okay, I think the issue is introduced in the <code>run_ensemble_forecast</code> step of the workflow. But it needs to be solved with the <code>split_cv_forecast</code> and the <code>ensemble_forecast</code> functions. Okay, actually i think it is an issue in the arimax function itself because of how it uses the prediction for the analysis and assessment part, by combining them into one dataframe it thinks we have many years in teh future of data. One way to address this could be to use the <code>fable</code> package which may allow me to fit “forecast” historical data?But first I will maybe try a hacky thing to just use <code>setdiff</code> to amke sure they don’t repeat each other. This is done and tests are added.</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-07-15">2025-07-15<a class="anchor" aria-label="anchor" href="#id_2025-07-15"></a></h2>
+<p>Working on the issue with ARIMA (ported over from pridec-forecast-workflow). It is related to this issue: <a href="https://github.com/Pivot-Madagascar/PRIDEC-package/issues/3" class="external-link uri">https://github.com/Pivot-Madagascar/PRIDEC-package/issues/3</a>. Although actually that has to do with using exogeneous variables. The other issue is that if you forecast ARIMA with a longer dataset of exogenous variables (like to “forecast” on training data), it expands the forecast way too far in the future because it starts with the last end date of the forecast. I think these are two seperate issues. To solve these, I will write tests that introduce these issues and then update code to fix them.</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-06-13">2025-06-13<a class="anchor" aria-label="anchor" href="#id_2025-06-13"></a></h2>
+<p>Updated <code>fit_naive</code> to no longer use the min and max no matter what, but to actually calculate the quantiles based on what is provided. Checked this didn’t upset other functions that rely on this. It seems to be fine.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary based on what is in <code>results_dir</code> - update “quick start” guide with training and forecasting steps - fix <code>split_cv_forecast</code> to take a horizon and forecast start date argument - control number of cores used in model fitting</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-06-09">2025-06-09<a class="anchor" aria-label="anchor" href="#id_2025-06-09"></a></h2>
+<p>The quantiles on the naive model are fixed at 0.025 and 0.0975, which is causing issues when stacking into an ensemble. I will update the stacked <code>ensemble_forecast</code> function to help fix this. Done.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary based on what is in <code>results_dir</code> - update “quick start” guide with training and forecasting steps - fix <code>split_cv_forecast</code> to take a horizon and forecast start date argument - control number of cores used in model fitting</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
+</div>
+<div class="section level2">
 <h2 id="id_2025-06-06">2025-06-06<a class="anchor" aria-label="anchor" href="#id_2025-06-06"></a></h2>
 <p>Running into issues when applying the INLA model to a spatial model that isn’t all contiguous (like for our CHW data which is just a subset of fokontany). I think I need to add an option where if the spatial polygon is <code>null</code>, then it doesn’t fit the spatial model and hopefully this will solve the issue for this. I’ve added that, but the issue was actually something with the <code>INLA</code> package itself. It may be good in the future to wrap fitting models in some kind of <code>tryCatch</code> so it doesn’t stop the whole process.</p>
 <p>Updated the INLA workflow to allow for fitting without the spatial model by providing <code>NULL</code> to <code>W_orgUnit</code>. Also updated INLA because I was having issues with my libc6.</p>
-<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary - update “quick start” guide</p>
+<p><strong>ARIMAX issue</strong>: I was having an issue with the ARIMAX model when the training and testing data overlap because ti by defautl will project forward from the end of the training data and I don’t know if that is changable. So I guess my question for myself was why did I want the data to be overlapping in the <code>ensemble_forecast</code> code? This is done in the special <code>split_cv_forecast</code> function because the original <code>split_cv</code> function was only included months where we had observations and the future by definition does not, so this was like a mnually way to split it. Maybe the easiest is just to change this function so it has a start date and a horizon, and then all the data before it is used in the training? I can also add something to the arimax function, but I think it is fine as is. Yes it is because the <code>xreg</code> overrides the <code>h</code> argumnet in the forecast part of the <code>get_arima_pi</code> function.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary based on what is in <code>results_dir</code> - update “quick start” guide with training and forecasting steps - fix <code>split_cv_forecast</code> to take a horizon and forecast start date argument</p>
 <p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
 </div>
 <div class="section level2">
