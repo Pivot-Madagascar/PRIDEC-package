@@ -43,6 +43,9 @@
 <div class="section level2">
 <h2 id="id_2025-07-16">2025-07-16<a class="anchor" aria-label="anchor" href="#id_2025-07-16"></a></h2>
 <p>Okay, I think the issue is introduced in the <code>run_ensemble_forecast</code> step of the workflow. But it needs to be solved with the <code>split_cv_forecast</code> and the <code>ensemble_forecast</code> functions. Okay, actually i think it is an issue in the arimax function itself because of how it uses the prediction for the analysis and assessment part, by combining them into one dataframe it thinks we have many years in teh future of data. One way to address this could be to use the <code>fable</code> package which may allow me to fit “forecast” historical data?But first I will maybe try a hacky thing to just use <code>setdiff</code> to amke sure they don’t repeat each other. This is done and tests are added.</p>
+<p>Also added functionality for choosing the number of cores for INLA models.</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary based on what is in <code>results_dir</code> - update “quick start” guide with training and forecasting steps - <del>fix <code>split_cv_forecast</code> to take a horizon and forecast start date argument</del> - <del>control number of cores used in model fitting</del></p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
 </div>
 <div class="section level2">
 <h2 id="id_2025-07-15">2025-07-15<a class="anchor" aria-label="anchor" href="#id_2025-07-15"></a></h2>

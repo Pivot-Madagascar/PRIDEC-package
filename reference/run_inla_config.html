@@ -46,7 +46,8 @@ An internal function to run a configured INLA model</p>
 <span>  <span class="va">data</span>,</span>
 <span>  family <span class="op">=</span> <span class="st">"zeroinflatednbinomial1"</span>,</span>
 <span>  config <span class="op">=</span> <span class="cn">T</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">T</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">T</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -72,6 +73,10 @@ An internal function to run a configured INLA model</p>
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>whether fitting should be verbose. Default = TRUE</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>number of cores to use. If null uses available cores - 2</p></dd>
 
 </dl></div>
 

@@ -51,7 +51,8 @@
 <span>  <span class="va">constant_org</span>,</span>
 <span>  <span class="va">constant_date</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">8675309</span>,</span>
-<span>  nsims <span class="op">=</span> <span class="fl">1</span></span>
+<span>  nsims <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,6 +106,10 @@
 
 <dt id="arg-nsims">nsims<a class="anchor" aria-label="anchor" href="#arg-nsims"></a></dt>
 <dd><p>number of simulations to run. Default = 1</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>number of cores to use (integer). Defaults to number of available cores minus 2.</p></dd>
 
 </dl></div>
     <div class="section level2">

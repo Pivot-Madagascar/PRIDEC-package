@@ -50,7 +50,8 @@
 <span>  quantile_levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.01</span>, <span class="fl">0.025</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span>, by <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span>, <span class="fl">0.975</span>, <span class="fl">0.99</span><span class="op">)</span>,</span>
 <span>  sample_pi <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  W_orgUnit <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  n_cores <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -102,6 +103,10 @@ posterior. Default (FALSE) uses a trick to put all error into an iid random effe
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
 <dd><p>whether to run the INLA model verbosely. Default = FALSE</p></dd>
+
+
+<dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
+<dd><p>number of cores to use (integer). Defaults to number of available cores minus 2.</p></dd>
 
 </dl></div>
     <div class="section level2">
