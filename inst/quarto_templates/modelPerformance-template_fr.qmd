@@ -277,43 +277,55 @@ Les figures ci-dessous montrent l’association de chaque variable avec le nombr
 
 En général, une pente plus raide signifie une association plus forte, tandis qu'une ligne essentiellement plate correspond à une association plus faible. Certains modèles ont également des associations qui ne sont pas linéaires et les lignes seront courbées.
 
-TESTING PROGRAMMATICALLY CONTROLLED PANEL CREATION
 
-```{r function for programmatic }
-tabset_invVar <- function(.x, .f, ...){
-  nms <- toupper(names(.x))
-  
-  cat(":::: {.panel-tabset}", "\n\n", sep = "")
-  
-  for (i in seq_along(.x)){
-    cat("##### ", nms[i], "\n\n", sep = "")
-    
-    cat("#| output: true", "\n\n", sep = "")
-    #set up figure heights
-    if(nms[i] == "NAIVE"){
-      cat("#| fig-height: 6", "\n\n", sep = "")
-      cat("#| out-height: 6in", "\n\n", sep = "")
-      print(patchwork::wrap_plots(plot_counterfactual(.x[[i]]), nrow = 2))
-    } else {
-      cat("#| fig-height: ",length(.x[[i]]), "\n\n", sep = "")
-      cat("#| out-height: ",length(.x[[i]]), "in", "\n\n", sep = "")
-      print(patchwork::wrap_plots(plot_counterfactual(.x[[i]]), ncol = 3))
-    }
-    
-    cat("\n\n")
+```{r programmatic function for tabs of counterfactual plots}
+tabset_counterPlots <- function(this_counterData, this_name){
+  #dynamically set figure height and layout for naive
+  if(this_name == "NAIVE"){
+  knitr::knit_child(text = c(
+    '#### `r this_name`',
+    '',
+    '```{r}',
+    '#| output: true',
+    '#| fig-height: 6',
+    '#| out-height: 6in',
+    'p <- patchwork::wrap_plots(plot_counterfactual(this_counterData), nrow = 2)',
+    'plot(p)',
+    '```',
+    ''
+  ), envir = environment(), quiet = TRUE)
+  } else {
+      knitr::knit_child(text = c(
+    '#### `r this_name`',
+    '',
+    '```{r}',
+    '#| output: true',
+    '#| fig-height: !expr length(this_counterData)',
+    '#| out-height: paste0(length(this_counterData), "in")',
+    'p <- patchwork::wrap_plots(plot_counterfactual(this_counterData), ncol = 3)',
+    'plot(p)',
+    '```',
+    ''
+  ), envir = environment(), quiet = TRUE)
   }
-  
-  cat("::::", "\n\n", sep = "")
-  
-  invisible(.x)
 }
 ```
 
+:::: {.panel-tabset}
 
 ```{r}
 #| results: asis
-tabset_invVar(counter_data)
+
+res <- purrr::map(1:length(counter_data), function(m){
+  
+  tabset_counterPlots(this_counterData = counter_data[[m]],
+               this_name = toupper(names(counter_data))[m])
+  
+})
+cat(unlist(res), sep = "\n")
 ```
+
+::::
 
 ## Exactitude
 
@@ -349,7 +361,7 @@ knitr::kable(
 
 Nous pouvons visualiser les nombres de cas predits par rapport aux nombres de cas réels au niveau du orgUnit. Le nombre réel de cas est représenté par des points et le nombre prédit de cas est représenté par la ligne. La ligne ombrée est l'intervalle de prediction à 95 %: nous sommes à 95% sur que le vrai valeur tombe dans cette zone coloré. 
 
-These plots represent the retrospective predictions at the full horizon (3 months).
+Ces graphiques représentent les prédictions rétrospectives à l’horizon complet (3 mois).
 
 ```{r}
 plot_oneModel <- function(pred_df, model_name, model_color){
@@ -381,61 +393,37 @@ model_cols <- c("naive" = paletteer_d("khroma::bright")[1],
                 "ranger" = paletteer_d("khroma::bright")[5])
 ```
 
-:::{.panel-tabset}
-
-#### Naive
-
 ```{r}
-#| output: true
-#| fig-height: !expr fig_height
-#| out-height: !expr paste0(fig_height, "in")
-
-plot_oneModel(pred_forecast, model_name = "naive", 
-              model_color = model_cols[1])
+tabset_timeSeries <- function(model_name, model_color){
+        knitr::knit_child(text = c(
+    '#### `r toupper(model_name)`',
+    '',
+    '```{r}',
+    '#| output: true',
+    '#| fig-height: !expr fig_height',
+    '#| out-height: !expr paste0(fig_height, "in")',
+    'p <- plot_oneModel(pred_forecast, model_name = model_name, model_color = model_color)',
+    'plot(p)',
+    '```',
+    ''
+  ), envir = environment(), quiet = TRUE)
+}
 ```
 
-#### ARIMA
+
+::: {.panel-tabset}
 
 ```{r}
 #| output: true
-#| fig-height: !expr fig_height
-#| out-height: !expr paste0(fig_height, "in")
+#| results: asis
 
-plot_oneModel(pred_forecast, model_name = "arima", 
-              model_color = model_cols[2])
-```
-
-#### GLM
-
-```{r}
-#| fig-height: !expr fig_height
-#| out-height: !expr paste0(fig_height, "in")
-#| output: true
-
-plot_oneModel(pred_forecast, model_name = "glm", 
-              model_color = model_cols[3])
-```
-
-#### INLA
-
-```{r}
-#| fig-height: !expr fig_height
-#| out-height: !expr paste0(fig_height, "in")
-#| output: true
-
-plot_oneModel(pred_forecast, model_name = "inla", 
-              model_color = model_cols[4])
-```
-
-#### RF
-
-```{r}
-#| fig-height: !expr fig_height
-#| out-height: !expr paste0(fig_height, "in")
-#| output: true
-
-plot_oneModel(pred_forecast, model_name = "ranger", 
-              model_color = model_cols[5])
+res <- purrr::map(1:length(trained_models), function(m){
+  
+  tabset_timeSeries(model_name = trained_models[m],
+                    model_color = model_cols[trained_models[m]])
+  
+})
+cat(unlist(res), sep = "\n")
 ```
 
 #### Tous 
