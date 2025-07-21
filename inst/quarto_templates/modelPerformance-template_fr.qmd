@@ -25,19 +25,9 @@ params:
 params <- list("results_dir" = "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults")
 
 #to render via a test
-# quarto render modelPerformance-template.qmd -M title:"Validation des Modèles PRIDEC" --output models-output.html  -P results_dir:"/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
+# quarto render modelPerformance-template_fr.qmd -M title:"Validation des Modèles PRIDEC" --output models-output.html  -P results_dir:"/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
 
 ```
-
-## Comment utiliser ce document?
-
-Ce document fournit des informations sur la performance des modèles statistiques utilisées pour prédire `r params$y_var`. Il fournit des informations sur cinq modèles statistiques (selon le choix de l'utilisateur):
-
-1. Un modèle de base, basée sur le moyenne des cinq dernières années pour ce mois (NAIVE)
-2. Un modèle temporelle autogressive qui est fait pour chaque orgUnit(ARIMA)
-3. Une regression linéare (GLM)
-4. Une regression linéare spatiale (INLA)
-5. Un modèle d'apprentissage automatique (Random Forest (RANGER))
 
 ```{r packages}
 #| include: false
@@ -60,6 +50,11 @@ library(lubridate)
 library(dplyr)
 ```
 
+```{r identify models used}
+#identify models to include based on what is in results_dir
+model_files <- list.files(params$results_dir, pattern = "*_preds.Rdata")
+trained_models <- gsub("_preds.Rdata", "",model_files)
+```
 
 ```{r load data}
 org_poly <- readRDS(paste0(params$results_dir, "/orgPolygon.Rdata")) 
@@ -78,7 +73,7 @@ available_vars$clean_var <- ifelse(available_vars$lagged, stringr::str_sub(avail
 ```
 
 ```{r load different model outputs}
-performance <- purrr::map(c("naive", "arima", "glm", "inla", "ranger"), function(m){
+performance <- purrr::map(trained_models, function(m){
     this_file <- paste0(params$results_dir, "/", m, "_perf.Rdata")
   if(!file.exists(this_file)){
     return(NULL)
@@ -91,7 +86,7 @@ performance <- purrr::map(c("naive", "arima", "glm", "inla", "ranger"), function
 
 performance <- dplyr::bind_rows(performance)
 
-predictions <- purrr::map(c("naive", "arima", "glm", "inla", "ranger"), function(m){
+predictions <- purrr::map(trained_models, function(m){
     this_file <- paste0(params$results_dir, "/", m, "_preds.Rdata")
   if(!file.exists(this_file)){
     return(NULL)
@@ -116,7 +111,7 @@ pred_forecast <- predictions |>
     ungroup()
 
 
-variable_importance <- purrr::map(c("arima", "glm", "inla", "ranger"), function(m){
+variable_importance <- purrr::map(trained_models, function(m){
    this_file <- paste0(params$results_dir, "/", m, "_inv_var.Rdata")
   if(!file.exists(this_file)){
     return(NULL)
@@ -128,7 +123,8 @@ variable_importance <- purrr::map(c("arima", "glm", "inla", "ranger"), function(
 }) |>
   dplyr::bind_rows() 
 
-counter_data <- purrr::map(c("arima", "glm", "inla", "ranger"), function(m){
+#counter data doesn't include naive model
+counter_data <- purrr::map(trained_models[trained_models != "naive"], function(m){
   this_file <- paste0(params$results_dir, "/", m, "_inv_var.Rdata")
   if(!file.exists(this_file)){
     return(NULL)
@@ -137,74 +133,87 @@ counter_data <- purrr::map(c("arima", "glm", "inla", "ranger"), function(m){
   this_in <- readRDS(this_file)[[2]]
   return(this_in)
 })
-names(counter_data) <- c("arima", "glm", "inla", "ranger")
+names(counter_data) <- trained_models[trained_models != "naive"]
+
+#manually add naive model if needed
+if("naive" %in% trained_models){
+  base_counter <- list()
+  #orgUnit
+  base_counter[[1]] <- filter(predictions, model == "naive", !is.na(cv_fold)) |>
+    filter(dataset == "analysis", quant_long == "quant_0.5", cv_fold == max(cv_fold)) |>
+    group_by(orgUnit) |>
+    summarise(yhat = mean(observed, na.rm = TRUE)) |>
+    rename(var_value = orgUnit) |>
+    mutate(variable = "orgUnit")
+  #month_season
+  base_counter[[2]] <- filter(predictions, model == "naive", !is.na(cv_fold)) |>
+    filter(dataset == "analysis", quant_long == "quant_0.5", cv_fold == max(cv_fold)) |>
+    mutate(month_season = month(date)) |>
+    group_by(month_season) |>
+      summarise(yhat = mean(observed, na.rm = TRUE)) |>
+    mutate(month_season = as.factor(month_season)) |>
+    rename(var_value = month_season) |>
+    mutate(variable = "month_season")
+  names(base_counter) <- c("orgUnit", "month_season")
+  
+  counter_data <- append(counter_data, list(base_counter), after = 0)
+  names(counter_data)[[1]] <- "naive"
+}
 ```
+
+## Comment utiliser ce document?
+
+Ce document fournit des informations sur la performance des modèles statistiques utilisées pour prédire `r y_var`. Il fournit des informations sur des modèles statistiques (selon le choix de l'utilisateur):
+
+1. Un modèle de base, basée sur le moyenne des cinq dernières années pour ce mois (NAIVE)
+2. Un modèle temporelle autogressive qui est fait pour chaque orgUnit(ARIMA)
+3. Une regression linéare (GLM)
+4. Une regression linéare spatiale (INLA)
+5. Un modèle d'apprentissage automatique (Random Forest (RANGER))
+
+Cette version de modèle PRIDE inclut les modèles suivants: `r print(toupper(trained_models))`
 
 ::: {.callout-note collapse="true" appearance="simple"}
 ### À propos des modèles
 
 #### BASE
 Le modèle de base est basé sur la moyenne des cinq dernières années pour chaque mois de l'année. Par exemple, la prévision pour décembre 2024 est égale au nombre moyen de cas pour cet unité organisationelle au mois de décembre entre 2018 et 2023. L'intervalle de prédiction correspond au minimum et au maximum au cours de cette période de cinq ans. 
-*Ny maodely fototra dia mifototra amin'ny salan'isan'ny dimy taona farany ho an'ny isam-bolana amin'ny taona. Ohatra, ny vinavina ho an'ny volana desambra 2024 dia mitovy amin'ny salan'isan'ny tranga ho an'ity tobim-pahasalamana ity tamin'ny volana desambra teo anelanelan'ny taona 2018 sy 2023. Ny elanelana vinavina dia mifanandrify amin'ny kely indrindra sy ambony indrindra mandritra io fe-potoana dimy taona io.*
 
 **Avantages** : Il s’agit du modèle le plus basique, facile à utiliser et à comprendre.
 
-***Tombontsoa*** : *Ity no môdely fototra indrindra, mora ampiasaina sy azo.*
-
 **Inconvénients** : Parce qu’il ne contient aucune variable climatique, environnementale ou sociale, ce n’est pas toujours un modèle exacte ni précis.
-
-***Fatiantoka*** : *Satria tsy misy ny fiovan'ny toetr'andro, ny tontolo iainana na ny fiaraha-monina, dia tsy modely mazava na mazava foana izy io.*
 
 #### ARIMA
 Un modèle ARIMA est conçu spécifiquement pour la modélisation de données de séries chronologiques. Il combine les tendances des données historiques avec une moyenne mobile des données pour prévoir l'avenir. 
-*Ny maodely ARIMA dia natao manokana hanaovana modely ny angona andiam-potoana. Izy io dia manambatra ny fironana angona ara-tantara miaraka amin'ny salan'isa mihetsiketsika mba haminavina ny ho avy.*
 
 **Avantages** : Il est très précis pour les données de séries chronologiques et peut tenir compte des tendances historiques à long et à court terme.
 
-***Tombontsoa*** : *Tena marina izy io amin'ny angon-drakitra andiam-potoana ary afaka mitantana ny fironana ara-tantara maharitra sy fohy.*
-
 **Inconvénients** : Il ne peut modéliser qu'une seule unité organisationalle (CSB, fokontany) à la fois, ce qui signifie qu'il ne peut pas partager d'informations entre les unités organisationnelles. Il est également peu performant si le nombre de cas est faible (< 50).
-
-***Fatiantoka*** : *CSB na fokontany iray ihany no azo atao modely amin’ny fotoana iray, izany hoe tsy afaka mifampizara vaovao eo amin’ny sampana fikambanana. Tsy mahomby raha ambany ny isan'ny tranga (<50).*
 
 
 #### GLM
 Un modèle GLM est une régression linéaire de base qui prend en compte l'identité individuelle des unités organisationnelles ainsi que la moyenne de chaque mois de l'année.
-*Ny maodelin'ny GLM dia fihemorana tsipika fototra izay mandinika ny maha-isan'ny vondrona fikambanana ary koa ny salan'isa isam-bolana amin'ny taona.*
 
 **Avantages** : Il est précis même lorsque le nombre de cas est faible (<50) et peut être créé très rapidement.
 
-***Tombontsoa***: *Marina izany na dia kely aza ny isan'ny tranga (<50) ary azo noforonina haingana dia haingana.*
-
 **Inconvénients** : Il ne tient pas compte des tendances spatiales sous-jacentes dans les données et ne peut pas modéliser directement la saisonnalité.
 
-***Fatiantoka*** : *Tsy mitanisa ny fironana ara-potoana ao anatin'ny angon-drakitra ary tsy afaka manao modely mivantana ny vanim-potoana.*
 
 #### INLA
 Le modèle INLA est basé sur le modèle GLM mais contient une structure supplémentaire pour tenir compte de la saisonnalité annuelle et de la structure spatiale des données. Cela signifie que les prévisions apparaîtront plus lisses que dans d'autres modèles et que les valeurs des unités organisationnelles proches les unes des autres seront similaires.
 
-*Ny maodely INLA dia mifototra amin'ny maodely GLM saingy misy rafitra fanampiny hijerena ny vanim-potoana isan-taona sy ny firafitry ny angon-drakitra. Midika izany fa hiseho malefaka kokoa noho ny amin'ny modely hafa ny vinavina ary hitovy ny soatoavin'ny vondrona fikambanana mifanakaiky.*
-
 **Avantage**: L'inclusion de la saisonnalité et de la structure spatiale peut rendre le modèle plus précis, si cela représente la réalité. Le modèle peut également inclure des associations non linéaires avec des variables.
-
-***Tombontsoa*** : *Ny fampidirana ny vanim-potoana sy ny firafitry ny habakabaka dia mety hahatonga ny modely ho marina kokoa, raha toa ka maneho ny zava-misy izany. Ny modely dia mety ahitana fikambanana tsy an-dalana miaraka amin'ny variables.*
 
 **Inconvénients** : Le modèle devient moins précis et fiable si des données manquent. Il nécessite un ordinateur puissant pour fonctionner.
 
-***Fatiantoka*** : *Lasa tsy dia marina sy azo itokisana ny modely raha tsy misy angona. Mitaky solosaina mahery vaika izy io.*
 
 #### RF (Ranger)
 Un modèle forêt aléatoire (ou Random Forest) est une méthode d'apprentissage automatique utilisée pour faire des prédictions. Il combine des milliers de modèles simples pour créer ses prédictions. Imagine que tu dois prendre une décision, mais au lieu de le faire seul, tu demandes à plusieurs de tes amis. Chacun de tes amis a une opinion différente, mais la majorité des opinions te donnera probablement la meilleure réponse. 
 
-*Ny maodely Random Forest dia fomba fianarana milina ampiasaina hanaovana faminaniana. Manambatra modely tsotra an'arivony izy io mba hamoronana ny faminaniany.*
-
 **Avantage** : Un modèle RF est souvent plus précis dans ses prévisions que d'autres modèles, car il utilise de nombreux modèles pour réduire les erreurs. Il peut inclure des associations non linéaires et est très rapide à créer.
 
-***Tombontsoa*** : *Ny modely RF dia mampiasa modely maro mba hampihenana ny lesoka. Mety ahitana fikambanana tsy misy tsipika izy io ary haingana be ny famoronana.*
 
 **Inconvénients** : Comme il ne tient pas directement compte de la saisonnalité, il ne permet pas de prévoir aussi bien les séries chronologiques. Il est également parfois plus difficile de comprendre les paramètres du modèle qu'un modèle de régression.
-
-***Fatiantoka*** : *Tsy maminavina ny fizaran-potoana koa izy io. Sarotra kokoa ny mahatakatra ny mari-pamantarana modely noho ny modely regression.*
 :::
 
 Pour évaluer des modèles vous-même, explorez les différentes sections à l'aide de la barre de navigation située sur le côté. Celles-ci contiennent des informations sur :
@@ -213,9 +222,6 @@ Pour évaluer des modèles vous-même, explorez les différentes sections à l'a
 - les mesures de performance du modèle, telles que le r-carré et les mesures d'erreur
 - comparaison des series temporelles prédit et réels
 - comparaison des cartes des taux d'incidence prédit et réels
-
-
-
 
 ## Variables Explicatives
 
@@ -234,6 +240,7 @@ var_imp_df <- variable_importance |>
   bind_rows(base_var_imp) |>
   left_join(available_vars[,c("var", "clean_var")], by = c("variable" = "var")) |>
   mutate(importance = round(importance, 3)) |>
+  mutate(importance = pmax(importance,0)) |>
   select(-stdev, -variable) |>
   pivot_wider(names_from = model, values_from = importance) |>
   select(Variable = clean_var, base, arima, glm, inla, ranger) |>
@@ -270,96 +277,43 @@ Les figures ci-dessous montrent l’association de chaque variable avec le nombr
 
 En général, une pente plus raide signifie une association plus forte, tandis qu'une ligne essentiellement plate correspond à une association plus faible. Certains modèles ont également des associations qui ne sont pas linéaires et les lignes seront courbées.
 
-:::{.panel-tabset}
+TESTING PROGRAMMATICALLY CONTROLLED PANEL CREATION
 
-#### BASE
-
-```{r}
-counter_y_range_opts <- list("n_palu" = c(0,600),
-                     "n_diar" = c(0,50),
-                     "n_resp" = c(0,200))
-# counter_y_range <- counter_y_range_opts[[which(names(counter_y_range_opts) == params$y_var_label)]]
-
-counter_y_range <- NULL
+```{r function for programmatic }
+tabset_invVar <- function(.x, .f, ...){
+  nms <- toupper(names(.x))
+  
+  cat(":::: {.panel-tabset}", "\n\n", sep = "")
+  
+  for (i in seq_along(.x)){
+    cat("##### ", nms[i], "\n\n", sep = "")
+    
+    cat("#| output: true", "\n\n", sep = "")
+    #set up figure heights
+    if(nms[i] == "NAIVE"){
+      cat("#| fig-height: 6", "\n\n", sep = "")
+      cat("#| out-height: 6in", "\n\n", sep = "")
+      print(patchwork::wrap_plots(plot_counterfactual(.x[[i]]), nrow = 2))
+    } else {
+      cat("#| fig-height: ",length(.x[[i]]), "\n\n", sep = "")
+      cat("#| out-height: ",length(.x[[i]]), "in", "\n\n", sep = "")
+      print(patchwork::wrap_plots(plot_counterfactual(.x[[i]]), ncol = 3))
+    }
+    
+    cat("\n\n")
+  }
+  
+  cat("::::", "\n\n", sep = "")
+  
+  invisible(.x)
+}
 ```
 
 
 ```{r}
-base_counter <- list()
-#orgUnit
-base_counter[[1]] <- filter(predictions, model == "naive", !is.na(cv_fold)) |>
-  filter(dataset == "analysis", quant_long == "quant_0.5", cv_fold == max(cv_fold)) |>
-  group_by(orgUnit) |>
-  summarise(yhat = mean(observed, na.rm = TRUE)) |>
-  rename(var_value = orgUnit) |>
-  mutate(variable = "orgUnit")
-#month_season
-base_counter[[2]] <- filter(predictions, model == "naive", !is.na(cv_fold)) |>
-  filter(dataset == "analysis", quant_long == "quant_0.5", cv_fold == max(cv_fold)) |>
-  mutate(month_season = month(date)) |>
-  group_by(month_season) |>
-    summarise(yhat = mean(observed, na.rm = TRUE)) |>
-  mutate(month_season = as.factor(month_season)) |>
-  rename(var_value = month_season) |>
-  mutate(variable = "month_season")
-names(base_counter) <- c("orgUnit", "month_season")
+#| results: asis
+tabset_invVar(counter_data)
 ```
-
-```{r}
-#| output: true
-#| fig-height: 6
-#| out-height: 6in
-patchwork::wrap_plots(plot_counterfactual(base_counter), nrow = 2)
-```
-
-
-#### ARIMA
-
-```{r}
-#| output: true
-#| fig-height: !expr length(counter_data$arima)
-#| out-height: !expr paste0(length(counter_data$arima), "in")
-
-wrap_plots(plot_counterfactual(counter_data$arima),
-           ncol = 3)
-```
-
-#### GLM
-
-```{r}
-#| output: true
-#| fig-height: !expr length(counter_data$glm)
-#| out-height: !expr paste0(length(counter_data$glm), "in")
-
-patchwork::wrap_plots(plot_counterfactual(counter_data$glm), 
-                     ncol = 3)
-```
-
-#### INLA
-
-
-```{r}
-#| output: true
-#| fig-height: !expr length(counter_data$inla)
-#| out-height: !expr paste0(length(counter_data$inla), "in")
-#| 
-patchwork::wrap_plots(plot_counterfactual(counter_data$inla), 
-                     ncol = 3)
-
-```
-
-#### RF
-
-```{r}
-#| output: true
-#| fig-height: !expr length(counter_data$ranger)
-#| out-height: !expr paste0(length(counter_data$ranger), "in")
-
-patchwork::wrap_plots(plot_counterfactual(counter_data$ranger), 
-                     ncol = 3)
-```
-
-:::
 
 ## Exactitude
 
