@@ -41,6 +41,19 @@
 <p>For more info, use <a href="https://r-pkgs.org/" class="external-link">R packages book</a>.</p>
 </div>
 <div class="section level2">
+<h2 id="id_2025-07-21">2025-07-21<a class="anchor" aria-label="anchor" href="#id_2025-07-21"></a></h2>
+<p>I have something that works for dynamically plotting in tabs, bt it does print out some text, and I’m not really sure why. Ignoring this for now. Okay, have somethign that works and I ahve testing on a subset of models. Running the full <code>train_models</code> workflow test to see now. It was working but for some reason now when I tried it out on a new folder it isn’t working? It is a werid error in chunk 15 of the template, with <code>tabset_timeSeries</code>. IT says we only ahve one orgUnit, but when I run it line by line, that clearly insn’t true? It may have been due to the fact I was using testing data that made no sense and only had one testing point? So I added more testing data to the test to see if that fixes it.Nope, the issue was the very last map figure! becuase it had a year of a map that didn’t exist due to the testing data not covering two years</p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary based on what is in <code>results_dir</code> - update “quick start” guide with training and forecasting steps</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
+</div>
+<div class="section level2">
+<h2 id="id_2025-07-18">2025-07-18<a class="anchor" aria-label="anchor" href="#id_2025-07-18"></a></h2>
+<p>Working on the training and forecasting steps to get them working better. First updating the quarto doc code to only return models based on what is in the <code>results_dir</code>. This is more complicated than I thought ti would be becuase it involves dynamically creating/using tabset. This blog has been super helpful though: <a href="https://josh.quarto.pub/posts/2022-09-29-quarto-tabsets/2022-09-29-quarto-tabsets.html#r-markdown-syntax" class="external-link uri">https://josh.quarto.pub/posts/2022-09-29-quarto-tabsets/2022-09-29-quarto-tabsets.html#r-markdown-syntax</a></p>
+<p>It works! but the sizing of the plots isn’t dynamic anymore. So now I am looking into that. Testing it in <code>scratch/testing_dynamic_tabs.qmd</code></p>
+<p><strong>TO DO:</strong> - update quarto doc to only use subset of models if necessary based on what is in <code>results_dir</code> - update “quick start” guide with training and forecasting steps</p>
+<p><em>Back burner</em>: - update <code>train_models</code> to actually use model_configs and tuning</p>
+</div>
+<div class="section level2">
 <h2 id="id_2025-07-16">2025-07-16<a class="anchor" aria-label="anchor" href="#id_2025-07-16"></a></h2>
 <p>Okay, I think the issue is introduced in the <code>run_ensemble_forecast</code> step of the workflow. But it needs to be solved with the <code>split_cv_forecast</code> and the <code>ensemble_forecast</code> functions. Okay, actually i think it is an issue in the arimax function itself because of how it uses the prediction for the analysis and assessment part, by combining them into one dataframe it thinks we have many years in teh future of data. One way to address this could be to use the <code>fable</code> package which may allow me to fit “forecast” historical data?But first I will maybe try a hacky thing to just use <code>setdiff</code> to amke sure they don’t repeat each other. This is done and tests are added.</p>
 <p>Also added functionality for choosing the number of cores for INLA models.</p>
