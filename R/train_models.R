@@ -39,8 +39,6 @@ train_models <- function(prep_output,
   # models = c("naive", "arimax", "ranger")
   # results_dir = paste(tempdir(), "pridec-output", sep = "/")
 
-  #create logical for if fitting all 5 models
-  fitting_five_models <- sum((c("naive", "ranger", "inla", "glm_nb", "arimax") %in% models))==5
 
   #move this outside the function
   if(is.null(results_dir)){
@@ -67,13 +65,10 @@ train_models <- function(prep_output,
   log_con <- file(lc_filename,
                   open = "a")
   cli::cli_alert_info(paste0("Saving log to: {.file ", lc_filename, "}"))
-  if(create_report & fitting_five_models){
-  cli::cli_alert_info(paste0("Saving HTML Report at: {.file ", report_configs$html_filename, "}"))
-  cat(paste0("Saving quarto report at ", report_configs$html_filename),
-      file = log_con, sep = "\n")
-  } else {
-    cli::cli_alert_info(paste0("No HTML report being created."))
-    cat("No HTML report created", file = log_con, sep = "\n")
+  if(create_report){
+    cli::cli_alert_info(paste0("Saving HTML Report at: {.file ", report_configs$html_filename, "}"))
+    cat(paste0("Saving quarto report at ", report_configs$html_filename),
+        file = log_con, sep = "\n")
   }
 
   cli::cli_text("Fitting the following models:\n",
@@ -301,7 +296,6 @@ train_models <- function(prep_output,
   # --------------------Create quarto report ------------------------- #
   if(create_report){
 
-  if(fitting_five_models){
   cli::cli_h2("Creating report of model performance")
   cat(paste0("Creating quarto report at ", round(Sys.time())),
       file = log_con, sep = "\n")
@@ -310,10 +304,6 @@ train_models <- function(prep_output,
                        html_filename = report_configs$html_filename,
                        lang = report_configs$lang,
                        doc_title = report_configs$doc_title)
-  } else {
-    cli::cli_alert_warning("Cannot create HTML report unless all 5 models are fit.
-                           Please retrain with all 5 models to output report.")
-  }
 
   }
 

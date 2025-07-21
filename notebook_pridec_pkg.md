@@ -18,6 +18,17 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2025-07-21
+
+I have something that works for dynamically plotting in tabs, bt it does print out some text, and I'm not really sure why. Ignoring this for now. Okay, have somethign that works and I ahve testing on a subset of models. Running the full `train_models` workflow test to see now. It was working but for some reason now when I tried it out on a new folder it isn't working? It is a werid error in chunk 15 of the template, with `tabset_timeSeries`. IT says we only ahve one orgUnit, but when I run it line by line, that clearly insn't true? It may have been due to the fact I was using testing data that made no sense and only had one testing point? So I added more testing data to the test to see if that fixes it.Nope, the issue was the very last map figure! becuase it had a year of a map that didn't exist due to the testing data not covering two years
+
+**TO DO:**
+- update quarto doc to only use subset of models if necessary based on what is in `results_dir`
+- update "quick start" guide with training and forecasting steps
+
+*Back burner*:
+- update `train_models` to actually use model_configs and tuning
+
 ## 2025-07-18
 
 Working on the training and forecasting steps to get them working better. First updating the quarto doc code to only return models based on what is in the `results_dir`. This is more complicated than I thought ti would be becuase it involves dynamically creating/using tabset. This blog has been super helpful though: https://josh.quarto.pub/posts/2022-09-29-quarto-tabsets/2022-09-29-quarto-tabsets.html#r-markdown-syntax

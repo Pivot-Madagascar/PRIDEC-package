@@ -15,17 +15,17 @@ execute:
   warning: false
   output: false
 params:
-  results_dir: "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
+  results_dir: "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/testthat_trainModels"
 ---
 
 
 ```{r}
 #| eval: false
 #for testing
-params <- list("results_dir" = "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults")
+params <- list("results_dir" = "/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/testthat_trainModels")
 
 #to render via a test
-# quarto render modelPerformance-template_fr.qmd -M title:"Validation des Modèles PRIDEC" --output models-output.html  -P results_dir:"/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelResults"
+# quarto render modelPerformance-template_fr.qmd -M title:"Validation des Modèles PRIDEC" --output models-output.html  -P results_dir:"/home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/demo_trainModelSubset"
 
 ```
 
@@ -166,7 +166,7 @@ if("naive" %in% trained_models){
 Ce document fournit des informations sur la performance des modèles statistiques utilisées pour prédire `r y_var`. Il fournit des informations sur des modèles statistiques (selon le choix de l'utilisateur):
 
 1. Un modèle de base, basée sur le moyenne des cinq dernières années pour ce mois (NAIVE)
-2. Un modèle temporelle autogressive qui est fait pour chaque orgUnit(ARIMA)
+2. Un modèle temporelle autogressive qui est fait pour chaque orgUnit (ARIMA)
 3. Une regression linéare (GLM)
 4. Une regression linéare spatiale (INLA)
 5. Un modèle d'apprentissage automatique (Random Forest (RANGER))
@@ -232,19 +232,30 @@ Nous avons calculé l'importance de chaque variable. Une valeur d'importance plu
 À noter: La modèle de base inclut seulement les variables de `unité organisationelle` et `mois de l'année`.
 
 ```{r}
-base_var_imp <- data.frame("importance" = c(0.5,0.5),
-                           "variable" = c("orgUnit", "month_season"),
-                           model = "base")
-
-var_imp_df <- variable_importance |>
-  bind_rows(base_var_imp) |>
-  left_join(available_vars[,c("var", "clean_var")], by = c("variable" = "var")) |>
-  mutate(importance = round(importance, 3)) |>
-  mutate(importance = pmax(importance,0)) |>
-  select(-stdev, -variable) |>
-  pivot_wider(names_from = model, values_from = importance) |>
-  select(Variable = clean_var, base, arima, glm, inla, ranger) |>
-  arrange(Variable)
+if("naive" %in% trained_models){
+  base_var_imp <- data.frame("importance" = c(0.5,0.5),
+                             "variable" = c("orgUnit", "month_season"),
+                             model = "naive")
+  
+  var_imp_df <- variable_importance |>
+    bind_rows(base_var_imp) |>
+    left_join(available_vars[,c("var", "clean_var")], by = c("variable" = "var")) |>
+    mutate(importance = round(importance, 3)) |>
+    mutate(importance = pmax(importance,0)) |>
+    select(-stdev, -variable) |>
+    pivot_wider(names_from = model, values_from = importance) |>
+    select(Variable = clean_var, all_of(trained_models)) |>
+    arrange(Variable)
+} else{
+    var_imp_df <- variable_importance |>
+    left_join(available_vars[,c("var", "clean_var")], by = c("variable" = "var")) |>
+    mutate(importance = round(importance, 3)) |>
+    mutate(importance = pmax(importance,0)) |>
+    select(-stdev, -variable) |>
+    pivot_wider(names_from = model, values_from = importance) |>
+    select(Variable = clean_var, all_of(trained_models)) |>
+    arrange(Variable)
+}
 ```
 
 ```{r}
@@ -255,7 +266,7 @@ DT_sketch <- htmltools::withTags(table(
   thead(
     tr(
       th(colspan = 3, ''),
-      th(colspan = 5, 'Modèle')
+      th(colspan = length(trained_models), 'Modèle')
     ),
     tr(
       lapply(colnames(var_imp_df), th)
@@ -365,6 +376,7 @@ Ces graphiques représentent les prédictions rétrospectives à l’horizon com
 
 ```{r}
 plot_oneModel <- function(pred_df, model_name, model_color){
+  tryCatch({
   pred_df |>
   dplyr::filter(model == model_name) |>
   filter(quant_long %in% c("quant_0.025", "quant_0.5", "quant_0.975")) |>
@@ -383,6 +395,14 @@ plot_oneModel <- function(pred_df, model_name, model_color){
     ylab("Nombre de cas") +
     xlab("Date") +
     facet_wrap(~orgUnit, scales = "free", ncol = 3)
+  }, error =function(msg){
+    ggplot() +
+  annotate("text", x = 0, y = 0, label = "Donnees Indisponible", 
+           size = 6, color = "gray50") +
+  theme_void() +
+  theme(panel.background = element_rect(fill = "white", color = NA),
+        plot.background = element_rect(fill = "white", color = NA))
+  })
 }
 
 fig_height <- ceiling(length(unique(pred_forecast$orgUnit))/3*2)
@@ -393,6 +413,8 @@ model_cols <- c("naive" = paletteer_d("khroma::bright")[1],
                 "ranger" = paletteer_d("khroma::bright")[5])
 ```
 
+
+
 ```{r}
 tabset_timeSeries <- function(model_name, model_color){
         knitr::knit_child(text = c(
@@ -402,7 +424,7 @@ tabset_timeSeries <- function(model_name, model_color){
     '#| output: true',
     '#| fig-height: !expr fig_height',
     '#| out-height: !expr paste0(fig_height, "in")',
-    'p <- plot_oneModel(pred_forecast, model_name = model_name, model_color = model_color)',
+    'p <- plot_oneModel(pred_df = pred_forecast, model_name = model_name, model_color = model_color)',
     'plot(p)',
     '```',
     ''
@@ -418,10 +440,8 @@ tabset_timeSeries <- function(model_name, model_color){
 #| results: asis
 
 res <- purrr::map(1:length(trained_models), function(m){
-  
   tabset_timeSeries(model_name = trained_models[m],
                     model_color = model_cols[trained_models[m]])
-  
 })
 cat(unlist(res), sep = "\n")
 ```
@@ -466,13 +486,14 @@ this_years <- sort(this_years[c(length(this_years), length(this_years)-1)])
 #create dataframe of polygons
 all_org <- expand.grid(orgUnit = org_poly$orgUnit,
                        year = this_years,
-                       model = c("naive", "arima", "glm", "inla", "ranger"))
+                       model = trained_models)
 ```
 
 
 Les cartes ci-dessous montrent le nombre de cas annuel pour les orgUnit pour les deux dernières années (`r this_years`).  Les zones administratives présentant des taux de cas exceptionnellement élevés sont appelées « hot spots ». Vous pouvez comparer les « hot spots »  dans les données réelles et les prévisions.
 
 ```{r}
+#prepare data
 forecast_map <- pred_forecast |>
   mutate(year = year(date)) |>
   filter(year %in% this_years) |>
@@ -484,38 +505,48 @@ forecast_map <- pred_forecast |>
   right_join(org_poly, by = "orgUnit")
 ```
 
+
+```{r}
+plot_oneMap <- function(map_data){
+  map_data |>
+  pivot_longer(c("Cas Réels", "Cas Prédits"), names_to = "datatype", values_to = "cases") |>
+  st_as_sf() |>
+  ggplot() +
+  geom_sf(aes(fill = cases)) +
+  scale_fill_viridis_c(name = "Cas annuel", na.value = "gray80") +
+  facet_grid(datatype~model) +
+  theme(axis.text = element_blank())
+}
+```
+
+
+```{r}
+tabset_map <- function(this_year){
+   knitr::knit_child(text = c(
+    '#### `r this_year`',
+    '',
+    '```{r}',
+    '#| output: true',
+    'this_data <- filter(forecast_map, year == this_year)',
+    'p <- plot_oneMap(map_data = this_data)',
+    'plot(p)',
+    '```',
+    ''
+  ), envir = environment(), quiet = TRUE)
+}
+```
+
 :::{.panel-tabset}
 
-#### `r this_years[1]`
-
 ```{r}
 #| output: true
+#| results: asis
 
-forecast_map |>
-  filter(year == this_years[1]) |>
-  pivot_longer(c("Cas Réels", "Cas Prédits"), names_to = "datatype", values_to = "cases") |>
-  st_as_sf() |>
-  ggplot() +
-  geom_sf(aes(fill = cases)) +
-  scale_fill_viridis_c(name = "Cas annuel", na.value = "gray80") +
-  facet_grid(datatype~model) +
-  theme(axis.text = element_blank())
+res <- purrr::map(this_years, function(m){
+  tabset_map(this_year = m)
+})
+cat(unlist(res), sep = "\n")
 ```
 
-#### `r this_years[2]`
-
-```{r}
-#| output: true
-
-forecast_map |>
-  filter(year == this_years[2]) |>
-  pivot_longer(c("Cas Réels", "Cas Prédits"), names_to = "datatype", values_to = "cases") |>
-  st_as_sf() |>
-  ggplot() +
-  geom_sf(aes(fill = cases)) +
-  scale_fill_viridis_c(name = "Cas annuel", na.value = "gray80") +
-  facet_grid(datatype~model) +
-  theme(axis.text = element_blank())
-```
 
 :::

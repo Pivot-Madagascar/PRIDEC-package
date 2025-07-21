@@ -21,6 +21,7 @@ Imports:
     lubridate,
     magrittr,
     MASS,
+    parallel,
     pdp,
     purrr,
     quarto,

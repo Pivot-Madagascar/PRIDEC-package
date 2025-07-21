@@ -5,7 +5,7 @@ test_that("train model works", {
   data(demo_malaria)
   data(demo_polygon)
 
-  prep_output <- prep_data(raw_data = demo_malaria[demo_malaria$period>201903,],
+  prep_output <- prep_data(raw_data = demo_malaria[demo_malaria$period>201810,],
                            y_var = "n_case",
                            lagged_vars = c("pev", "rain_mm", "temp_c"),
                            scaled_vars = c("pev", "rain_mm", "temp_c",
