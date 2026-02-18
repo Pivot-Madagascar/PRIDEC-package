@@ -18,12 +18,51 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2026-02-18
+
+## 2026-02-17
+
+Started integrating much of the PRIDE-C forecasting workflow into this package last week. This includes things to validate inputs and move between steps. Eventually these will be used as part of the plumber app side of the PRIDE-C ETL.
+
+The steps/functions are: 
+
+1. `validate_inputs`: validates inputs but doesn't save them. This allows the user to manually adjust if needed. Inputs could be a json or maybe manually typing
+2. `run_pridec_forecast` : includes the processing of inputs to limit the sending of files between processes
+
+I initially had a bunch more steps but ended up combining them for ease of then wrapping them up in a plumber app. Also I think it makes sense to always save the output and intermediate files for checking them later.
+
+On either side would be the GET to get the inputs and the POST to then send the forecast to DHIS2 once it is done. That is handled by our flask app, but I will eventually make functions for this too for those who want to work exclusively in R. For my future self, I have seperated the run_forecast from the validate_forecast to allow for interactive trouble-shooting between the steps. The files from before should be saved so that someone could download them and investigate themselves. Actually, that doesn't make sense, I just should just save all the outputs/intermediate files regardless.
+
+Some resources for getting files into plumber:
+
+[RDS files](https://stackoverflow.com/questions/77174884/how-to-send-rds-file-to-an-r-plumber-api)
+[csv and others][https://stackoverflow.com/questions/77759278/how-can-i-retrieve-data-from-the-request-body-sent-to-a-plumber-api]
+
+I will need to ask Paul what he prefers. If the files are being created and saved locally, then they can just take a pathname that doesn't change. The prefernece is to just use the input/outpu folder structure for now.
+
+There are workign functions in `scratch/plumber-fxs.R` These steps are what need to be turned into the plumber API bits, following here: https://github.com/paulfianar/pride-c-etl-with-webui/blob/main/plumber-app/app.R
+
+I need to try to run this locally on my machine, and then I can input my own functions into it to make sure they work. I also want to update how the messages are logged, but I think I need to see how it works first.
+
+**TO DO:**
+- INLA is returning odd `mbind: Operation not permitted` error. Not sure where it is coming from. Probably from messed up installation? I can redo the `inla.binary.install()` to fix this.
+- ~~forecast report doesn't open in Firefox, only chrome [this is normal, cannot change on our side]~~
+- check out ARIMA errors
+- add tryCatch around models in ensemble stack
+- wrap into plumber app on ETL
+- write tests for new functions (includes creating test data)
+- ~~move several of the forecasting steps (like data validation) to the PRIDE-C package so it can be updated most easily~~
+
+## 2025-08-28
+
+Working on finishing documentation before I go on leave. This is mostly the quick start vignette
+
 ## 2025-07-21
 
 I have something that works for dynamically plotting in tabs, bt it does print out some text, and I'm not really sure why. Ignoring this for now. Okay, have somethign that works and I ahve testing on a subset of models. Running the full `train_models` workflow test to see now. It was working but for some reason now when I tried it out on a new folder it isn't working? It is a werid error in chunk 15 of the template, with `tabset_timeSeries`. IT says we only ahve one orgUnit, but when I run it line by line, that clearly insn't true? It may have been due to the fact I was using testing data that made no sense and only had one testing point? So I added more testing data to the test to see if that fixes it.Nope, the issue was the very last map figure! becuase it had a year of a map that didn't exist due to the testing data not covering two years
 
 **TO DO:**
-- update quarto doc to only use subset of models if necessary based on what is in `results_dir`
+- ~~update quarto doc to only use subset of models if necessary based on what is in `results_dir`~~
 - update "quick start" guide with training and forecasting steps
 
 *Back burner*:

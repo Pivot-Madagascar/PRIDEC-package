@@ -1,0 +1,285 @@
+---
+title: "Template for model validation for PRIDE-C workflow"
+lang: en
+format: 
+  html:
+    toc: true
+    toc-location: right
+    embed-resources: true
+    page-layout: full
+editor: source
+execute:
+  echo: false
+  warning: false
+  output: false
+execute-dir: project
+---
+
+```{r}
+#| eval: false
+
+#to render via a test
+# quarto render validation_report_template.qmd -M title:"PRIDE-C Forecast Report" --output forecast_report.html  
+
+#NOTE: this always needs to be rendered from the output_dir used by `run_pridec_forecast`
+
+```
+
+```{r packages}
+#| include: false
+
+library(jsonlite)
+library(skimr)
+library(sf)
+# library(PRIDEC)
+
+library(ggplot2); theme_set(theme_bw())
+library(tidyr)
+library(paletteer)
+
+library(dplyr)
+
+```
+
+```{r load data}
+#| include: false
+config <- jsonlite::fromJSON("config.json")
+forecast_df <- jsonlite::fromJSON(txt = "forecast.json")$dataValues
+input_set <- readRDS("input_data.RData")
+analysis_data <- input_set$analysis
+assess_data <- input_set$assessment
+poly <- sf::st_read("polygon.geojson", quiet = TRUE)
+```
+
+
+# Model Configurations and Info
+
+**Date Run:** `r Sys.Date()`
+
+```{r}
+#| output: true
+print(config)
+```
+
+# Input Data
+
+## Disease Variable
+
+The model is trained on the `r config$disease_dataElement` data source from the DHIS2 instance.
+
+:::: {.panel-tabset}
+
+### Completeness
+
+```{r}
+#| output: true
+#| 
+y_var <- analysis_data[[config$disease_dataElement]]
+prop_missing <- mean(is.na(y_var))
+prop_outliers <- mean(y_var>(mean(y_var, na.rm = TRUE) + 3*sqrt(var(y_var, na.rm = TRUE))), na.rm = TRUE)
+
+print(data.frame("Proportion Missing" = round(prop_missing,4),
+                 "Proportion 3 sd outlier" = round(prop_outliers,4)))
+
+#add missing by month and orgUnit
+```
+
+### Data Trends
+
+Each panel represents a randomly chosen `orgUnit`. The historical case counts are plotted for each `orgUnit` for the full analysis period.
+
+```{r}
+#| output: true
+#| 
+analysis_data |>
+  filter(orgUnit %in% sample(unique(analysis_data$orgUnit), 9)) |>
+  rename(yvar := config$disease_dataElement) |>
+  ggplot(aes(x = date, y = yvar)) +
+  geom_line() +
+  ylab(config$disease_dataElement) +
+  xlab("Date") +
+  facet_wrap(~orgUnit)
+```
+
+::::
+
+## Predictor Variables
+
+The model includes the following predictor variables: 
+
+
+```{r}
+pred_vars <- config$pred_vars
+pred_var_df <- select(assess_data, orgUnit, period, date, all_of(pred_vars))
+```
+
+```{r}
+#| output: true
+ print(pred_vars)
+```
+
+
+:::: {.panel-tabset}
+
+### Completeness
+
+```{r}
+#| output: true
+
+skimr::skim(select(pred_var_df, -date))
+```
+
+### Histograms
+
+```{r}
+#| output: true
+
+# TODO: add check to only plot numeric/continuous
+pred_var_df |>
+  dplyr::mutate(Comparison = ifelse(date >= (max(date) - lubridate::years(1)), 
+                                    "Prior Year", "Prior 3 Years")) |>
+  tidyr::pivot_longer(cols = all_of(pred_vars), names_to = "variable", values_to = "value") |>
+  ggplot(aes(x = value)) +
+  geom_density(aes(fill = Comparison), alpha = 0.5, position = "identity") +
+  facet_wrap(~variable, scales = "free")
+```
+
+
+### Timeseries
+
+Timeseries of each predictor variable. A random selection of 8 orgUnits are shown, with each color line corresponding to one orgUnit.
+
+```{r}
+#| output: true
+
+pred_var_df |>
+  filter(orgUnit %in% sample(unique(pred_var_df$orgUnit), 8)) |>
+  tidyr::pivot_longer(cols = all_of(pred_vars), names_to = "variable", values_to = "value") |>
+  ggplot(aes(x = date, y = value)) +
+  geom_line(aes(color = orgUnit)) +
+  paletteer::scale_color_paletteer_d("khroma::bright") +
+  facet_wrap(~variable, scales = "free_y") +
+  theme(legend.position = 'none')
+  
+```
+
+:::: 
+
+# Forecasts
+
+Created forecast for:
+
+- `r length(unique(forecast_df$orgUnit))` orgUnits
+- time period spanning `r min(forecast_df$period)` thru `r max(forecast_df$period)`
+
+## Completion
+
+List of orgUnits without full forecast period (`r config$month_assess` months beginning `r config$forecast_start`):
+
+```{r}
+#| output: true
+
+forecast_df |>
+  filter(period>=config$forecast_start, endsWith(dataElement, "Avg")) |>
+  summarise(num_forecast = sum(!is.na(value)),
+            .by = "orgUnit") |>
+  filter(num_forecast<config$month_assess)
+```
+
+There should be no orgUnits listed in this list. If there are, this may mean that some input data is missing.
+
+## Value Validity
+
+Forecasts should be:
+
+- integers
+- non-negative
+- real numbers
+
+```{r}
+#| output: true
+PRIDEC::validate_dhis_format(forecast_df)
+```
+
+All should be zero.
+
+## Time Series
+
+```{r}
+#| output: true
+
+forecast_df |>
+  filter(orgUnit %in% sample(unique(orgUnit), 9)) |>
+  mutate(forecast_period = ifelse(period>=config$forecast_start, "Forecast", "Historic")) |>
+  mutate(date = as.Date(paste0(period, "01"), format = "%Y%m%d")) |>
+  mutate(conf_ints = case_when(
+    endsWith(dataElement, "LowCI") ~ "lowCI",
+    endsWith(dataElement, "UppCI") ~ "uppCI",
+    endsWith(dataElement, "Avg") ~ "avg"
+  )) |>
+  select(-dataElement) |>
+  pivot_wider(names_from = conf_ints, values_from = value) |>
+  ggplot(aes(x = date, color = forecast_period, fill = forecast_period)) +
+  geom_ribbon(aes(ymin = lowCI, ymax = uppCI), alpha = 0.3, color = NA) +
+  geom_line(aes(y = avg)) +
+  facet_wrap(~orgUnit, scales = "free_y") +
+  scale_color_manual(values = c("navyblue", "gray20")) +
+  scale_fill_manual(values = c("navyblue", "gray20")) +
+  theme(legend.position = "bottom")
+```
+
+## Historic Performance
+
+```{r}
+#| output: true
+
+forecast_df |>
+  filter(orgUnit %in% sample(unique(orgUnit), 9)) |>
+  filter(period<config$forecast_start) |>
+  mutate(conf_ints = case_when(
+    endsWith(dataElement, "LowCI") ~ "lowCI",
+    endsWith(dataElement, "UppCI") ~ "uppCI",
+    endsWith(dataElement, "Avg") ~ "avg"
+  )) |>
+    select(-dataElement) |>
+  pivot_wider(names_from = conf_ints, values_from = value) |>
+  left_join(select(analysis_data, orgUnit, period, 
+                   starts_with("pridec_historic")), by = c("orgUnit", "period")) |>
+  rename(observed = starts_with("pridec_historic")) |>
+    mutate(date = as.Date(paste0(period, "01"), format = "%Y%m%d")) |>
+  ggplot(aes(x = date)) +
+  geom_ribbon(aes(ymin = lowCI, ymax = uppCI), fill = "gray20", alpha = 0.3) +
+  geom_point(aes(y =observed)) +
+  geom_line(aes(y = avg), color = "gray20") +
+  ylab("Cases") +
+  xlab("Date") +
+  facet_wrap(~orgUnit, scales = "free_y")
+```
+
+
+## Map
+
+```{r}
+map_preds <- forecast_df |>
+  filter(period>=config$forecast_start, endsWith(dataElement, "Avg")) |>
+  summarise(avg_forecast = round(mean(value)),
+            .by = "orgUnit") |>
+  right_join(poly, by = "orgUnit") |>
+  sf::st_as_sf()
+```
+
+```{r}
+#| output: true
+
+ggplot() +
+  geom_sf(data = map_preds, aes(fill = avg_forecast)) +
+  scale_fill_viridis_c()
+```
+
+# R Session Info
+
+```{r}
+#| output: true
+sessionInfo()
+```
+
