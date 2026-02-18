@@ -354,7 +354,7 @@ performance_df <- performance |>
   dplyr::summarise(Pourc.SurEstime = mean(prop_over,  na.rm = TRUE),
             Pourc.SousEstime = mean(prop_under,  na.rm = TRUE),
             Erreur.moyenne = mean(med_ae, na.rm = TRUE),
-            R.carre = median(sp_rho,  na.rm = TRUE),
+            R.carre = median(sp_rho^2,  na.rm = TRUE),
             .by = "model") |>
   dplyr::mutate(model = toupper(.data$model)) |>
   dplyr::arrange(model)
