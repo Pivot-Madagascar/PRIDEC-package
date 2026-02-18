@@ -25,9 +25,10 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
                               ranger_configs = NULL,
                               arimax_configs = NULL,
                               naive_configs = NULL,
-                              return_individual_models = FALSE){
+                              return_individual_models = FALSE,
+                              abort_on_error = TRUE){
 
-  cli::cli_h1("PRIDE-C Forecast Workflow")
+  cli::cli_h2("PRIDE-C Forecast Workflow")
   start_time <- Sys.time()
   cli::cli_text(paste0("Started: ", round(Sys.time())))
   true_data <-  do.call(rbind, get_cv_subsets(cv_set, y_var = y_var,
@@ -37,76 +38,152 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
 
   out_list <- list()
   if(!is.null(inla_configs)){
-    cli::cli_h2("INLA Forecast")
+    cli::cli_h3("INLA Forecast")
     cli::cli_text(paste0("Started: ", round(Sys.time())))
-    pred_inla <- fit_inla(cv_set = cv_set,
-                          y_var = y_var,
-                          pred_vars = inla_configs$pred_vars,
-                          id_vars = id_vars,
-                          reff_var = inla_configs$reff_var,
-                          hyper_priors = inla_configs$hyper_priors,
-                          quantile_levels = quantile_levels,
-                          sample_pi = inla_configs$sample_pi,
-                          W_orgUnit = inla_configs$W_orgUnit,
-                          n_cores = inla_configs$n_cores)
+    pred_inla <- tryCatch(
+      expr = {
+        fit_inla(cv_set = cv_set,
+                 y_var = y_var,
+                 pred_vars = inla_configs$pred_vars,
+                 id_vars = id_vars,
+                 reff_var = inla_configs$reff_var,
+                 hyper_priors = inla_configs$hyper_priors,
+                 quantile_levels = quantile_levels,
+                 sample_pi = inla_configs$sample_pi,
+                 W_orgUnit = inla_configs$W_orgUnit,
+                 n_cores = inla_configs$n_cores)
+      },
+      error = function(e){
+        if(abort_on_error){
+          stop(paste("INLA model failed with error message:\n",
+                     conditionMessage(e)),
+               call. = FALSE)
+        } else {
+          cli::cli_alert_warning(paste("INLA model failed with error message:\n",
+                                       conditionMessage(e),
+                                       "\nRemoving from ensemble model."))
+          return(NULL)
+        }
+      })
     pred_inla$model <- "inla"
     pred_inla$weight <- inla_configs$weight
     out_list$inla <- pred_inla
   } else  out_list$inla <- NULL
 
   if(!is.null(glm_nb_configs)){
-    cli::cli_h2("GLM Forecast")
+    cli::cli_h3("GLM Forecast")
     cli::cli_text(paste0("Started: ", round(Sys.time())))
-    pred_glm_nb <- fit_glm_nb(cv_set = cv_set,
-                          y_var = y_var,
-                          pred_vars = glm_nb_configs$pred_vars,
-                          id_vars = id_vars,
-                          quantile_levels = quantile_levels)
+    pred_glm_nb <- tryCatch(
+      expr = {
+        fit_glm_nb(cv_set = cv_set,
+                   y_var = y_var,
+                   pred_vars = glm_nb_configs$pred_vars,
+                   id_vars = id_vars,
+                   quantile_levels = quantile_levels)
+      },
+      error = function(e){
+        if(abort_on_error){
+          stop(paste("GLM model failed with error message:\n",
+                     conditionMessage(e)),
+               call. = FALSE)
+        } else {
+          cli::cli_alert_warning(paste("GLM model failed with error message:\n",
+                                       conditionMessage(e),
+                                       "\nRemoving from ensemble model."))
+        return(NULL)
+        }
+      })
     pred_glm_nb$model <- "glm_nb"
     pred_glm_nb$weight <- glm_nb_configs$weight
     out_list$glm_nb <- pred_glm_nb
   } else out_list$glm_nb <- NULL
 
   if(!is.null(ranger_configs)){
-    cli::cli_h2("RANGER Forecast")
+    cli::cli_h3("RANGER Forecast")
     cli::cli_text(paste0("Started: ", round(Sys.time())))
-    pred_ranger <- fit_ranger(cv_set = cv_set,
-                              y_var = y_var,
-                              pred_vars = ranger_configs$pred_vars,
-                              id_vars = id_vars,
-                              hyper_control = ranger_configs$hyper_control,
-                              quantile_levels = quantile_levels)
+    pred_ranger <- tryCatch(
+      expr = {
+        fit_ranger(cv_set = cv_set,
+                   y_var = y_var,
+                   pred_vars = ranger_configs$pred_vars,
+                   id_vars = id_vars,
+                   hyper_control = ranger_configs$hyper_control,
+                   quantile_levels = quantile_levels)
+      },
+      error = function(e){
+        if(abort_on_error){
+          stop(paste("RANGER model failed with error message:\n",
+                     conditionMessage(e)),
+               call. = FALSE)
+        } else {
+          cli::cli_alert_warning(paste("RANGER model failed with error message:\n",
+                                       conditionMessage(e),
+                                       "\nRemoving from ensemble model."))
+          return(NULL)
+        }
+      })
     pred_ranger$model <- "ranger"
     pred_ranger$weight <- ranger_configs$weight
     out_list$ranger <- pred_ranger
   } else out_list$ranger <- NULL
 
   if(!is.null(arimax_configs)){
-    cli::cli_h2("ARIMAX Forecast")
+    cli::cli_h3("ARIMAX Forecast")
     cli::cli_text(paste0("Started: ", round(Sys.time())))
-    pred_arimax <- fit_arima(cv_set = cv_set,
-                              y_var = y_var,
-                              pred_vars = arimax_configs$pred_vars,
-                              log_trans = arimax_configs$log_trans,
-                              quantile_levels = quantile_levels)
+    pred_arimax <- tryCatch(
+      expr = {
+        fit_arima(cv_set = cv_set,
+                  y_var = y_var,
+                  pred_vars = arimax_configs$pred_vars,
+                  log_trans = arimax_configs$log_trans,
+                  quantile_levels = quantile_levels)
+      },
+      error = function(e){
+        if(abort_on_error){
+          stop(paste("ARIMAX model failed with error message:\n",
+                     conditionMessage(e)),
+               call. = FALSE)
+        } else {
+          cli::cli_alert_warning(paste("ARIMAX model failed with error message:\n",
+                                       conditionMessage(e),
+                                       "\nRemoving from ensemble model."))
+          return(NULL)
+        }
+      })
+
     pred_arimax$model <- "arimax"
     pred_arimax$weight <- arimax_configs$weight
     out_list$arimax <- pred_arimax
   } else out_list$arimax <- NULL
 
   if(!is.null(naive_configs)){
-    cli::cli_h2("Naive Forecast")
+    cli::cli_h3("Naive Forecast")
     cli::cli_text(paste0("Started: ", round(Sys.time())))
-    pred_naive <- fit_naive(cv_set = cv_set,
-                             y_var = y_var,
-                            quantile_levels = quantile_levels,
-                             group_vars = naive_configs$group_vars)
+    pred_naive <- tryCatch(
+      expr = {
+        fit_naive(cv_set = cv_set,
+                  y_var = y_var,
+                  quantile_levels = quantile_levels,
+                  group_vars = naive_configs$group_vars)
+      },
+      error = function(e){
+        if(abort_on_error){
+          stop(paste("NAIVE model failed with error message:\n",
+                     conditionMessage(e)),
+               call. = FALSE)
+        } else {
+          cli::cli_alert_warning(paste("NAIVE model failed with error message:\n",
+                                       conditionMessage(e),
+                                       "\nRemoving from ensemble model."))
+          return(NULL)
+        }
+      })
     pred_naive$model <- "naive"
     pred_naive$weight <- naive_configs$weight
     out_list$naive <- pred_naive
   } else out_list$naive<- NULL
 
-  cli::cli_h2("Creating stacked ensemble")
+  cli::cli_h3("Creating stacked ensemble")
   #combine to get ensemble based on weights
   model_stack <- split(dplyr::bind_rows(out_list), f = ~ orgUnit + date + quant_long) |>
     purrr::map(\(x) sample_preds(predicted = x$predicted,
@@ -116,7 +193,7 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
                     sep = "\\.",
                     extra = "merge", fill = "left") |>
     dplyr::mutate(quantile_level = as.numeric(gsub("quant_","", .data$quant_long))) |>
-    mutate(date = as.Date(date))
+    dplyr::mutate(date = as.Date(date))
 
   stack_out <- dplyr::left_join(model_stack, true_data, by = id_vars)
 
