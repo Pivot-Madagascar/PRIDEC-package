@@ -1,0 +1,28 @@
+Saving quarto report at /home/mevans/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/quickstart/quarto-report.html
+Beginning naive model fit at 2025-08-28 17:10:34
+Finished naive model fit at 2025-08-28 17:10:37
+Beginning ranger model fit at 2025-08-28 17:10:37
+Completed ranger model fit at 2025-08-28 17:11:11
+Beginning arimax model fit at 2025-08-28 17:11:11
+Fitting ARIMAX CV 1 at 2025-08-28 17:11:11
+Fitting ARIMAX CV 2 at 2025-08-28 17:11:45
+Fitting ARIMAX CV 3 at 2025-08-28 17:12:16
+Fitting ARIMAX CV 4 at 2025-08-28 17:12:48
+Fitting ARIMAX CV 5 at 2025-08-28 17:13:20
+Fitting ARIMAX CV 6 at 2025-08-28 17:13:53
+Fitting ARIMAX CV 7 at 2025-08-28 17:14:27
+Fitting ARIMAX CV 8 at 2025-08-28 17:15:00
+Fitting ARIMAX CV 9 at 2025-08-28 17:15:38
+Fitting ARIMAX CV 10 at 2025-08-28 17:16:16
+Fitting ARIMAX CV 11 at 2025-08-28 17:16:59
+Fitting ARIMAX CV 12 at 2025-08-28 17:17:39
+Fitting ARIMAX CV 13 at 2025-08-28 17:18:17
+Fitting ARIMAX CV 14 at 2025-08-28 17:18:52
+Completed arimax model fit at 2025-08-28 17:20:07
+Beginning glm model fit at 2025-08-28 17:20:07
+Completed glm model fit at 2025-08-28 17:20:17
+Beginning inla model fit at 2025-08-28 17:20:17
+Completed inla model fit at 2025-08-28 17:24:19
+Completed training 5 models at 2025-08-28 17:24:19
+Creating quarto report at 2025-08-28 17:24:19
+Finished model training workflow at 2025-08-28 17:24:59
