@@ -18,7 +18,33 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2026-02-19
+
+Have a plumber app working now. There is still some wierd formatting being returned, but I changed as much as I could to standard messaging. As long as it isn't run through Rstudio it seems to be okay. I also switched over to plumber2, as this is the new package that will be supported and alreayd links in with quarto and REDIS.
+
+Paul's existing app has some good stuff for using a log file too
+
+**TO DO:**
+- check out ARIMA errors
+- ~~wrap into a plumber app~~
+- add info on missing data to forecast quarto doc. and code to investigate data yourself
+- test with Paul's ETL (also move to plumber2?)
+- write tests for new functions (includes creating test data)
+- ~~go through validate inputs and update cli output so it can be sent easily via JSON as a message. Otherwise it is returned with some crazy formatting.~~
+
 ## 2026-02-18
+
+Added tryCatch to ensemble_forecast models in case one model fails for some reason. In the future I could even save individual outputs to help save time if models become really large.
+
+**TO DO**
+- ~~INLA is returning odd `mbind: Operation not permitted` error. Not sure where it is coming from. Probably from messed up installation? I can redo the `inla.binary.install()` to fix this. This is an error on the docker image.~~
+- ~~forecast report doesn't open in Firefox, only chrome [this is normal, cannot change on our side]~~
+- check out ARIMA errors
+- ~~add tryCatch around models in ensemble stack~~
+- wrap into plumber app on ETL
+- write tests for new functions (includes creating test data)
+- go through validate inputs and update cli output so it can be sent easily via JSON as a message. Otherwise it is returned with some crazy formatting.
+- ~~move several of the forecasting steps (like data validation) to the PRIDE-C package so it can be updated most easily~~
 
 ## 2026-02-17
 

@@ -17,3 +17,5 @@ scratch/*
 ^docs$
 ^pkgdown$
 ^\.github$
+^doc$
+^Meta$

@@ -43,7 +43,7 @@ data("demo_malaria")
 data("demo_polygon")
 
 demo_malaria |>
-  filter(orgUnit %in% sample(unique(orgUnit), 4)) |>
+  filter(orgUnit %in% c("CSB1 AMBALAVOLO", "CSB2 IFANADIANA", "CSB2 AMBIABE", "CSB1 MAROMANANA")) |>
   mutate(date = as.Date(paste0(period,"01"), format = "%Y%m%d")) |>
   ggplot(aes(x = date, y = n_case)) +
   geom_line() +
@@ -59,10 +59,10 @@ The first step is to process and clean the data. The PRIDE-C forecasting workflo
 
 1. **lag predictors**: in order to predict into the future, we must use lagged values of the predictor variables, so that the number of cases is predicted as a function of the variable at time `t-lag`
 2. **normalize predictors**: all of the predictor variables are centered and scaled to help with model convergence
-3. **Impute missing predictors**: missing values in the predictor variables are imputed via a seasonal imputation
+3. **Impute missing predictors**: missing values in the predictor variables are imputed via seasonal imputation
 4. **create spatial structure**: one of the model fitting approaches (INLA) uses the spatial structure of the data to help predict. This structure is created via a matrix that identifies the neighbors of each polygon.
 
-The data preparation step is done via the `prep_data()` function. We will choose to lag all of the dynamic predictor variables and scale all of the predictor variables.
+The data preparation step is done via the `prep_data()` function. We will choose to lag all of the dynamic predictor variables by three months and scale all of the predictor variables.
 
 ```{r}
 prep_output <- prep_data(raw_data = demo_malaria,
@@ -79,13 +79,13 @@ prep_output <- prep_data(raw_data = demo_malaria,
 
 - `W_graph`: object containing the spatial structure of data required by INLA
 - `data_prep`: data.frame of the cleaned and processed data
-- `scale_factors`: data.frame of center and scaling factors used to normalize the predictor variables. This will be used when explorign variables later.
+- `scale_factors`: data.frame of center and scaling factors used to normalize the predictor variables. This will be used when exploring variables later.
 
 ## `split_cv_rolling()`
 
 Once the data is prepared, it needs to be split into multiple cross-validation sets (`cv_set`). Each `cv_set` contains an `analysis` and `assessment` dataset that will be used in model training. These `cv_set`s are created via rolling origin splits ([Tashman 2000](https://www.sciencedirect.com/science/article/abs/pii/S0169207000000650?via%3Dihub).) 
 
-Each `cv_set` can be thought of as an individual test of the workflow's ability to forecast, where a model is fit to the `analysis` data following the specified `pred_vars` and model parameters and performance is assessed on the `assessment` data.Generally, the `analysis` data corresponds to a longer period of historical data used for training, while the `assessment` data corresponds to the actual forecast horizon relevant to the user.
+Each `cv_set` can be thought of as an individual test of the workflow's ability to forecast, where a model is trained on the `analysis` data following the specified `pred_vars` and model parameters and performance is assessed on the `assessment` data.Generally, the `analysis` data corresponds to a longer period of historical data used for training, while the `assessment` data corresponds to the actual forecast horizon relevant to the user.
 
 We will use 5 years of `analysis` data to train the model, and 3 months of `assessment` data to test it. The function `split_cv_rolling` will return a list, where each element corresponds to one `cv_set`.
 
@@ -121,15 +121,15 @@ A generalized linear model with a negative binomial distribution can be fit to t
  
 ### ranger
 
-A random forest quantile regression model is implemented via the [`ranger` package](https://cran.r-project.org/web/packages/ranger/index.html). This package was chosen for its ability to apply quantile regression, its speed, and high-performance with default hyper-parameters. Three hyper-parameters (`m.try`, `min.node.size`, and `num.trees`) can be tuned with the `tune_ranger()` function. Predictor variables can be either dynamic or constant within an `orgUnit`, allowing for the inclusion of socio-demographic or topographical variables. It includes a variable to control for the `orgUnit` and month of the year, in addition to the specified predictor variables. 
+A random forest quantile regression model is implemented via the [`ranger` package](https://cran.r-project.org/web/packages/ranger/index.html). This package was chosen for its ability to apply quantile regression, its speed, and high-performance with default hyper-parameters. Three hyper-parameters (`m.try`, `min.node.size`, and `num.trees`) can be tuned with the `tune_ranger()` function. Predictor variables can be either dynamic or constant within an `orgUnit`, allowing for the inclusion of socio-demographic or topographical variables. By default, it controls for the `orgUnit` and month of the year, in addition to the specified predictor variables. 
 
 ### inla
 
 An approximate Bayesian model is fit via Integrated Nested Laplace Approximation via the [`inla` package](https://www.r-inla.org/). Note that this package is not available on CRAN and should be installed following these [installation instructions](https://www.r-inla.org/download-install). 
 
-This is the most computationally intense model, as it includes both temporal and spatial random effect structures. The temporal random effects are included via cyclical random walk with an annual seasonality, nested within `orgUnit`. The spatial structure is defined by a Besag-York-Mollié (BYM) model. This is an autoregressive spatial model based on the neighborhood spatial structure of the `orgUnits`. Priors can be provided for both random effects via the `hyper_priors` argument to `fit_inla`. In the future, functionality will be added to tune these hyper-parameters.
+The temporal random effects are included via cyclical random walk with an annual seasonality, nested within `orgUnit`. The spatial structure is defined by a Besag-York-Mollié (BYM) model. This is an autoregressive spatial model based on the neighborhood spatial structure of the `orgUnits`. Priors can be provided for both random effects via the `hyper_priors` argument to `fit_inla`. In the future, functionality will be added to tune these hyper-parameters.
 
-# Training Workflow
+# Training on Historical Data
 
 Each modeling approach follows the same training workflow:
 
@@ -138,5 +138,116 @@ Each modeling approach follows the same training workflow:
 3. `eval_performance`: evaluation of models on `analysis` and `assessment` datasets
 4. `inv_variables_*`: investigation of variable importance scores and counterfactual plots to visualize the association with predictor variables
 
-This workflow can be launched for multiple approaches at once and returns a `quarto` report of model performance and variable investigation via the `train_models` function. 
+This workflow can be launched for multiple approaches at once and returns a `quarto` report of model performance and variable investigation via the `train_models` function. It takes the output of the `prep_data` function and will evaluate the performance and investigate the variables for each model on all of the `cv_set`s. By default, the `cv_set`s contain `analysis` datasets of 60 months and `assessment` datasets of 3 months. This will be configurable in the future. This training step can take quite a while if your dataset covers a long time period, as it will need to fit over each `cv_set`.
+
+A HTML report and log text document will be saved in the specified `results_dir` directory. If no directory is specified, a temporary one will be created. The HTML report is currently only available in French.
+
+```{r, include=FALSE}
+prep_output <- prep_data(raw_data = demo_malaria[demo_malaria$period>201801,],
+                      y_var = "n_case",
+                      lagged_vars = c("pev", "rain_mm", "temp_c"),
+                      scaled_vars = c("pev", "rain_mm", "temp_c",
+                                      "wealth_index", "elevation",
+                                      "time_to_district"),
+                      lag_n = 3,
+                      graph_poly = demo_polygon)
+
+
+```
+
+
+```{r}
+train_models(prep_output,
+               models = c("naive", "glm_nb", "ranger", "inla", "arimax"),
+               y_var = "n_case",
+               pred_vars = c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
+                             "wealth_indexsc", "elevationsc",
+                             "time_to_districtsc"),
+               id_vars = c("orgUnit", "date"),
+               results_dir = here::here("scratch/quickstart"),
+               create_report = TRUE,
+               model_configs = NULL)
+```
+
+The HTML report should be used to further refine the models, validate them, and ultimately assign weights to each modeling approach in the ensemble forecast. This does not need to be done every time you forecast, but on a somewhat regular basis to ensure models continue to perform well.
+
+# Forecasting
+
+Once the model configurations have been chosen, they can be used to create a stacked ensemble forecast. This is a forecast approach where the forecasts are based on a weighted-mean of forecasts from each of the modeling approaches, where the weights are chosen by the user.
+
+
+
+## Prepare forecast data
+
+The user needs to provide the `cv_set` that contains the `analysis` and `assessment` data they would like to forecast over. This can be created via the `split_cv_forecast` function from the prepared data `prep_output`. The output of this will again contain a `analysis` and `assessment` dataset, but the `assessment` dataset will contain data from both the training and forecast period.
+
+```{r}
+forecast_cv_set <- split_cv_forecast(data_to_split = prep_output$data_prep,
+                                         forecast_start_date = as.Date("2024-04-01"),
+                                         month_analysis = 60,
+                                         month_assess = 3)
+```
+
+## Set Model Configurations
+
+Model configurations must be specified for the forecast. Exact configurations differ by model type and are noted in the help file for the `ensemble_forecast` function (see `?ensemble_forecast`). They can be set directly in the call, stored as individual objects, or store in one list of many configurations. We recommend the latter for ease of saving and tracking model configurations.
+
+```{r}
+chosen_pred_vars <- c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
+                             "wealth_indexsc", "elevationsc",
+                             "time_to_districtsc")
+model_configs <- list()
+model_configs$inla<- list(reff_var = NULL, pred_vars = chosen_pred_vars,
+                          hyper_priors = list("prec.unstruct" = c(1, 5e-4),
+                                              "prec.spatial" = c(1, 5e-4),
+                                              "prec.timerw1" = c(1,0.01)),
+                          W_orgUnit = prep_output$W_graph, 
+                          sample_pi = TRUE,
+                          weight = 0.6)
+model_configs$glm_nb <- list(pred_vars = chosen_pred_vars,
+                             weight = 0.3)
+model_configs$ranger <- list(pred_vars = chosen_pred_vars,
+                             hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500),
+                             weight = 0.45)
+model_configs$arimax <- list(pred_vars = chosen_pred_vars,
+                             log_trans = TRUE,
+                             weight = 0.05)
+model_configs$naive <- list(group_vars = c("month_season", "orgUnit"),
+                            weight = 0.2)
+```
+
+## Create stacked ensemble forecasts
+
+The `return_individual_models` argument can be set to `TRUE` to help with debugging individual models, if needed.
+
+```{r}
+forecast_output <- ensemble_forecast(cv_set = forecast_cv_set,
+                                            y_var = "n_case",
+                                            id_vars = c("orgUnit", "date"),
+                                            quantile_levels = c(0.05,0.95),
+                                            inla_configs = model_configs$inla,
+                                            glm_nb_configs = model_configs$glm_nb,
+                                            ranger_configs = model_configs$ranger,
+                                            arimax_configs = model_configs$arimax,
+                                            naive_configs = model_configs$naive,
+                                            return_individual_models = FALSE)
+```
+
+The function will run with a verbose output, tracking the progress of the ensemble forecast for each modeling approach. There will usually be some warnings on the ARIMAX model when it automatically removes any predictor variables that are constant over the training time period. The output is a dataframe with a predicted value for each orgUnit x date in the analysis and assessment datasets for the specified quantiles.
+
+## Assess ensemble forecasts
+
+The `plot_predictions` function can be used to visualize the forecast. It will create a subplot for every orgUnit. Because the `assessment` dataset included historical data, it allows you to retrospectively evaluate how well the model fit the training data, as well as view the forecasts over the forecast period.
+
+```{r}
+plot_predictions(forecast_output, quantile_ribbon = c(0.05,0.95))
+```
+
+In the case of having many orgUnits, you may wish to only plot a subset of them. For example, to plot a random subset:
+
+```{r}
+plot_predictions(forecast_output[forecast_output$orgUnit %in% sample(unique(forecast_output$orgUnit),4),],
+                 quantile_ribbon = c(0.05,0.95))
+```
+
 
