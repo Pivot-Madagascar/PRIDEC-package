@@ -1,6 +1,12 @@
 # plumber.R
 
-# plumber2::api_run(plumber2::api("plumber.R"))
+# setwd("~/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/plumber-test")
+# pa <- plumber2::api_run(plumber2::api("plumber.R"), port =8082)
+# plumber2::api_stop(pa)
+
+## library(plumber)
+# pr("plumber.R")|>
+#     pr_run(port=8084)
 
 #load inputs into session memory
 # not scalable, see https://www.rplumber.io/articles/execution-model.html#managing-state
@@ -8,7 +14,7 @@
 input_folder <- normalizePath("app/input")
 config <- jsonlite::fromJSON(file.path(input_folder, "config.json"))
 external_data <- read.csv(file.path(input_folder, "external_data.csv"))
-climate_data <- jsonlite::fromJSON(file.path(input_folder, "disease_data.json"))$dataValues
+disease_data <- jsonlite::fromJSON(file.path(input_folder, "disease_data.json"))$dataValues
 climate_data <- jsonlite::fromJSON(file.path(input_folder, "climate_data.json"))$dataValues
 orgUnit_poly <- sf::st_read(file.path(input_folder, "orgUnit_poly.geojson"), quiet = TRUE)
 
@@ -50,7 +56,7 @@ function() {
   sink(type = "message")
   close(log_con)
 
-  error_log <- readLines("pridec.log", warn = FALSE)
+  error_log <- PRIDEC::clean_ansi_log(readLines("pridec.log", warn = FALSE))
   file.remove("pridec.log")
 
   if(validate_res){
@@ -107,7 +113,7 @@ function() {
     sink(type = "message")
     close(log_con)
 
-    error_log <- readLines("pridec.log", warn = FALSE)
+    error_log <- PRIDEC::clean_ansi_log(readLines("pridec.log", warn = FALSE))
     file.remove("pridec.log")
 
     if(report_status){
@@ -127,7 +133,7 @@ function() {
     sink(type = "message")
     close(log_con)
 
-    error_log <- readLines("pridec.log", warn = FALSE)
+    error_log <- PRIDEC::clean_ansi_log(readLines("pridec.log", warn = FALSE))
     file.remove("pridec.log")
 
     return(list(message = "ERROR: Forecast encountered error. See log for details.",
