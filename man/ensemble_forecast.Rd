@@ -14,7 +14,8 @@ ensemble_forecast(
   ranger_configs = NULL,
   arimax_configs = NULL,
   naive_configs = NULL,
-  return_individual_models = FALSE
+  return_individual_models = FALSE,
+  abort_on_error = TRUE
 )
 }
 \arguments{

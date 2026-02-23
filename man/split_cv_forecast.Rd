@@ -12,7 +12,7 @@ split_cv_forecast(
 )
 }
 \arguments{
-\item{forecast_start_date}{start date of forecast}
+\item{forecast_start_date}{start date of forecast, as a Date object in YYYY-MM-DD format}
 
 \item{month_analysis}{how many months of analysis to include}
 
