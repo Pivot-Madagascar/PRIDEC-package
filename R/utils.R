@@ -47,3 +47,13 @@ create_demo_preds <- function(n_orgUnit, n_months, n_quant = 2){
 
   return(demo_data)
 }
+
+#' Clean log output from R message formatting
+#' @param text_to_clean string vector to clean
+#' @returns cleaned text
+#' @export
+clean_ansi_log <- function(text_to_clean){
+  to_remove <- paste(c("\033G3;", "\033g"), collapse = "|")
+  clean <- gsub(to_remove,"", text_to_clean)
+  clean[nzchar(trimws(clean))]
+}
