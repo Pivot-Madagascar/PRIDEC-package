@@ -3,7 +3,7 @@
 #'
 #' @param inputs list of config, input_data and orgUnit poly output from validate_inputs
 #' @param output_dir directory to save outputs in. If NULL, saves in a temporary directory
-#' @returns 0 if success, 1 if not
+#' @returns T for success, F for error
 #' @export
 
 run_pridec_forecast <- function(inputs,
@@ -15,7 +15,7 @@ run_pridec_forecast <- function(inputs,
   if(is.null(output_dir)){
     output_dir <- tempdir()
   }
-  cli::cli_alert_info(paste("Saving intermediate files and output in ", output_dir,
+  message(paste("Saving intermediate files and output in ", output_dir,
                             "\nDirectory will be created if it does not exist."))
 
   #if output directory doesn't exist, create it
@@ -24,7 +24,7 @@ run_pridec_forecast <- function(inputs,
   }
 
   #-------- data processing -------
-  cli::cli_h1(paste(round(Sys.time()), ": Processing and formatting input data"))
+  message(paste(round(Sys.time()), ": Processing and formatting input data"))
   variables <- format_pred_vars(var_list = inputs$config$pred_vars,
                                 input_data = inputs$input_data)
 
@@ -50,8 +50,8 @@ run_pridec_forecast <- function(inputs,
 
 
   #------- forecast model
-  cli::cli_h1(paste(round(Sys.time()),": Beginning forecast model"))
-  cli::cli_alert_info(paste("Forecast period:", forecast_start, "thru", forecast_start + lubridate::period(month = inputs$config$month_assess)))
+  message(paste(round(Sys.time()),": Beginning forecast model"))
+  message(paste("Forecast period:", forecast_start, "thru", forecast_start + lubridate::period(month = inputs$config$month_assess)))
 
   stack_forecast <- PRIDEC::ensemble_forecast(cv_set = forecast_cv,
                                               y_var = inputs$config$disease_dataElement,
@@ -71,11 +71,11 @@ run_pridec_forecast <- function(inputs,
                                          month_assess = inputs$config$month_asses,
                                          month_analysis = inputs$config$month_analysis)
 
-  cli::cli_h1(paste(round(Sys.time()),": Forecast model finished."))
+  message(paste(round(Sys.time()),": Forecast model finished."))
 
   #--------save intermediate files----------
 
-  cli::cli_alert_info(paste0("Saving intermediate files to ", output_dir))
+  message(paste0("Saving intermediate files to ", output_dir))
 
   #save intermediate files (saving as json for compatability)
   write(jsonlite::toJSON(list("dataValues" = dhis2_forecast)), file.path(output_dir,"forecast.json"))
@@ -88,7 +88,7 @@ run_pridec_forecast <- function(inputs,
   #reset to default
   suppressMessages(sf::sf_use_s2(TRUE))
 
-  return(0)
+  return(TRUE)
 }
 
 

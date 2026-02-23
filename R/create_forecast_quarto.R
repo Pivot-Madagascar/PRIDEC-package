@@ -1,7 +1,7 @@
 #' Create HTML forecast report from quarto template
 #' @param report_dir directory to build quarto doc in
 #' @param quiet whether to render quarto doc quietly
-#' @returns message of success of failure
+#' @returns TRUE if successful, FALSE if error
 #' @export
 #'
 create_forecast_report <- function(report_dir,
@@ -23,18 +23,22 @@ create_forecast_report <- function(report_dir,
     }
     result <- system(cmd)
 
+    file.remove(file.path(report_dir, "tmp_template.qmd"))
+
     if (result == 0) {
-      cli::cli_alert_success(paste("Created forecast report at:", file.path(report_dir, "forecast_report.html")))
+      message(paste("Created forecast report at:", file.path(report_dir, "forecast_report.html")))
+      return(TRUE)
     } else {
-      cli::cli_alert_warning(paste("Quarto render failed with exit code:", result))
-      # Create a simple fallback HTML report
-      create_simple_report(report_dir)
+      message(paste("Quarto render failed with exit code:", result))
     }
 
   }, error = function(e) {
-    cli::cli_alert_warning(paste("Error in create_forecast_report:", e$message))
+    message(paste("Error in create_forecast_report:", e$message))
     # Create a simple fallback HTML report
+    message("Creating simple report...")
     create_simple_report(report_dir)
+
+    return(FALSE)
   })
 }
 

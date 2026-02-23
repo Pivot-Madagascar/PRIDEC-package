@@ -22,7 +22,7 @@
 #' @param climate_data data.frame containing historical disease data used to train model. Must contain columns orgUnit, period, dataElement, value
 #' @param orgUnit_poly sf data.frame containing geometry of orgUnits. Must contain column orgUnit
 #' @param return_inputs whether to return validated input or not. If TRUE, returns list of configs, input data, and orgPoly
-#' @returns 0 for success, 1 for error. Or if return_inputs=TRUE, list of validated inputs
+#' @returns T for success, F for error. Or if return_inputs=TRUE, list of validated inputs
 #' @export
 validate_inputs <- function(config,
                             external_data = NULL,
@@ -49,15 +49,15 @@ validate_inputs <- function(config,
   #-------------Check configurations-------------
   missing_modelWeight <- c("inla", "glm_nb" ,"ranger", "arimax", "naive")[which(!(any((c("inla", "glm_nb" ,"ranger", "arimax", "naive") %in% config$model_weights$model))))]
   if(length(missing_modelWeight)>0){
-    cli::cli_alert_danger(c("Error in config: missing the following model weights:",
-                            missing_modelWeight,
-                            "/n Supply a weight of `0` fo models you don't want to include."))
+    message(c("\nERROR in config: missing the following model weights: ",
+                            paste(missing_modelWeight, collapse = ", "),
+                            "\nSupply a weight of `0` for models you don't want to include. \n"))
     err_count <- err_count + 1
   }
 
   #set to default value if not provided
   if(is.null(config$inla_hyper)){
-    cli::cli_alert_info("No inla_hyper provided. Setting to default values.")
+    message("\nNo inla_hyper provided. Setting to default values.")
     config$inla_hyper <- list("prec.unstruct" = c(1, 5e-4),
                                "prec.spatial" = c(1, 5e-4),
                                "prec.timerw1" = c(1,0.01))
@@ -65,8 +65,8 @@ validate_inputs <- function(config,
     if(!all(names(config$inla_hyper) == c("prec.unstruct", "prec.spatial", "prec.timerw1")) |
        !(all(sapply(config$inla_hyper, length) == 2)) |
        !(all(sapply(config$inla_hyper, class) == "numeric"))){
-      cli::cli_alert_danger(c("Error in config: `inla_hyper` poorly specified.
-                              `prec.unstruct`, `prec.spatial`, `prec.timerw1` should be numeric vectors of length 2."))
+      message(c("\nERROR in config: `inla_hyper` poorly specified.
+                `prec.unstruct`, `prec.spatial`, `prec.timerw1` should be numeric vectors of length 2."))
 
       err_count <- err_count + 1
     }
@@ -77,47 +77,47 @@ validate_inputs <- function(config,
     config$ranger_hyper <- list("mtry" = NULL,
                               "min.node.size" = NULL,
                               "num.trees" = 500)
-    cli::cli_alert_info("No ranger_hyper provided. Setting to default values.")
+    message("No ranger_hyper provided. Setting to default values.")
   } else {
     if(!all(names(config$ranger_hyper) == c("mtry", "min.node.size", "num.trees"))){
-      cli::cli_alert_danger(c("Error in config: `ranger_hyper` poorly specified.
-                              Should include `mtry`, `min.node.size`, `num.trees`"))
+      message(c("\nERROR in config: `ranger_hyper` poorly specified.
+                 Should include `mtry`, `min.node.size`, `num.trees`"))
 
       err_count <- err_count + 1
     }
   }
 
   if(length(config$quantile_levels) != 3){
-    cli::cli_alert_danger("Error in config: Quantile levels must be numeric of length 3.")
+    message("\nERROR in config: Quantile levels must be numeric of length 3.")
     err_count <- err_count + 1
   }
 
   if(!is.integer(config$month_analysis)){
-    cli::cli_alert_danger("Error in config: month_analysis must be an integer of length 1")
+    message("\nERROR in config: month_analysis must be an integer of length 1")
     err_count <- err_count + 1
   }
 
   if(!is.integer(config$month_assess)){
-    cli::cli_alert_danger("Error in config: month_assess must be an integer of length 1")
+    message("\nERROR in config: month_assess must be an integer of length 1")
     err_count <- err_count + 1
   }
 
 
   if(is.null(config$month_lag)){
     config$month_lag <- 3
-    cli::cli_alert_info("No month_lag provided. Setting to default of 3.")
+    message("No month_lag provided. Setting to default of 3.")
   } else {
     config$month_lag <- as.numeric(config$month_lag)
   }
 
   #defaut is current month
   if(is.null(config$forecast_start)){
-    cli::cli_alert_info("No forecast_start provided. Setting to current month.")
+    message("No forecast_start provided. Setting to current month.")
     config$forecast_start <- gsub("-","",substr(lubridate::rollback(Sys.Date(), roll_to_first = TRUE), 1,7))
   }
 
   if(is.na(as.Date(paste0(config$forecast_start, "01"), format = "%Y%m%d"))){
-    cli::cli_alert_danger("Error in config: forecast_start not a valid date. Is it in YYYYMM format?")
+    message("\nERROR in config: forecast_start not a valid date. Is it in YYYYMM format?")
     err_count <- err_count + 1
   }
 
@@ -128,7 +128,7 @@ validate_inputs <- function(config,
   # Ensure appropriate columns in all data ----------------
   if(!is.null(external_data)){
     if(check_columns(external_data,  c("orgUnit","period"))>0){
-      cli::cli_alert_danger(paste("Columns missing from external_data: ",
+      message(paste("\nERROR: Columns missing from external_data: ",
                               paste(check_columns(external_data,  c("orgUnit","period")),
                                     collapse = ", ")))
       err_count <- err_count + 1
@@ -136,21 +136,21 @@ validate_inputs <- function(config,
   }
 
   if(check_columns(disease_data,  c("orgUnit","period", "dataElement", "value"))>0){
-    cli::cli_alert_danger(paste("Columns missing from disease_data: ",
+    message(paste("\nERROR: Columns missing from disease_data: ",
                                 paste(check_columns(disease_data,  c("orgUnit","period", "dataElement", "value")),
                                       collapse = ", ")))
     err_count <- err_count + 1
   }
 
   if(check_columns(climate_data,  c("orgUnit","period", "dataElement", "value"))>0){
-    cli::cli_alert_danger(paste("Columns missing from climate_data: ",
+    message(paste("\nERROR: Columns missing from climate_data: ",
                                 paste(check_columns(climate_data,  c("orgUnit","period", "dataElement", "value")),
                                       collapse = ", ")))
     err_count <- err_count + 1
   }
 
   if(check_columns(orgUnit_poly,  c("orgUnit"))>0){
-    cli::cli_alert_danger(paste("Columns missing from orgUnit_poly: ",
+    message(paste("\nERROR: Columns missing from orgUnit_poly: ",
                                 paste(check_columns(orgUnit_poly,  c("orgUnit")),
                                       collapse = ", ")))
     err_count <- err_count + 1
@@ -167,7 +167,7 @@ validate_inputs <- function(config,
     if(sum(is.na(external_data))>0){
       na_col <- colSums(is.na(external_data))
       na_col <- na_col[na_col>0]
-      cli::cli_alert_danger(paste("External data has `NA` in the following columns: ",
+      message(paste("\nERROR: External data has `NA` in the following columns: ",
                                   paste(names(na_col),
                                         collapse = ", ")))
       err_count <- err_count + 1
@@ -179,7 +179,7 @@ validate_inputs <- function(config,
   disease_data <- disease_data[,c("orgUnit", "period", "dataElement", "value")]
 
   if(length(unique(disease_data$dataElement))>1){
-    cli::cli_alert_danger(paste("disease_data should contain one dataElement but contains multiple:",
+    message(paste("\nERROR: `disease_data` should contain one dataElement but contains multiple:\n",
                                 paste(unique(disease_data$dataElement),
                                       collapse = ", ")))
     err_count <- err_count + 1
@@ -187,7 +187,7 @@ validate_inputs <- function(config,
 
   if(all(sapply(disease_data, class) != c(rep("character",3), "numeric"))){
     wrong_class <- colnames(disease_data)[sapply(disease_data, class) != c(rep("character",3), "numeric")]
-    cli::cli_alert_danger(paste("The following disease_data columns are incorrectly specified:",
+    message(paste("\nERROR: The following `disease_data` columns are incorrectly specified:",
                                 paste(wrong_class,
                                       collapse = ", "),
                                 "\n Correct classes are orgUnit (chr), period (chr), dataElement (chr), value (num)"))
@@ -196,21 +196,25 @@ validate_inputs <- function(config,
 
   # ------------Combine into Input data ------------
 
-  input_data <- dplyr::bind_rows(disease_data, climate_data) |>
-    tidyr::pivot_wider(names_from = "dataElement", values_from = "value") |>
-    dplyr::full_join(external_data, by = c("orgUnit", "period")) |>
-    #the joins above will sometimes add variables for orgUnits we don't have data for, drop them
-    dplyr::filter(orgUnit %in% disease_data$orgUnit)
-
-  #limit to predictor variables only to save space
-  input_data <- input_data[,c("orgUnit", "period", config$disease_dataElement, config$pred_vars)]
-
   #check that all predictor variables are there
-  missing_predVars <- config$pred_vars[which(!(config$pred_vars %in% colnames(input_data)))]
+  missing_predVars <- config$pred_vars[which(!(config$pred_vars %in% c(unique(climate_data$dataElement), colnames(external_data))))]
   if(length(missing_predVars)>0){
-    cli::cli_alert_danger(c("The following predictor variables are missing from the input data:\n",
-                            paste(missing_predVars, collapse = ", ")))
+    message(c("\nERROR: The following predictor variables are missing from the input datasets:\n",
+              paste(missing_predVars, collapse = ", "),
+              "\n \n Ensure they are present in `climate_data` or `external_data`."))
+
+    input_data <- NULL
     err_count <- err_count + 1
+  } else {
+
+    input_data <- dplyr::bind_rows(disease_data, climate_data) |>
+      tidyr::pivot_wider(names_from = "dataElement", values_from = "value") |>
+      dplyr::full_join(external_data, by = c("orgUnit", "period")) |>
+      #the joins above will sometimes add variables for orgUnits we don't have data for, drop them
+      dplyr::filter(orgUnit %in% disease_data$orgUnit)
+
+    #limit to predictor variables only to save space
+    input_data <- input_data[,c("orgUnit", "period", config$disease_dataElement, config$pred_vars)]
   }
 
   #---------------geojson polygons---------------
@@ -220,26 +224,26 @@ validate_inputs <- function(config,
   all_ou <- unique(input_data$orgUnit)
   missing_orgPoly <-all_ou[which(!(all_ou %in% orgUnit_poly$orgUnit))]
   if(length(missing_orgPoly)>0){
-    cli::cli_alert_danger(c("The following orgUnits are missing corresponding polygons in `orgUnit_poly`:\n",
+    message(c("\nERROR: The following orgUnits are missing corresponding polygons in `orgUnit_poly`:\n",
                             paste(missing_orgPoly, "\n")))
     err_count <- err_count + 1
   }
 
   # --------------- Return data or errors -----------------#
   if(err_count>0){
-    cli::cli_h2("ERROR: Invalid inputs. See notes above.")
-    return(1)
+    message("\nERROR: Invalid inputs. See notes above.")
+    return(FALSE)
   } else {
-    cli::cli_h2("SUCCESS: All inputs valid.")
+    message("\nSUCCESS: All inputs valid.")
 
     if(return_inputs){
 
-      cli::cli_h3("Returning processed inputs as a list.")
+      message("Returning processed inputs as a list.")
       return(list(config = config,
                   input_data = input_data,
                   graph_poly = orgUnit_poly))
     } else {
-      return(0)
+      return(TRUE)
     }
 
   }

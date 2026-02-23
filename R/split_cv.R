@@ -78,7 +78,7 @@ split_stratified <- function(cvdata_list){
 
 #' Create data to use for forecast
 #' @param all_data data.frame that contains the data used to train the model
-#' @param forecast_start_date start date of forecast
+#' @param forecast_start_date start date of forecast, as a Date object in YYYY-MM-DD format
 #' @param month_analysis how many months of analysis to include
 #' @param month_assess how many months of forecasting (assessment to include)
 #'
