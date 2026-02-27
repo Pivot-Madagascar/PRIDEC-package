@@ -19,20 +19,27 @@
 #* @serializer json
 function() {
 
-  file.create("test.log")
-  log_con <- file("test.log",
-                  open = "a")
-  sink(file = log_con, type = "message")
+  create_message <- function(){
 
-  message("This is a test of the log")
-  message("testing the log x2")
+    message("this is a test")
+    message("this is a test2")
 
-  sink(type = "message")
-  close(log_con)
+    return(4)
+  }
+  #
+  # file.create("test.log")
+  # log_con <- file("test.log",
+  #                 open = "a")
 
-  error_log <- readLines("test.log", warn = FALSE)
-  error_log <- clean_ansi_log(error_log)
-  file.remove("test.log")
+
+  error_log <- capture.output(create_message()) #doesn't work either
+
+  # sink(type = "message")
+  # close(log_con)
+
+  # error_log <- readLines("test.log", warn = FALSE)
+  # error_log <- PRIDEC::clean_ansi_log(error_log)
+  # file.remove("test.log")
 
   return(list(message = "SUCCESS: All inputs valid.",
                 status = 'success',

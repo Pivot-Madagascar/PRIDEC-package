@@ -1,12 +1,12 @@
 # plumber.R
 
 # setwd("~/Dropbox/PIVOT/pride-c/packages/PRIDEC-package/scratch/plumber-test")
-# pa <- plumber2::api_run(plumber2::api("plumber.R"), port =8082)
+# pa <- plumber2::api_run(plumber2::api("plumber.R"), port =8084)
 # plumber2::api_stop(pa)
 
 ## library(plumber)
-# pr("plumber.R")|>
-#     pr_run(port=8084)
+pr("plumber.R")|>
+    pr_run(port=8084)
 
 #load inputs into session memory
 # not scalable, see https://www.rplumber.io/articles/execution-model.html#managing-state
