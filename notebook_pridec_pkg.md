@@ -18,6 +18,28 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2026-02-27
+
+Updating docker with this package to have something to use while the ETL gets made. This has involved writing some tests for the new code since it was having issues.
+
+**TO DO:**
+- test with Paul's ETL (also move to plumber2?)
+- check out ARIMA errors
+- ~~add info on missing data to forecast quarto doc. and code to investigate data yourself~~: just did proportion missing by month
+- ~~write tests for new functions (includes creating test data)~~
+
+## 2026-02-23
+
+Since updating to plumber2, I have an issue with the logs not getting returned properly and I'm not sure why. The log in the final JSON response is just blank, although the file is fine and things are being read in. Filed a question on SO about this. Teh answer was that plumber2 messes with sink, not quite sure how to go about this then.
+
+Added a function to clean the weird R formatting out of the message error log, so now it returns something more readbale in JSON.
+
+**TO DO:**
+- test with Paul's ETL (also move to plumber2?)
+- check out ARIMA errors
+- add info on missing data to forecast quarto doc. and code to investigate data yourself
+- write tests for new functions (includes creating test data)
+
 ## 2026-02-19
 
 Have a plumber app working now. There is still some wierd formatting being returned, but I changed as much as I could to standard messaging. As long as it isn't run through Rstudio it seems to be okay. I also switched over to plumber2, as this is the new package that will be supported and alreayd links in with quarto and REDIS.

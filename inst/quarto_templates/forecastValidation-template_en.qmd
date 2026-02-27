@@ -63,6 +63,14 @@ print(config)
 
 # Input Data
 
+To investigate errors in input data, run the following in `R`:
+
+```{r}
+#| eval: false
+#| echo: true
+readRDS("output/input_data.RData")
+```
+
 ## Disease Variable
 
 The model is trained on the `r config$disease_dataElement` data source from the DHIS2 instance.
@@ -128,6 +136,30 @@ pred_var_df <- select(assess_data, orgUnit, period, date, all_of(pred_vars))
 
 skimr::skim(select(pred_var_df, -date))
 ```
+
+```{r}
+#| output: true
+missing_cols <- colSums(is.na(pred_var_df))
+missing_cols <- missing_cols[missing_cols>0]
+
+for(this_col in names(missing_cols)){
+  this_subset_na <- select(pred_var_df, orgUnit, date, values = this_col) |>
+    dplyr::summarise(prop_NA = mean(is.na(values)),
+                  .by = "date") |>
+    filter(prop_NA > 0)
+  print(paste("Missing in", this_col, ":"))
+  print(this_subset_na)
+}
+```
+
+To investigate missing climate variables, look directly at the climate data imported from DHIS2:
+
+```{r}
+#| eval: false
+#| echo: true
+climate_data <- jsonlite::fromJSON(txt = "input/climate_data.json")$dataValues
+```
+
 
 ### Histograms
 

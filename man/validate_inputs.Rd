@@ -14,7 +14,7 @@ validate_inputs(
 )
 }
 \arguments{
-\item{config}{list of configurations for forecase. See Details}
+\item{config}{list of configurations for forecast. See Details}
 
 \item{external_data}{data.frame containing external data to use in prediction. Must contain columns orgUnit, period, and predictor variables specified in the config (optional)}
 

@@ -26,7 +26,7 @@ create_forecast_report <- function(report_dir,
     file.remove(file.path(report_dir, "tmp_template.qmd"))
 
     if (result == 0) {
-      message(paste("Created forecast report at:", file.path(report_dir, "forecast_report.html")))
+      message(paste("Created forecast report at:", file.path(gsub("\\/", "", report_dir), "forecast_report.html")))
       return(TRUE)
     } else {
       message(paste("Quarto render failed with exit code:", result))

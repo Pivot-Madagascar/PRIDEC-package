@@ -16,7 +16,7 @@
 #'    \item forecast_start (string): date in format YYYYMM
 #' }
 #'
-#' @param config list of configurations for forecase. See Details
+#' @param config list of configurations for forecast. See Details
 #' @param external_data data.frame containing external data to use in prediction. Must contain columns orgUnit, period, and predictor variables specified in the config (optional)
 #' @param disease_data data.frame containing historical disease data used to train model. Must contain columns orgUnit, period, dataElement, value
 #' @param climate_data data.frame containing historical disease data used to train model. Must contain columns orgUnit, period, dataElement, value
@@ -121,45 +121,69 @@ validate_inputs <- function(config,
     err_count <- err_count + 1
   }
 
-  #add disease element to configs
-  config$disease_dataElement <- unique(disease_data$dataElement)
-
 
   # Ensure appropriate columns in all data ----------------
+
+  #subset out if it has been returned as raw json list
+  if(class(disease_data) == "list" & "dataValues" %in% names(disease_data)){
+    disease_data <- disease_data$dataValues
+  }
+  if(class(climate_data) == "list" & "dataValues" %in% names(climate_data)){
+    climate_data <- climate_data$dataValues
+  }
+
+  if(!all(sapply(list(disease_data, external_data, climate_data), class) == "data.frame")){
+    message("\nERROR: disease, climate, and external data must be provided as a data.frame:")
+    wrong_format <- c("disease_data", "external_data", "climate_data")[!(sapply(list(disease_data, external_data, climate_data), class) == "data.frame")]
+    message(paste("The following datasets are incorrectly formatted:",
+                  paste(wrong_format, collapse = ", ")))
+  }
+
   if(!is.null(external_data)){
-    if(check_columns(external_data,  c("orgUnit","period"))>0){
+    if(length(missing_columns(external_data,  c("orgUnit","period")))>0){
       message(paste("\nERROR: Columns missing from external_data: ",
-                              paste(check_columns(external_data,  c("orgUnit","period")),
+                              paste(missing_columns(external_data,  c("orgUnit","period")),
                                     collapse = ", ")))
-      err_count <- err_count + 1
+      message("\nERROR: Invalid inputs. See notes above.")
+      return(FALSE)
     }
   }
 
-  if(check_columns(disease_data,  c("orgUnit","period", "dataElement", "value"))>0){
+  if(length(missing_columns(disease_data,  c("orgUnit","period", "dataElement", "value")))>0){
     message(paste("\nERROR: Columns missing from disease_data: ",
-                                paste(check_columns(disease_data,  c("orgUnit","period", "dataElement", "value")),
+                                paste(missing_columns(disease_data,  c("orgUnit","period", "dataElement", "value")),
                                       collapse = ", ")))
+
     err_count <- err_count + 1
+    message("\nERROR: Invalid inputs. See notes above.")
+    return(FALSE)
   }
 
-  if(check_columns(climate_data,  c("orgUnit","period", "dataElement", "value"))>0){
+  if(length(missing_columns(climate_data,  c("orgUnit","period", "dataElement", "value")))>0){
     message(paste("\nERROR: Columns missing from climate_data: ",
-                                paste(check_columns(climate_data,  c("orgUnit","period", "dataElement", "value")),
+                                paste(missing_columns(climate_data,  c("orgUnit","period", "dataElement", "value")),
                                       collapse = ", ")))
     err_count <- err_count + 1
+    message("\nERROR: Invalid inputs. See notes above.")
+    return(FALSE)
   }
 
-  if(check_columns(orgUnit_poly,  c("orgUnit"))>0){
+  if(length(missing_columns(orgUnit_poly,  c("orgUnit")))>0){
     message(paste("\nERROR: Columns missing from orgUnit_poly: ",
-                                paste(check_columns(orgUnit_poly,  c("orgUnit")),
+                                paste(missing_columns(orgUnit_poly,  c("orgUnit")),
                                       collapse = ", ")))
     err_count <- err_count + 1
+    message("\nERROR: Invalid inputs. See notes above.")
+    return(FALSE)
   }
 
   # ensure period is a character, not numeric
   external_data$period <- as.character(external_data$period)
   disease_data$period <- as.character(disease_data$period)
   climate_data$period <- as.character(climate_data$period)
+
+  #add disease element to configs
+  config$disease_dataElement <- unique(disease_data$dataElement)
 
   #------------External data -------------
   if(!is.null(external_data)){
@@ -252,12 +276,8 @@ validate_inputs <- function(config,
 #' Check that dataframe contains appropriate columns
 #' @param input_data data.frame to check
 #' @param column_names required column names
-#' @returns names of missing columns (if missing), or 0 if none missing
-check_columns <- function(input_data, column_names){
+#' @returns names of missing columns (if missing), or nothing if none missing
+missing_columns <- function(input_data, column_names){
   found <- column_names %in% colnames(input_data)
-  if(!all(found)){
-    return(column_names[!found])
-  } else {
-    return(FALSE)
-  }
+  return(column_names[!found])
 }
