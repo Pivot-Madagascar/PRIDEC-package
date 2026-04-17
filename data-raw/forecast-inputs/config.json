@@ -10,11 +10,11 @@
   "model_weights": [
     {
       "model": "inla",
-      "weight": 0.0
+      "weight": 0.1
     },
     {
       "model": "glm_nb",
-      "weight": 0.0
+      "weight": 0.1
     },
     {
       "model": "ranger",
@@ -22,7 +22,7 @@
     },
     {
       "model": "arimax",
-      "weight": 0
+      "weight": 0.2
     },
     {
       "model": "naive",
