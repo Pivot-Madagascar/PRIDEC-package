@@ -117,3 +117,31 @@ test_that("inla internal functions work",{
 })
 
 
+test_that("check that model matrix is positive definite",{
+  data(demo_malaria)
+  data(demo_polygon)
+
+  orgUnit_subset <- sample(unique(demo_malaria$orgUnit),10)
+  cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria[demo_malaria$orgUnit %in% orgUnit_subset,],
+                                                       y_var = "n_case",
+                                                       lagged_vars =  c("rain_mm", "temp_c"),
+                                                       scaled_vars = NULL,
+                                                       graph_poly = demo_polygon)$data_prep,
+                             month_analysis = 48,
+                             month_assess = 3)[[6]]
+
+
+  W_orgUnit <- prep_data(raw_data = demo_malaria,
+                         y_var = "n_case",
+                         lagged_vars =  c("rain_mm", "temp_c"),
+                         scaled_vars = NULL,
+                         graph_poly = demo_polygon)$W_graph
+
+  test_fit <- fit_inla(cv_set = cv_set,
+                       y_var = "n_case",
+                       pred_vars = c("rain_mm", "temp_c"),
+                       id_vars = c("orgUnit", "date"),
+                       W_orgUnit = W_orgUnit,
+                       verbose = FALSE,
+                       n_cores = 10)
+})

@@ -51,15 +51,22 @@ assess_data <- input_set$assessment
 poly <- sf::st_read("polygon.geojson", quiet = TRUE)
 ```
 
-
 # Model Configurations and Info
+
 
 **Date Run:** `r Sys.Date()`
 
+::: {.callout-note collapse=true appearance="simple"}
+
+## Model Configurations
+
 ```{r}
 #| output: true
+config$model_configs$inla$W_orgUnit <- NULL
 print(config)
 ```
+
+:::
 
 # Input Data
 
@@ -308,6 +315,8 @@ ggplot() +
   scale_fill_viridis_c()
 ```
 
+::: {.callout-note collapse=true appearance="simple"}
+
 # R Session Info
 
 ```{r}
@@ -315,3 +324,4 @@ ggplot() +
 sessionInfo()
 ```
 
+:::

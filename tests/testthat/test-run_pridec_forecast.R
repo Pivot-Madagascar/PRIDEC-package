@@ -15,9 +15,13 @@ test_that("pridec forecast works", {
   expect_true(run_pridec_forecast(inputs = input_list, output_dir = output_dir))
   #check files are there
   expect_true(all(c("config.json", "forecast.json", "input_data.json", "input_data.RData",
-                "polygon.geojons") %in% list.files(output_dir)))
-  unlink(output_dir, recursive = TRUE)
+                "polygon.geojson") %in% list.files(output_dir)))
+
 
   #create report
   expect_true(create_forecast_report(report_dir = output_dir, quiet = TRUE))
+
+  expect_true("forecast_report.html" %in% list.files(output_dir))
+
+  unlink(output_dir, recursive = TRUE)
 })

@@ -18,6 +18,23 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2026-04-17
+
+Updated the run_pridec_forecast to change how it saves the input data and output configuration so that the missing data is accurate for the data after we do the prep in the quarto report, rather than before prep.
+
+Also added the full model configuration in a collapsible code block to quarto.
+
+## 2026-04-15
+
+With the most recent monthly update, there is an error in the INLA code (this may be due to using a more recent version or a different matrix library). The error is: 
+
+```
+Error: INLA model failed with error message:
+ $ operator is invalid for atomic vectors
+```
+
+I thought this may be due to a missing check on data quality, but it may actually have to do with how certain control parameters are being defined. Yes, it was a typo in how we were passing through the model configurations.
+
 ## 2026-02-27
 
 Updating docker with this package to have something to use while the ETL gets made. This has involved writing some tests for the new code since it was having issues.

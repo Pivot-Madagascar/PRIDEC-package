@@ -43,8 +43,8 @@ run_pridec_forecast <- function(inputs,
                                            month_assess = inputs$config$month_assess)
 
   model_configs <- PRIDEC::create_model_configs(model_weights_df = inputs$config$model_weights,
-                                        W_graph = inputs$W_graph,
-                                        pred_vars = inputs$config$pred_vars,
+                                        W_graph = data_prep_list$W_graph,
+                                        pred_vars = variables$pred_vars,
                                         inla_hyper = inputs$config$inla_hyper,
                                         ranger_hyper = inputs$config$ranger_hyper)
 
@@ -83,7 +83,15 @@ run_pridec_forecast <- function(inputs,
   write(jsonlite::toJSON(forecast_cv), file.path(output_dir, "input_data.json")) #saves as JSON too for interoperability
   sf::st_write(inputs$graph_poly, file.path(output_dir, "polygon.geojson"),
                delete_dsn = TRUE, quiet = TRUE, driver = "GeoJSON")
-  write(jsonlite::toJSON(inputs$config), file.path(output_dir, "config.json"))
+  out_config <- list("disease_dataElement" = inputs$config$disease_dataElement,
+                     "forecast_start" = inputs$config$forecast_start,
+                     "month_analysis" = inputs$config$month_analysis,
+                     "month_assess" = inputs$config$month_assess,
+                     "quantile_levels" = inputs$config$quantile_levels,
+                     "month_lag" = inputs$config$month_lag,
+                     "pred_vars" = variables$pred_vars,
+                     "model_configs" = model_configs)
+  write(jsonlite::toJSON(out_config), file.path(output_dir, "config.json"))
 
   #reset to default
   suppressMessages(sf::sf_use_s2(TRUE))
