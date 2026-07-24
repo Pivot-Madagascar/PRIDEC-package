@@ -16,6 +16,7 @@ Imports:
     forecast,
     generics,
     ggplot2,
+    httr2,
     imputeTS,
     INLA,
     lubridate,

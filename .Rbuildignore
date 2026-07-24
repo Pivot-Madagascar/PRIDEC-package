@@ -19,3 +19,5 @@ scratch/*
 ^\.github$
 ^doc$
 ^Meta$
+^\.positai$
+^\.claude$
