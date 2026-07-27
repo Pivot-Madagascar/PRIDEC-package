@@ -58,15 +58,13 @@ validate_inputs <- function(config,
   #set to default value if not provided
   if(is.null(config$inla_hyper)){
     message("\nNo inla_hyper provided. Setting to default values.")
-    config$inla_hyper <- list("prec.unstruct" = c(1, 5e-4),
-                               "prec.spatial" = c(1, 5e-4),
-                               "prec.timerw1" = c(1,0.01))
+    config$inla_hyper <- NULL
   } else {
-    if(!all(names(config$inla_hyper) == c("prec.unstruct", "prec.spatial", "prec.timerw1")) |
+    if(!all(names(config$inla_hyper) == c("prec.spatial", "phi.spatial", "prec.timerw1")) |
        !(all(sapply(config$inla_hyper, length) == 2)) |
        !(all(sapply(config$inla_hyper, class) == "numeric"))){
       message(c("\nERROR in config: `inla_hyper` poorly specified.
-                `prec.unstruct`, `prec.spatial`, `prec.timerw1` should be numeric vectors of length 2."))
+               `prec.spatial`, `phi.spatial`,  `prec.timerw1` should be numeric vectors of length 2."))
 
       err_count <- err_count + 1
     }
