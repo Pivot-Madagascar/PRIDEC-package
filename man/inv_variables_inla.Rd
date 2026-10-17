@@ -10,8 +10,7 @@ inv_variables_inla(
   pred_vars,
   reff_var = NULL,
   id_vars,
-  hyper_priors = list(prec.unstruct = c(1, 5e-04), prec.spatial = c(1, 5e-04),
-    prec.timerw1 = c(1, 0.01)),
+  hyper_priors = INLA_HYPER_DEFAULT,
   W_orgUnit,
   var_scales,
   constant_org,
@@ -46,7 +45,7 @@ inv_variables_inla(
 
 \item{nsims}{number of simulations to run. Default = 1}
 
-\item{n_cores}{number of cores to use (integer). Defaults to number of available cores minus 2.}
+\item{n_cores}{number of cores to use (integer). Defaults to number of available cores/2}
 }
 \value{
 list containing variable importance scores and a list of dataframes

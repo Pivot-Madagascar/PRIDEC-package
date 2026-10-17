@@ -3,19 +3,27 @@
 \name{run_inla_config}
 \alias{run_inla_config}
 \title{Configuration for an INLA model
-An internal function to run a configured INLA model}
+An internal function to run a configured INLA model with a limit on the time and number of times to try to fit
+If a model cannot be fit within those tries, it returns NULL}
 \usage{
 run_inla_config(
   formula,
   data,
+  pred_vars,
   family = "zeroinflatednbinomial1",
   config = T,
   verbose = T,
-  n_cores = NULL
+  n_cores = NULL,
+  hyper_priors = INLA_HYPER_DEFAULT,
+  W_orgUnit = NULL,
+  reff_var = NULL,
+  sample_pi = INLA_SAMPLEPI_DEFAULT,
+  max_time = INLA_MAX_TIME_DEFAULT,
+  max_tries = INLA_MAX_TRY_DEFAULT
 )
 }
 \arguments{
-\item{formula}{forumula in y ~x format for model}
+\item{formula}{formula in y ~x format for model}
 
 \item{data}{data to be used in model}
 
@@ -25,9 +33,10 @@ run_inla_config(
 
 \item{verbose}{whether fitting should be verbose. Default = TRUE}
 
-\item{n_cores}{number of cores to use. If null uses available cores - 2}
+\item{n_cores}{number of cores to use. If null uses available cores/2}
 }
 \description{
 Configuration for an INLA model
-An internal function to run a configured INLA model
+An internal function to run a configured INLA model with a limit on the time and number of times to try to fit
+If a model cannot be fit within those tries, it returns NULL
 }

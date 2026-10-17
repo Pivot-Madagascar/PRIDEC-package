@@ -53,7 +53,7 @@ run_pridec_forecast <- function(inputs,
   message(paste(round(Sys.time()),": Beginning forecast model"))
   message(paste("Forecast period:", forecast_start, "thru", forecast_start + lubridate::period(month = inputs$config$month_assess)))
 
-  stack_forecast <- PRIDEC::ensemble_forecast(cv_set = forecast_cv,
+  stack_forecast <- ensemble_forecast(cv_set = forecast_cv,
                                               y_var = inputs$config$disease_dataElement,
                                               id_vars = c("orgUnit", "date"),
                                               quantile_levels = inputs$config$quantile_levels,

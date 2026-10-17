@@ -8,8 +8,7 @@ create_model_configs(
   model_weights_df,
   W_graph,
   pred_vars,
-  inla_hyper = list(prec.unstruct = c(1, 5e-04), prec.spatial = c(1, 5e-04), prec.timerw1
-    = c(1, 0.01)),
+  inla_hyper = INLA_HYPER_DEFAULT,
   ranger_hyper = list(mtry = NULL, min.node.size = NULL, num.trees = 500)
 )
 }

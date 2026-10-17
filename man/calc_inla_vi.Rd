@@ -8,10 +8,9 @@ calc_inla_vi(
   cv_set,
   y_var,
   pred_vars,
-  reff_var = NULL,
   id_vars,
-  hyper_priors = list(prec.unstruct = c(1, 5e-04), prec.spatial = c(1, 5e-04),
-    prec.timerw1 = c(1, 0.01)),
+  reff_var = NULL,
+  hyper_priors = INLA_HYPER_DEFAULT,
   W_orgUnit,
   seed = 8675309,
   nsims = 1,
@@ -25,9 +24,9 @@ calc_inla_vi(
 
 \item{pred_vars}{vector string of predictor variables to use in model}
 
-\item{reff_var}{string or formula for random effects}
-
 \item{id_vars}{names of columns used as keys/ids in data.frames}
+
+\item{reff_var}{string or formula for random effects}
 
 \item{hyper_priors}{priors for spatial and temporal random effects}
 
@@ -37,7 +36,7 @@ calc_inla_vi(
 
 \item{nsims}{number of simulations to run. Default = 1}
 
-\item{n_cores}{number of cores to use (integer). Defaults to number of available cores minus 2.}
+\item{n_cores}{number of cores to use (integer). Defaults to number of available cores/2}
 }
 \value{
 dataframe of variable importance scores

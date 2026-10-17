@@ -30,8 +30,12 @@ export(validate_dhis_format)
 export(validate_inputs)
 importFrom(dplyr,mutate)
 importFrom(magrittr,"%>%")
-importFrom(rlang,":=")
-importFrom(rlang,.data)
-importFrom(stats,cor)
-importFrom(stats,median)
+importFrom(rlang,
+  ":=",
+  .data
+)
+importFrom(stats,
+  cor,
+  median
+)
 importFrom(tidyselect,all_of)

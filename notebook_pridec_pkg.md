@@ -13,10 +13,63 @@
 `document()`: update package documentation
 `build_readme()`: builds the README. better to use becuase it uses source version of your package
 `load_all()`: builds and loads package locally
-`check()`: runs through all the CRAN and other tests to make sure it is okay
+`check(vignettes = FALSE)`: runs through all the CRAN and other tests to make sure it is okay
 `install(keep_source = TRUE)`: install the source version of the package. `keep_source = T` helps with formatting for debugging
 
 For more info, use [R packages book](https://r-pkgs.org/).
+
+## 2026-10-15
+
+Back to troubleshooting the INLA issue. wrote up some code that runs a bunch of checks on teh data and if they fail just doesn't fit the INLA model. I need to fully check this though first.
+
+**TO DO:**
+- run test, documentation ,etc.
+- make some extra tests for arimax and glmnb too
+- push this new version that better tests models with a new release
+- 
+
+## 2026-07-30
+
+Spent ages trying to troubleshoot this INLA model. I've added a bunch of checks for the data and model structure, but still getting a numerical failure even when they all pass. Maybe the issue is just the INLA package/version I have and it not working with my Linux OS? But some models do run so I am honestly super confused. I re-installed the INLA binary and now it works fine... But now I get an error on this step: `post_pis <- INLA::inla.posterior.sample(1000, inla_mod)`. Probably the answer is to wrap it in a tryCatch somehow and not return PI if there aren't any? or remove from ensemble and suggest to rerun by fitting the PIs per sample.
+
+## 2026-07-27
+
+I had added the checks for the fill_seasonal, so now if there is zero-variance it will just use the mean.
+
+After I did this I also was still getting a bunch of errors for the INLA models. I think many of them were coming from the spatial polygon, so I switched to a "bym2" model and updated the default priors for this. The model was still having a ton of issues converging and also running away with the RAM.
+
+## 2026-07-24
+
+Working on issue #4 concerning the zero variance in the fill_seasonal function. I am having trouble reproducing the error on my machine, it seems to only happen on one other machine and I have no idea why.
+
+## 2026-05-04
+
+Running PRIDE-C update and continuing to have issue with INLA:
+
+```
+Error: INLA model failed with error message:
+ $ operator is invalid for atomic vectors
+In addition: Warning message:
+In parallel::mclapply(1:cs$nconfig, (function(k) { :
+  scheduled cores 2, 4, 7, 10, 9 encountered errors in user code, all values of the jobs will be affected
+Execution halted
+```
+
+Before, I thought this was due to how INLA configs were being passed by that has been fixed in the PRIDE-C package with this commit: https://github.com/Pivot-Madagascar/PRIDEC-package/commit/d97120c7ec8474b85f385d43e34331ad74c36710#diff-286214608d5669437d8e884f9aadccba8f00e9910b751d433519f37057c66cf0
+
+I also thought it was due to the model fitting, but it is actually during the posterior sampling step to give us the PIs:
+
+```
+debug: post_pis <- INLA::inla.posterior.sample(1000, inla_mod)
+```
+
+So one way to get aroudn this is to just not use the posterior sampling for now. I think long term, I probably want to wrap it in a tryCatch and use the modeled PI instead. THe modeled CI involves fitting a iidx for each row and takes ages, so probably better to avoid if I can. I will add a config note to the INLA model where I could choose this. Okay for now I just manually updated this in the `create_model_configs` function (line 24) to not use sample PIs. 
+
+Actually I think it may be due to a versioning issue on the docker, so I am updating the geolight image which then updates the pride-docker. 
+
+## 2026-04-22
+
+Starting to add the DHIS2 data GET and POST functions that will serve as the base for the export and import steps. Just need to be very clear about the language for this. I think eventually I will want to move this into a sister package for the python `pivot_dhis_tools` so that others can use it without loading the whole PRIDE-C package, but for now this is where they will be housed.
 
 ## 2026-04-17
 

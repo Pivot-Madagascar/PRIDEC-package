@@ -7,9 +7,7 @@
 #' @returns list of model configurations for each of five models
 #' @export
 create_model_configs <- function(model_weights_df, W_graph, pred_vars,
-                                 inla_hyper = list("prec.unstruct" = c(1, 5e-4),
-                                                   "prec.spatial" = c(1, 5e-4),
-                                                   "prec.timerw1" = c(1,0.01)),
+                                 inla_hyper = INLA_HYPER_DEFAULT,
                                  ranger_hyper = list("mtry" = NULL,
                                                      "min.node.size" = NULL,
                                                      "num.trees" = 500)
@@ -21,7 +19,7 @@ create_model_configs <- function(model_weights_df, W_graph, pred_vars,
   model_configs$inla <- list(reff_var = NULL, pred_vars = pred_vars,
                             hyper_priors = inla_hyper,
                             W_orgUnit = W_graph,
-                            sample_pi = FALSE,
+                            sample_pi = INLA_SAMPLEPI_DEFAULT,
                             weight = model_weights["inla"])
   model_configs$glm_nb <- list(pred_vars = pred_vars,
                                weight = model_weights["glm_nb"])
