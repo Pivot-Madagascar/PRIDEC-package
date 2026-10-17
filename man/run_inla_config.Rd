@@ -13,7 +13,7 @@ run_inla_config(
   family = "zeroinflatednbinomial1",
   config = T,
   verbose = T,
-  n_cores = NULL,
+  n_cores = ncores_default(),
   hyper_priors = INLA_HYPER_DEFAULT,
   W_orgUnit = NULL,
   reff_var = NULL,
@@ -33,7 +33,7 @@ run_inla_config(
 
 \item{verbose}{whether fitting should be verbose. Default = TRUE}
 
-\item{n_cores}{number of cores to use. If null uses available cores/2}
+\item{n_cores}{number of cores to use. Defaults to ncores_default() if not provided.}
 }
 \description{
 Configuration for an INLA model

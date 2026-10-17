@@ -18,6 +18,17 @@
 
 For more info, use [R packages book](https://r-pkgs.org/).
 
+## 2026-10-17
+
+Ran the tests and documents for INLA. Everything should be mostly good.
+
+I would like to update the arimax and glmnb models too, since those most often have issues. Will work with Claude to write diagnosis tests.
+
+**TO DO**:
+- add data diagnosis for arimax and glmnb
+- push this new version as a new release
+- think about whether we want to integrate khisr stuff into this or into our own pivot_dhis_toolr package
+
 ## 2026-10-15
 
 Back to troubleshooting the INLA issue. wrote up some code that runs a bunch of checks on teh data and if they fail just doesn't fit the INLA model. I need to fully check this though first.

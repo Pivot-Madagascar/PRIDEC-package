@@ -198,9 +198,7 @@ chosen_pred_vars <- c("pev_lagsc", "rain_mm_lagsc", "temp_c_lagsc",
                              "time_to_districtsc")
 model_configs <- list()
 model_configs$inla<- list(reff_var = NULL, pred_vars = chosen_pred_vars,
-                          hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-                                              "prec.spatial" = c(1, 5e-4),
-                                              "prec.timerw1" = c(1,0.01)),
+                          hyper_priors = NULL,
                           W_orgUnit = prep_output$W_graph, 
                           sample_pi = TRUE,
                           weight = 0.6)

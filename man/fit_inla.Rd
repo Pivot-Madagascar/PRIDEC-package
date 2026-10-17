@@ -30,7 +30,7 @@ fit_inla(
 
 \item{reff_var}{string or formula for random effects}
 
-\item{hyper_priors}{priors for spatial and temporal random effects}
+\item{hyper_priors}{priors for spatial and temporal random effects. Default: \code{INLA_HYPER_DEFAULT}}
 
 \item{return_model}{whether or not to return the INLA model in addition to predictions}
 
@@ -38,13 +38,13 @@ fit_inla(
 Default =  c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99)}
 
 \item{sample_pi}{whether to estimate the prediction intervals by sampling the
-posterior. FALSE uses a trick to put all error into an iid random effect. Default = TRUE}
+posterior. FALSE uses a trick to put all error into an iid random effect. Default = \code{INLA_SAMPLEPI_DEFAULT}}
 
 \item{W_orgUnit}{graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.}
 
-\item{verbose}{whether to run the INLA model verbosely. Default = FALSE}
+\item{verbose}{whether to run the INLA model verbosely. Default = TRUE}
 
-\item{n_cores}{number of cores to use (integer). Defaults to number of available cores/2}
+\item{n_cores}{number of cores to use (integer). If NULL (default), uses available cores/2}
 }
 \value{
 dataframe of predictions intervals

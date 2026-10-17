@@ -152,6 +152,13 @@ test_that("diagnose_inla_data detects structural and predictor problems", {
   res <- diagnose(data = d, W_orgUnit = W)
   expect_true("design_matrix_rank_deficient" %in% names(res[[1]]))
 
+  #highly (but not perfectly) correlated predictors pass the rank check but are flagged
+  d <- make_data()
+  d$x2 <- d$x1 + rnorm(nrow(d), sd = 0.05)
+  res <- diagnose(data = d, W_orgUnit = W)
+  expect_false("design_matrix_rank_deficient" %in% names(res[[1]]))
+  expect_true("collinear_predictors" %in% names(res[[2]]))
+
   #org in data but not in graph
   d <- make_data()
   d$org_ID[d$org_ID == "org4"] <- "org5"
