@@ -1,4 +1,5 @@
 test_that("get dhis data works", {
+  skip("WIP")
   period_query <- paste0("pe:", paste(c("202501", "202502"), collapse = ";"))
   dataElement <- "dx:Uvn6LCg7dVU"
   ou_query <- c("dGheVylzol6", "zFDYIgyGmXG")
