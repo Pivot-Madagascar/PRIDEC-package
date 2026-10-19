@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "r",
+      "package-name": "PRIDEC",
+      "changelog-path": "NEWS.md",
+      "pull-request-title-pattern": "chore(release): release v${version}",
+      "include-component-in-tag": false
+    }
+  },
+  "changelog-sections": [
+    { "type": "feat", "section": "Features", "hidden": false },
+    { "type": "fix", "section": "Bug Fixes", "hidden": false },
+    { "type": "refactor", "section": "Internal", "hidden": false },
+    { "type": "chore", "section": "Internal", "hidden": false },
+    { "type": "docs", "section": "Internal", "hidden": false },
+    { "type": "test", "section": "Internal", "hidden": false },
+    { "type": "build", "section": "Internal", "hidden": false }
+  ]
+}
