@@ -21,3 +21,5 @@ scratch/*
 ^Meta$
 ^\.positai$
 ^\.claude$
+^release-please-config\.json$
+^\.release-please-manifest\.json$
