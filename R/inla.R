@@ -85,7 +85,6 @@ run_inla_config <- function(formula, data, pred_vars, family = "zeroinflatednbin
   }
 
   # create priors
-
   prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
   if(is.null(reff_var)){
@@ -135,6 +134,11 @@ run_inla_config <- function(formula, data, pred_vars, family = "zeroinflatednbin
 #' @param W_orgUnit graph of orgunits for INLA model
 #' @returns list of priors and random effects
 create_inla_setup <- function(hyper_priors = INLA_HYPER_DEFAULT, W_orgUnit=NULL){
+
+  #backwards compabitbility for hyper_priors=NULL
+  if(is.null(hyper_priors)) {
+    hyper_priors = INLA_HYPER_DEFAULT
+  }
 
   format_param <- function(p) paste0("c(", paste(p, collapse = ", "), ")")
 
