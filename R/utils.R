@@ -57,3 +57,17 @@ clean_ansi_log <- function(text_to_clean){
   clean <- gsub(to_remove,"", text_to_clean)
   clean[nzchar(trimws(clean))]
 }
+
+check_collinearity <- function(data_df){
+  #NAs are expected in prediction rows, so use pairwise complete observations
+  var_cor <- stats::cor(data_df, use = "pairwise.complete.obs")
+  diag(var_cor) <- NA
+  corr_names <- colSums(abs(var_cor) > 0.9, na.rm = TRUE)
+  corr_vars <- names(corr_names[corr_names>0])
+  if(length(corr_vars)>0){
+    cli::cli_alert_warning(paste0("The following variables have collinearity > 0.9: ", paste(corr_vars, collapse = ", ")))
+    return(TRUE)
+  } else return(FALSE)
+
+}
+

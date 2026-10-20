@@ -15,7 +15,7 @@ ensemble_forecast(
   arimax_configs = NULL,
   naive_configs = NULL,
   return_individual_models = FALSE,
-  abort_on_error = TRUE
+  abort_on_error = FALSE
 )
 }
 \arguments{
@@ -44,6 +44,10 @@ log_trans. See \link[PRIDEC]{fit_arima} for more info.}
 See \link[PRIDEC]{fit_naive} for more info.}
 
 \item{return_individual_models}{whether to return intermediate predictions from each model type. Default = FALSE}
+
+\item{abort_on_error}{if TRUE, an error in any model stops the whole forecast. If FALSE (default),
+a model that errors or fails to fit is dropped from the ensemble with a warning and the
+remaining models are re-weighted (weights are normalised within each prediction).}
 }
 \value{
 Dataframe of prediction intervals for the ensemble predictions

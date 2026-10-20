@@ -18,5 +18,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Michelle Evans \email{first.last@example.com} (\href{https://orcid.org/0000-0002-5628-0502}{ORCID})
 
+Authors:
+\itemize{
+  \item Michelle Evans \email{first.last@example.com} (\href{https://orcid.org/0000-0002-5628-0502}{ORCID})
+}
+
 }
 \keyword{internal}

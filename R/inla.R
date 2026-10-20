@@ -1,59 +1,38 @@
 #' Fit an INLA model to one cv_set and get prediction intervals
 #' @inheritParams fit_ranger
-#' @param hyper_priors priors for spatial and temporal random effects
+#' @param hyper_priors priors for spatial and temporal random effects. Default: \code{INLA_HYPER_DEFAULT}
 #' @param reff_var string or formula for random effects
 #' @param return_model whether or not to return the INLA model in addition to predictions
 #' @param sample_pi whether to estimate the prediction intervals by sampling the
-#'   posterior. Default (FALSE) uses a trick to put all error into an iid random effect.
+#'   posterior. FALSE uses a trick to put all error into an iid random effect. Default = \code{INLA_SAMPLEPI_DEFAULT}
 #' @param W_orgUnit graph of orgUnit to use in spatial structure. If NULL (default), will not fit a spatial structure.
-#' @param verbose whether to run the INLA model verbosely. Default = FALSE
-#' @param n_cores number of cores to use (integer). Defaults to number of available cores minus 2.
+#' @param verbose whether to run the INLA model verbosely. Default = TRUE
+#' @param n_cores number of cores to use (integer). If NULL (default), uses available cores/2
 #'
 #' @returns dataframe of predictions intervals
 #' @export
 fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
-                     hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-                                         "prec.spatial" = c(1, 5e-4),
-                                         "prec.timerw1" = c(1,0.01)),
+                     hyper_priors = INLA_HYPER_DEFAULT,
                      return_model = FALSE,
                      quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
-                     sample_pi = FALSE,
+                     sample_pi = INLA_SAMPLEPI_DEFAULT,
                      W_orgUnit = NULL,
-                     verbose = FALSE,
+                     verbose = TRUE,
                      n_cores = NULL){
 
-  prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
-  if(is.null(reff_var)){
-    reff_var <- prior_setup$reff_var
-  }
-  if(sample_pi) prior_setup$pi_var <- NULL
+  both_datasets <- create_inla_data_basic(cv_set = cv_set, y_var = y_var, pred_vars = pred_vars, id_vars = id_vars)
 
-  # ------ set up data ------
-  cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars,
-                                                                  "org_ID",
-                                                                  "month_season", "month_num"),
-                             remove_NA = TRUE)
-  this_analysis <- cv_clean$analysis
-  this_analysis$observed <- this_analysis$y_obs
-
-  this_assess <- cv_clean$assess
-  #will predict on things that are NA
-  this_assess$observed <- this_assess$y_obs
-  this_assess$y_obs <- as.numeric(NA)
-
-  both_datasets <- dplyr::bind_rows(this_analysis, this_assess)
-  both_datasets$idx <- 1:nrow(both_datasets)
-
-  #------run inla-------------------------------
-  formula_inla <- stats::reformulate(termlabels = c(reff_var, pred_vars, prior_setup$pi_var),
-                              response = "y_obs")
-
-  inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
+  inla_mod <- run_inla_config(data = both_datasets, pred_vars = pred_vars,
                               verbose = verbose, family = 'zeroinflatednbinomial1',
-                              n_cores = n_cores)
+                              n_cores = n_cores, hyper_priors = hyper_priors, W_orgUnit = W_orgUnit)
 
-  # ----- prediction intervals -------------------
+  if(is.null(inla_mod)) {
+    cli::cli_alert_warning("Removing INLA from ensemble due to convergence issues.")
+    return(NULL)
+  }
+
+  # get PIs based on sampling regime
   id_dataframe <- both_datasets[,c("orgUnit", "date", "dataset", "observed")]
 
   if(sample_pi){
@@ -80,248 +59,99 @@ fit_inla <- function(cv_set, y_var, pred_vars, id_vars, reff_var = NULL,
 
 }
 
-#' Calculate variable importance in INLA via simulation
+#' Configuration for an INLA model
+#' An internal function to run a configured INLA model with a limit on the time and number of times to try to fit
+#' If a model cannot be fit within those tries, it returns NULL
 #'
-#' @inheritParams fit_inla
-#' @param nsims number of simulations to run. Default = 1
-#' @param seed a seed to use for reproducability. Default = 8675309
-#' @returns dataframe of variable importance scores
-calc_inla_vi <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
-                               hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-                                                   "prec.spatial" = c(1, 5e-4),
-                                                   "prec.timerw1" = c(1,0.01)),
-                         W_orgUnit,
-                        seed = 8675309,
-                         nsims = 1,
-                        n_cores = NULL){
+#' @param formula formula in y ~x format for model
+#' @param data data to be used in model
+#' @param family family of model to fit. Default = "zeroinflatednbinomial1"
+#' @param config whetehr or not to use config for control.compute step. Default = TRUE
+#' @param verbose whether fitting should be verbose. Default = TRUE
+#' @param n_cores number of cores to use. Defaults to ncores_default() if not provided.
+run_inla_config <- function(formula, data, pred_vars, family = "zeroinflatednbinomial1",
+                            config = T, verbose = T, n_cores = ncores_default(), hyper_priors = INLA_HYPER_DEFAULT, W_orgUnit = NULL,
+                            reff_var = NULL, sample_pi = INLA_SAMPLEPI_DEFAULT,
+                            max_time = INLA_MAX_TIME_DEFAULT, max_tries = INLA_MAX_TRY_DEFAULT){
+  # diagnose data for problems
+  diagnosis <- diagnose_inla_data(data = data, W_orgUnit = W_orgUnit, pred_vars = pred_vars)
+  #these problems make the precision matrix singular, so don't bother fitting
+  fatal <- c(names(diagnosis[[1]])[names(diagnosis[[1]]) %in% c("missing_from_graph",
+                                                                "design_matrix_rank_deficient")],
+             names(diagnosis[[2]]))
+  if(length(fatal) > 0){
+    cli::cli_alert_warning("Cannot fit INLA due to data problems: {paste(unique(fatal), collapse = ', ')}")
+    return(NULL)
+  }
 
+  # create priors
   prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
 
   if(is.null(reff_var)){
     reff_var <- prior_setup$reff_var
   }
+  if(sample_pi) prior_setup$pi_var <- NULL
 
-  # ------ set up data ------
-  cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars, "org_ID",
-                                                                  "month_season", "month_num"),
-                             remove_NA = TRUE)
-  this_analysis <- cv_clean$analysis
-  this_analysis$observed <- this_analysis$y_obs
-  this_analysis$nsim <- 0
-  this_analysis$perm_var = "original"
+  formula <- stats::reformulate(termlabels = c(reff_var, pred_vars, prior_setup$pi_var),
+                                response = "y_obs")
 
-  #---- create variable importance data ---------
-  permute_vars <- pred_vars
+  #fit model max_tries times
 
-  set.seed(seed)
-  permute_data <- purrr::map(1:length(permute_vars), function(var_i,...){
-    this_var_permute <- purrr::map(1:nsims, function(sim_i,...){
-      this_permute_df <- this_analysis |>
-        dplyr::mutate(perm_var = permute_vars[[var_i]],
-               nsim = sim_i)
-      this_permute_df[permute_vars[[var_i]]] <- sample(this_permute_df[[permute_vars[[var_i]]]],
-                                                       size = nrow(this_permute_df),
-                                                       replace = FALSE)
-      return(this_permute_df)
-    }) |>
-      dplyr::bind_rows() #end nsims simulation of permutation for one variable
-
-  }) |>
-    dplyr::bind_rows() #end map over all pred_vars
-
-  permute_data <- permute_data |>
-    dplyr::mutate(y_obs = NA) |>
-    dplyr::select(dplyr::all_of(c("y_obs", "observed", id_vars,
-                         pred_vars, "nsim", "perm_var"))) |>
-    dplyr::mutate(dataset = "varImp")
-
-  both_datasets <- dplyr::bind_rows(this_analysis, permute_data)
-
-  #---- run inla -------------------
-  formula_inla <- stats::reformulate(termlabels = c(reff_var, pred_vars),
-                                     response = "y_obs")
-
-  inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
-                              verbose = FALSE, family = 'zeroinflatednbinomial1',
-                              n_cores = n_cores)
-
-  #---- calculate importance via performance on permuted data ------
-  permute_out <- both_datasets[,c(id_vars, "y_obs", "observed",
-                        "perm_var", "nsim", "dataset")]
-  permute_out$predicted <- inla_mod$summary.fitted.values$`0.5quant`
-  permute_out$quant_long <- "quant_0.5"
-  permute_out$quantile_level <- 0.5
-  permute_out$dataset <- paste(permute_out$perm_var, permute_out$nsim, sep = "-sim")
-
-  #estimate median absolute error
-  var_imp <- eval_performance(permute_out)[,c("dataset", "med_ae")]
-  var_imp$original <- var_imp$med_ae[var_imp$dataset == "original-sim0"]
-  var_imp <- var_imp |>
-    tidyr::separate(.data$dataset, into = c("perm_var", "nsim"), sep = "-sim") |>
-    dplyr::mutate(err_diff = .data$med_ae - .data$original) |>
-    dplyr::mutate(err_diff = ifelse(.data$err_diff<0,0, .data$err_diff)) |>
-    dplyr::summarise(err_diff = mean(.data$err_diff, na.rm = TRUE),
-              .by = "perm_var") |>
-    dplyr::mutate(imp = .data$err_diff/sum(.data$err_diff)) |>
-    dplyr::filter(.data$perm_var != "original") |>
-    dplyr::select(dplyr::all_of(c("variable" = "perm_var", "importance" = "imp")))
-
-  return(var_imp)
-
+  for (i in seq_len(max_tries)) {
+    model_fit <- tryCatch({
+      callr::r(
+        func = function(formula, data, family, config, verbose, n_cores, prior_setup, W_orgUnit){
+          INLA::inla(formula = formula, data = data, family = family,
+                     control.inla = list(strategy = 'auto'),
+                     control.compute = list(dic = T, config = config,
+                                            waic = T, return.marginals.predictor = T),
+                     control.predictor = list(link = 1, compute = T),
+                     control.fixed = list(prec.intercept = 0.01),
+                     num.threads = n_cores,
+                     verbose = verbose)
+        },
+        args = list(formula = formula, data = data, family = family, config = config,
+                    verbose = verbose, n_cores = n_cores,
+                    prior_setup = prior_setup, W_orgUnit = W_orgUnit),
+        timeout = max_time
+      )
+    }, error = function(e) {
+      message("INLA fitting attempt ", i, " failed or timed out after ", max_time, "s : ", conditionMessage(e))
+      NULL
+    })
+    if(!is.null(model_fit)){
+      problem <- check_inla_fit(model_fit, config = config)
+      if(is.null(problem)) return(model_fit)
+      message("INLA fitting attempt ", i, " did not produce a usable model: ", problem)
+    }
+  }
+  message("All INLA fit attempts hung or failed.")
+  return(NULL)
 }
 
-#' Create counterfactual data of variables from INLA model
-#' @inheritParams fit_inla
-#' @param var_scales data.frame of center and scale factors used in variable scaling
-#' @param constant_org orgUnit to use in counterfactual plots
-#' @param constant_date date to use in counterfactual plots
-#' @returns list of dataframes of counter factual data. Each element corresponds to one predictor variable
-create_counterfactual_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
-                                       hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-                                                           "prec.spatial" = c(1, 5e-4),
-                                                           "prec.timerw1" = c(1,0.01)),
-                                       W_orgUnit, var_scales,
-                                       constant_org, constant_date,
-                                       n_cores = NULL){
+#' Set up priors and random effects for INLA model
+#' @param hyper_priors Named list containing `prec.spatial`, `phi.spatial`, `prec.timerw1`. Defaults correspond to \code{INLA_HYPER_DEFAULT}
+#' @param W_orgUnit graph of orgunits for INLA model
+#' @returns list of priors and random effects
+create_inla_setup <- function(hyper_priors = INLA_HYPER_DEFAULT, W_orgUnit=NULL){
 
-  prior_setup <- create_inla_setup(hyper_priors, W_orgUnit)
-
-  if(is.null(reff_var)){
-    reff_var <- prior_setup$reff_var
+  #backwards compabitbility for hyper_priors=NULL
+  if(is.null(hyper_priors)) {
+    hyper_priors = INLA_HYPER_DEFAULT
   }
 
-  # ------ set up counterfactual data ------
-  cv_clean <- get_cv_subsets(cv_set, y_var = y_var, pred_vars = c(pred_vars, id_vars, "org_ID",
-                                                                  "month_season", "month_num"),
-                             remove_NA = TRUE)
-  this_analysis <- cv_clean$analysis
-  this_analysis$observed <- this_analysis$y_obs
+  format_param <- function(p) paste0("c(", paste(p, collapse = ", "), ")")
 
-  counter_one <- subset(this_analysis, this_analysis$orgUnit == constant_org & this_analysis$date == constant_date)
-  counter_one$y_obs <- NA
-
-  #throw error message if the constant_org and constant_date aren't working
-  if(nrow(counter_one)!=1){
-    cli::cli_abort(c(
-      "The combination of {.var constant_org} and {.var constant_date} has an NA in the y_var column.",
-      "Please supply new values for these constants."
-    ))
-  }
-
-  #loop over pred_vars to create counter-data for each one
-  counter_vars <- c("org_ID", "month_season", "month_num", pred_vars)
-
-  counter_data <- purrr::map(1:length(counter_vars), function(i){
-    this_var_name <- counter_vars[i]
-    #create a grid to fit
-    var_class <- class(this_analysis[[this_var_name]])
-    if(var_class == "numeric"){
-      var_range <- range(this_analysis[this_var_name], na.rm = TRUE)
-      var_grid <- seq(var_range[1], var_range[2], length.out = 50)
-      if(nrow(unique(this_analysis[this_var_name]))<10){
-        var_grid <- unique(this_analysis[[this_var_name]])
-      }
-    } else {
-      var_grid <- unique(this_analysis[[this_var_name]])
-    }
-    this_counter <- counter_one[rep(1, length(var_grid)),]
-    this_counter[this_var_name] <- var_grid
-    this_counter$counter_variable <- this_var_name
-    return(this_counter)
-  }) |> dplyr::bind_rows()
-
-  both_datasets <- dplyr::bind_rows(mutate(this_analysis, dataset = "analysis"),
-                                    mutate(counter_data, dataset = "counter"))
-  #------run inla-------------------------------
-  formula_inla <- stats::reformulate(termlabels = c(reff_var, pred_vars),
-                                     response = "y_obs")
-
-  inla_mod <- run_inla_config(formula = formula_inla, data = both_datasets,
-                              verbose = FALSE, family = 'zeroinflatednbinomial1',
-                              n_cores = n_cores)
-  #----transform into pdp dataframe --------
-
-  counter_preds <- both_datasets
-  counter_preds$pred <- inla_mod$summary.fitted.values$`0.5quant`
-  counter_preds <- subset(counter_preds, counter_preds$dataset == "counter")
-
-  counter_out <- purrr::map(1:length(counter_vars), function(i,...){
-    pdp_df <- dplyr::filter(counter_preds, .data$counter_variable == counter_vars[i]) |>
-      dplyr::rename(var_valuesc = counter_vars[i]) |>
-      dplyr::select(dplyr::all_of(c("variable" = "counter_variable", "var_valuesc", "yhat" = "pred"))) |>
-      dplyr::distinct()
-    if(stringr::str_sub(counter_vars[i], -2,-1)=="sc") {
-      pdp_df <- pdp_df |>
-        dplyr::left_join(var_scales, by = "variable") |>
-        dplyr::mutate(var_value = .data$var_valuesc*.data$scale + .data$center) |>
-        dplyr::select(-all_of(c("scale", "center")))
-    } else {
-      pdp_df <- pdp_df |>
-        dplyr::mutate(var_value = .data$var_valuesc)
-    }
-    return(pdp_df)
-  })
-  return(counter_out)
-}
-
-#' Estimate variable importance and partial dependence plots of a  INLA model
-#' @inheritParams fit_inla
-#' @inheritParams create_counterfactual_inla
-#' @inheritParams calc_inla_vi
-#' @param var_scales data.frame containing centering and scaling parameters for variables
-#'
-#' @returns list containing variable importance scores and a list of dataframes
-#'   containing data for pdp plots with each element corresponding to a variable
-#' @export
-inv_variables_inla <- function(cv_set, y_var, pred_vars, reff_var = NULL, id_vars,
-                               hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-                                                   "prec.spatial" = c(1, 5e-4),
-                                                   "prec.timerw1" = c(1,0.01)),
-                               W_orgUnit, var_scales,
-                               constant_org, constant_date,
-                               seed = 8675309,
-                               nsims = 1,
-                               n_cores = NULL){
-
-  var_imp <- calc_inla_vi(cv_set = cv_set,
-               y_var = y_var,
-               pred_vars = pred_vars,
-               id_vars = id_vars,
-               reff_var = reff_var,
-               hyper_priors = hyper_priors,
-               W_orgUnit = W_orgUnit,
-               seed = seed,
-               nsims = nsims,
-               n_cores = n_cores)
-
-  counter_list <- create_counterfactual_inla(cv_set = cv_set,
-                                             y_var = y_var,
-                                             pred_vars = pred_vars,
-                                             id_vars = id_vars,
-                                             reff_var = reff_var,
-                                             hyper_priors = hyper_priors,
-                                             W_orgUnit = W_orgUnit,
-                                             constant_org = constant_org,
-                                             constant_date = constant_date,
-                                             var_scales = var_scales,
-                                             n_cores = n_cores)
-
-  return(list("var_imp" = var_imp,
-              "counter_data" = counter_list))
-
-}
-
-create_inla_setup <- function(hyper_priors, W_orgUnit){
   prior_sp <- list(
-    #iid, default = c(1, 5e-4)
-    prec.unstruct = list(
-      prior = "loggamma",
-      param = hyper_priors$prec.unstruct
-    ),
-    # besag spatial structure parameter, default = c(1, 5e-4)
-    prec.spatial = list(
-      prior = "loggamma",
+    #structured spatial variance, c(u, alpha): P(sd > u) = alpha
+    prec = list(
+      prior = "pc.prec",
       param = hyper_priors$prec.spatial
+    ),
+    # unsctructured spatial variance, c(u, alpha): P(phi < u) = alpha
+    phi = list(
+      prior = "pc",
+      param = hyper_priors$phi.spatial
     )
   )
 
@@ -333,10 +163,17 @@ create_inla_setup <- function(hyper_priors, W_orgUnit){
       param = hyper_priors$prec.timerw1
     )
   )
-
-  reff_var <- c("f(month_season, model = 'rw1', cyclic = T, group = org_ID, control.group = list(model = 'iid'), scale.model = TRUE, hyper = prior_setup$prior_time)")
+  reff_var <- sprintf(
+    "f(month_season, model = 'rw1', cyclic = T, group = org_ID, control.group = list(model = 'iid'), scale.model = TRUE, hyper = list(prec = list(prior = '%s', param = %s)))",
+    prior_time$prec$prior, format_param(prior_time$prec$param)
+  )
   if(!(is.null(W_orgUnit))){
-    reff_var <- c(reff_var, "f(org_ID, model = 'bym', graph = W_orgUnit, scale.model = TRUE, hyper = prior_setup$prior_sp)")
+    reff_space <- sprintf(
+      "f(org_ID, model = 'bym2', graph = W_orgUnit, scale.model = TRUE, hyper = list(prec = list(prior = '%s', param = %s), phi = list(prior = '%s', param = %s)))",
+      prior_sp$prec$prior, format_param(prior_sp$prec$param),
+      prior_sp$phi$prior,  format_param(prior_sp$phi$param)
+    )
+    reff_var <- c(reff_var, reff_space)
   }
 
   pi_var <- c("f(idx, model = 'iid', hyper = list(prec = list(param = c(1,0.01))))")
@@ -407,29 +244,28 @@ get_inla_pi <- function(inla_marginal, quantile_levels, id_df){
 }
 
 
-#' Configuration for an INLA model
-#' An internal function to run a configured INLA model
+#' Check that a fitted INLA object is actually usable
 #'
-#' @param formula forumula in y ~x format for model
-#' @param data data to be used in model
-#' @param family family of model to fit. Default = "zeroinflatednbinomial1"
-#' @param config whetehr or not to use config for control.compute step. Default = TRUE
-#' @param verbose whether fitting should be verbose. Default = TRUE
-#' @param n_cores number of cores to use. If null uses available cores - 2
-run_inla_config <- function(formula, data,  family = "zeroinflatednbinomial1",
-                            config = T, verbose = T, n_cores = NULL){
-  if(is.null(n_cores)){
-    n_cores <- parallel::detectCores() - 2
+#' When the C program hits a non positive-definite matrix, `inla()` can return
+#' an object without raising an R error. That object is missing pieces
+#' (e.g. `misc$configs`) and breaks later, e.g. in `inla.posterior.sample()`.
+#' @param model_fit output of `INLA::inla()`
+#' @param config whether the model was fit with `control.compute(config = TRUE)`
+#' @returns NULL if the model looks fine, otherwise a string describing the problem
+#' @noRd
+check_inla_fit <- function(model_fit, config = TRUE){
+  if(!is.list(model_fit)) return("fit is not a model object")
+  if(!isTRUE(model_fit$ok)) return("INLA reported the run as not ok")
+  fv <- model_fit$summary.fitted.values
+  if(is.null(fv) || nrow(fv) == 0 || all(is.na(fv$`0.5quant`))) return("no fitted values")
+  if(config){
+    cfg <- model_fit$misc$configs
+    if(is.null(cfg) || !is.list(cfg) || is.null(cfg$nconfig) || cfg$nconfig < 1) {
+      return("no posterior configurations (needed for sampling)")
+    }
   }
-
-  model <- INLA::inla(formula = formula, data = data, family = family,
-                      control.inla = list(strategy = 'adaptive', force.diagonal = T),
-                      control.compute = list(dic = T, config = config,
-                                             waic = T, return.marginals.predictor = T),
-                      control.predictor = list(link = 1, compute = T),
-                      num.threads = n_cores,
-                      verbose = verbose)
-
-  # model <- inla.rerun(model) #rerun from hyperparameters above, for publication
-  return(model)
+  NULL
 }
+
+
+

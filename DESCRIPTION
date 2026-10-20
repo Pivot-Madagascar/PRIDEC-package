@@ -6,11 +6,13 @@ Authors@R:
            comment = c(ORCID = "0000-0002-5628-0502"))
 Description: Functions used by the Predicting Infectious Diseases via Environment and Climate (PRIDE-C) forecasting workflow to forecast infectious diseases for DHIS2 instances.
 License: MIT + file LICENSE
-Additional_repositories: https://inla.r-inla-download.org/R/stable/
+Additional_repositories:
+    https://inla.r-inla-download.org/R/stable/,
+    https://bgreenwell.r-universe.dev
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Imports: 
+    callr,
     cli,
     dplyr,
     forecast,
@@ -30,13 +32,15 @@ Imports:
     rlang,
     scoringutils,
     sf,
+    sn,
     spdep,
     stats,
     stringr,
     tibble,
     tidyr,
     tidyselect,
-    vip
+    vip,
+    yardstick
 Depends: 
     R (>= 4.1.0)
 LazyData: true
@@ -47,3 +51,4 @@ Suggests:
 Config/testthat/edition: 3
 URL: https://pivot-madagascar.github.io/PRIDEC-package/
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.0

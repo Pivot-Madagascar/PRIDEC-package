@@ -33,7 +33,7 @@ devtools::install_github("Pivot-Madagascar/PRIDEC-package")
 
 ## Example
 
-TThe PRIDE-C forecasting approach follows the following steps:
+The PRIDE-C forecasting approach follows the following steps:
 
 1. Data processing
 2. Model tuning and training

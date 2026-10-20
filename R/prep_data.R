@@ -96,19 +96,28 @@ fill_seasonal <- function(data_to_fix, data_col, group_col, verbose = FALSE){
   for(this_col in data_col){
     #apply seasonal imputation over each orgUnit individually
     this_vec <- split(data_to_fix[this_col], f = data_to_fix[group_col])
-    this_vec <- lapply(this_vec, FUN = function(x) stats::ts(x, deltat = 1/12))
     if(!verbose){
       suppressWarnings({
-    data_to_fix[this_col] <- lapply(this_vec, FUN = imputeTS::na_seadec, find_frequency = TRUE,
-                                    algorithm = "ma") |>
-      unlist() |> c()
+        data_to_fix[this_col] <- unlist(lapply(this_vec, FUN = impute_seasonal), use.names = FALSE)
       })
     } else {
-      data_to_fix[this_col] <- lapply(this_vec, FUN = imputeTS::na_seadec, find_frequency = TRUE,
-                                      algorithm = "ma") |>
-        unlist() |> c()
+      data_to_fix[this_col] <- unlist(lapply(this_vec, FUN = impute_seasonal), use.names = FALSE)
     }
-
   }
+
   return(data_to_fix)
+}
+
+impute_seasonal <- function(data_vector){
+  data_vector <- unlist(data_vector, use.names = FALSE)
+  if(stats::sd(data_vector, na.rm = TRUE) == 0 || is.na(stats::sd(data_vector, na.rm = TRUE))){
+    if(is.nan(mean(data_vector, na.rm = TRUE))){
+      return(data_vector)
+    }
+    data_vector[is.na(data_vector)] =  mean(data_vector, na.rm = TRUE)
+    return(data_vector)
+  }
+  this_vec <- stats::ts(data_vector, deltat = 1/12)
+  new_vec <- imputeTS::na_seadec(this_vec, find_frequency = FALSE, algorithm = "ma")
+  return(c(new_vec))
 }
