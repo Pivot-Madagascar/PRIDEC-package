@@ -1,6 +1,6 @@
 Package: PRIDEC
 Title: Disease Forecasting with PRIDE-C
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: 
     person("Michelle", "Evans", , "first.last@example.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-5628-0502"))
