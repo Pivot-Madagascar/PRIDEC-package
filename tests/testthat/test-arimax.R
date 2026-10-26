@@ -117,6 +117,44 @@ test_that("arimax fits to one orgUnit", {
 
 })
 
+test_that("screen_xreg removes collinear and constant variables", {
+  set.seed(1)
+  df <- data.frame(x1 = rnorm(48), x2 = rnorm(48))
+  df$x3 <- df$x1*2 + 1       #perfectly collinear with x1
+  df$x4 <- df$x1 + df$x2     #linear combination
+  df$x5 <- 1                 #constant
+  df$x6 <- rnorm(48)
+  df$x6[1:3] <- NA           #incomplete rows are ignored
+
+  expect_equal(screen_xreg(df, c("x1", "x2")), c("x1", "x2"))
+  expect_equal(screen_xreg(df, c("x1", "x2", "x3", "x4", "x5", "x6")),
+               c("x1", "x2", "x6"))
+  #earlier variables preferentially kept
+  expect_equal(screen_xreg(df, c("x3", "x1")), "x3")
+  expect_equal(screen_xreg(df, character(0)), character(0))
+  #more variables than rows
+  expect_equal(screen_xreg(df[1:3,], c("x1", "x2")), character(0))
+})
+
+test_that("arimax fits with collinear variable by dropping it", {
+  set.seed(2)
+  demo_df <- data.frame(orgUnit = "orgA",
+                        date = seq.Date(as.Date("2018-01-01"), by = "month",
+                                        length.out = 51))
+  demo_df$y_obs <- (sin(2*pi/12*lubridate::month(demo_df$date))+5)*10 + rnorm(51, sd = 2)
+  demo_df$x1 <- rnorm(51)
+  demo_df$x2 <- demo_df$x1*3
+
+  expect_warning(
+    test_col <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
+                                     test_df = demo_df[49:51,],
+                                     pred_vars = c("x1", "x2"),
+                                     quantile_levels = 0.5),
+    "Collinear variable found in ARIMA model: x2"
+  )
+  expect_equal(nrow(test_col[test_col$dataset == "assess",]), 3)
+})
+
 test_that("internal get_arima_pi works", {
   demo_df <- data.frame(orgUnit = "orgA",
                         date = seq.Date(as.Date("2018-01-01"), by = "month",

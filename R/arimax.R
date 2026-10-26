@@ -34,12 +34,21 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                             lubridate::month(min(train_df$date))),
                   frequency = 12)
 
-  #check that pred_vars are not static
-  #any static variables are removed from the pred_vars list
+  #check that pred_vars have enough variation
+  #any static variables or those with less than ten values are removed from the pred_vars list
   n_unique_pred <- sapply(lapply(train_df[pred_vars], FUN = unique, MARGIN = 2), length)
   if(any(n_unique_pred<2)){
     warning(paste("Static variable found in ARIMA model:", pred_vars[n_unique_pred<2], ". Fitting without static variable.\n"))
     pred_vars <- pred_vars[n_unique_pred>1]
+  }
+
+  #check that pred_vars are not collinear (auto.arima errors on a rank deficient xreg)
+  kept_vars <- screen_xreg(train_df = train_df, pred_vars = pred_vars)
+  if(length(kept_vars) < length(pred_vars)){
+    warning(paste("Collinear variable found in ARIMA model:",
+                  paste(setdiff(pred_vars, kept_vars), collapse = ", "),
+                  ". Fitting without collinear variable.\n"))
+    pred_vars <- kept_vars
   }
 
   arimax_run <- retry_arima(train_df = train_df, pred_vars = pred_vars, this_y_ts = this_y_ts)
@@ -199,6 +208,34 @@ inv_variables_arima <- function(cv_set, y_var, pred_vars,
 }
 
 
+#' Internal function to drop predictors that make xreg rank deficient
+#'
+#' forecast::auto.arima() errors with "xreg is rank deficient" when the
+#'   intercept and exogenous variables are linearly dependent. This checks
+#'   for that ahead of time via a pivoted QR decomposition, which is much
+#'   faster than refitting. Variables earlier in `pred_vars` are preferentially
+#'   kept. Variables that are constant (after removing incomplete rows) are
+#'   also dropped. The tolerance is stricter than auto.arima's own check so that
+#'   near-collinear sets, which tend to cause optimisation errors, are also removed.
+#' @param train_df data.frame of data used to train the model
+#' @param pred_vars vector of character names of exogeneous variables
+#' @param tol tolerance for the rank determination in [base::qr()]
+#' @return vector of character names of the retained variables
+screen_xreg <- function(train_df, pred_vars, tol = 1e-7){
+  if(length(pred_vars) == 0) return(character(0))
+
+  X <- as.matrix(train_df[pred_vars])
+  X <- X[stats::complete.cases(X), , drop = FALSE]
+
+  X <- X[, apply(X, 2, function(v) length(unique(v)) > 1), drop = FALSE]
+  if(ncol(X) == 0 || nrow(X) <= ncol(X) + 1) return(character(0))
+
+  #QR decomposition to identify linearly dependent pred_vars
+  q <- qr(cbind(1, scale(X)), tol = tol)
+  keep <- setdiff(q$pivot[seq_len(q$rank)], 1) - 1
+  colnames(X)[sort(keep)]
+}
+
 #' Internal function to iteratively fit an ARIMAX model
 #'
 #' This function fits an ARIMAX model iteratively. It starts with all of the e
@@ -213,28 +250,34 @@ inv_variables_arima <- function(cv_set, y_var, pred_vars,
 retry_arima <- function(train_df, pred_vars, this_y_ts){
   new_pred_vars <- pred_vars
 
-  #model without exogeneous variables
-  arima_mod <- forecast::auto.arima(this_y_ts) #to return in case it fails
-
   while(length(new_pred_vars)>0){
+    fit_err <- NULL
     try({
       this_x_ts <- stats::ts(data = train_df[new_pred_vars],
                       start = c(lubridate::year(train_df$date[1]),
                                 lubridate::month(train_df$date[1])),
                       frequency = 12)
 
-      arimax_mod <- forecast::auto.arima(this_y_ts,
-                               xreg = this_x_ts)
+      arimax_mod <- tryCatch(forecast::auto.arima(this_y_ts,
+                                                  xreg = this_x_ts),
+                             error = function(e){
+                               fit_err <<- conditionMessage(e)
+                               stop(e)
+                             })
       return(list("model" = arimax_mod,
              "xreg_vars" = new_pred_vars))
     }, silent = TRUE)
-    cli::cli_alert_warning(paste("Unable to fit ARIMAX. Dropping", new_pred_vars[length(new_pred_vars)],
-                                  "and refitting."))
+    cli::cli_alert_warning(paste0("Unable to fit ARIMAX (", fit_err, "). Dropping ",
+                                  new_pred_vars[length(new_pred_vars)],
+                                  " and refitting."))
     new_pred_vars <- new_pred_vars[-length(new_pred_vars)]
   }
 
   #If still fails
   cli::cli_alert_warning("ARIMAX cannot fit with exogenous variables. Fitting ARIMA without xreg.")
+  #model without exogeneous variables
+  arima_mod <- forecast::auto.arima(this_y_ts) #to return in case it fails
+
   return(list("model" = arima_mod,
          "xreg_vars" = NULL))
 }
