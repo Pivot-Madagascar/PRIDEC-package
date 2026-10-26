@@ -15,11 +15,14 @@ test_that("full arimax workflow works", {
   cv_set$analysis <- dplyr::filter(cv_set$analysis, orgUnit %in% ex_orgUnits)
   cv_set$assessment <- dplyr::filter(cv_set$assessment, orgUnit %in% ex_orgUnits)
   #fit
-  expect_no_condition(
+  expect_no_error(
   test_fit <- fit_arima(cv_set,
                         y_var = "n_case",
                         pred_vars = c("rain_mm", "temp_c"))
+
   )
+
+  expect_contains(class(test_fit), "data.frame")
 
   # ----- evaluate -------
   test_eval <- eval_performance(test_fit)
@@ -61,14 +64,14 @@ test_that("arimax fits to one orgUnit", {
   demo_df$x3 <- 1
   demo_df$x4 <- "A"
 
-  expect_no_condition(
+  expect_no_error(
     test_x1 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
                                    test_df = demo_df[49:51,],
                                    pred_vars = c("x1"),
                                    quantile_levels = c(0.2,0.5, 0.643))
   )
 
-  expect_no_condition(
+  expect_no_error(
     test_x2 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
                                      test_df = demo_df[49:51,],
                                      pred_vars = c("x1", "x2"),
@@ -85,15 +88,6 @@ test_that("arimax fits to one orgUnit", {
     "Fitting without static variable"
   )
   expect_equal(nrow(test_x3[test_x3$dataset=="assess",]), 3)
-
-  #testing removal of static variables
-  # expect_warning(
-  #   fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
-  #                                   test_df = demo_df[49:51,],
-  #                                   pred_vars = c("x1", "x4"),
-  #                                   quantile_levels = 0.5),
-  #   "Fitting without static variable"
-  # )
 
 
   # testing having overlapping train and test dfs
@@ -208,7 +202,7 @@ test_that("arimax log transform works", {
   this_analysis <- cv_clean$analysis
   this_assess <- cv_clean$assess
   #fit
-  expect_no_condition({
+  expect_no_error({
   fit_nolog <- fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
                                   test_df = cv_clean$assess,
                                   quantile_levels = c(0.25,0.5,0.75),
@@ -250,5 +244,4 @@ test_that("arimax can forecast retrospectively", {
   forecast_dates <- unique(pred_arimax$date[pred_arimax$dataset == "assess"])
   expect_true(all(forecast_dates %in% assess_dates))
 
-  # plot_predictions(pred_arimax)
 })

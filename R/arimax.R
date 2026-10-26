@@ -11,6 +11,8 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                  quantile_levels, return_model = FALSE,
                                  log_trans = FALSE){
 
+  this_org <- unique(train_df$orgUnit)
+  cli::cli_alert_info("Fitting ARIMAX model for orgUnit: {this_org}")
   #ensure that dates of the train and test df do not overlap
   if(any(test_df$date %in% train_df$date)){
     stop("Train and testing dataframes contain overlapping dates. Please provide non-overlapping dates for ARIMA model.")
@@ -18,11 +20,17 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
 
   #if it starts with an NA, will not return fitted for that value
   #cut data until it starts with a true value
-  first_val <- is.na(train_df$y_obs[1])
-  while(first_val){
-    train_df <- train_df[-1,]
-    first_val <- is.na(train_df$y_obs[1])
+  first_valid <- match(FALSE, is.na(train_df$y_obs))
+  if (!is.na(first_valid)) {
+    train_df <- train_df[first_valid:nrow(train_df), , drop = FALSE]
+  } else {
+    if(return_model){
+      return(list("model" = NULL,
+                  "predictions" = NULL))
+      cli::cli_alert_warning("All value are NA. Cannot predict for orgUnit: {this_org}")
+    } else return(NULL)
   }
+
 
   if(log_trans){
     train_df$y_obs <- log(train_df$y_obs +1)
@@ -34,8 +42,8 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                             lubridate::month(min(train_df$date))),
                   frequency = 12)
 
-  #check that pred_vars have enough variation
-  #any static variables or those with less than ten values are removed from the pred_vars list
+  #check that pred_vars are not static
+  #any static variables are removed from the pred_vars list
   n_unique_pred <- sapply(lapply(train_df[pred_vars], FUN = unique, MARGIN = 2), length)
   if(any(n_unique_pred<2)){
     warning(paste("Static variable found in ARIMA model:", pred_vars[n_unique_pred<2], ". Fitting without static variable.\n"))
@@ -61,12 +69,12 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
                                    observed = train_df$y_obs,
                                    quantile_level = 0.5,
                                    quant_long = "quant_0.5",
-                                   orgUnit = unique(train_df$orgUnit),
+                                   orgUnit = this_org,
                                    dataset = "analysis")
 
   arimax_pi_assess <- get_arima_pi(arima_mod = arimax_mod, quantile_levels = quantile_levels,
                                    xreg = as.matrix(test_df[arimax_vars])) |>
-    dplyr::mutate(orgUnit = unique(test_df$orgUnit),
+    dplyr::mutate(orgUnit = this_org,
            dataset = "assess") |>
     dplyr::left_join(dplyr::select(test_df, all_of(c("observed" = "y_obs", "orgUnit", "date"))),
                      by = c("date", "orgUnit"))
