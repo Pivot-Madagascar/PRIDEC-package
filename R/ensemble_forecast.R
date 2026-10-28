@@ -18,6 +18,11 @@
 #' @param abort_on_error if TRUE, an error in any model stops the whole forecast. If FALSE (default),
 #'    a model that errors or fails to fit is dropped from the ensemble with a warning and the
 #'    remaining models are re-weighted (weights are normalised within each prediction).
+#' @param max_pred_multiplier a model is dropped from the ensemble if its predictions are
+#'    higher than this multiple of the maximum value observed in the analysis data
+#'    (`cv_set$analysis[[y_var]]`) or if any prediction is infinite. The median prediction
+#'    is checked if it exists, otherwise all predictions are. This check never aborts the
+#'    forecast, regardless of `abort_on_error`. Default = 10.
 #'
 #' @returns Dataframe of prediction intervals for the ensemble predictions
 #' @export
@@ -29,7 +34,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
                               arimax_configs = NULL,
                               naive_configs = NULL,
                               return_individual_models = FALSE,
-                              abort_on_error = FALSE){
+                              abort_on_error = FALSE,
+                              max_pred_multiplier = 10){
 
   cli::cli_h2("PRIDE-C Forecast Workflow")
   start_time <- Sys.time()
@@ -39,12 +45,16 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
                                remove_NA = FALSE))
   colnames(true_data)[colnames(true_data)== "y_obs"] <- "observed"
 
+  #ceiling for plausible predictions, based on analysis (training) data only
+  max_obs <- suppressWarnings(max(cv_set$analysis[[y_var]], na.rm = TRUE))
+  max_allowed <- if(is.finite(max_obs) && max_obs > 0) max_pred_multiplier * max_obs else Inf
+
   out_list <- list()
   if(!is.null(inla_configs)){
     out_list$inla <- fit_ensemble_member(
       model_name = "inla", label = "INLA", weight = inla_configs$weight,
-      abort_on_error = abort_on_error,
-      fit_fun = function() fit_inla(cv_set = cv_set,
+      abort_on_error = abort_on_error, max_allowed = max_allowed,
+      fit_fun =function() fit_inla(cv_set = cv_set,
                                     y_var = y_var,
                                     pred_vars = inla_configs$pred_vars,
                                     id_vars = id_vars,
@@ -59,8 +69,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   if(!is.null(glm_nb_configs)){
     out_list$glm_nb <- fit_ensemble_member(
       model_name = "glm_nb", label = "GLM", weight = glm_nb_configs$weight,
-      abort_on_error = abort_on_error,
-      fit_fun = function() fit_glm_nb(cv_set = cv_set,
+      abort_on_error = abort_on_error, max_allowed = max_allowed,
+      fit_fun =function() fit_glm_nb(cv_set = cv_set,
                                       y_var = y_var,
                                       pred_vars = glm_nb_configs$pred_vars,
                                       id_vars = id_vars,
@@ -70,8 +80,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   if(!is.null(ranger_configs)){
     out_list$ranger <- fit_ensemble_member(
       model_name = "ranger", label = "RANGER", weight = ranger_configs$weight,
-      abort_on_error = abort_on_error,
-      fit_fun = function() fit_ranger(cv_set = cv_set,
+      abort_on_error = abort_on_error, max_allowed = max_allowed,
+      fit_fun =function() fit_ranger(cv_set = cv_set,
                                       y_var = y_var,
                                       pred_vars = ranger_configs$pred_vars,
                                       id_vars = id_vars,
@@ -82,8 +92,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   if(!is.null(arimax_configs)){
     out_list$arimax <- fit_ensemble_member(
       model_name = "arimax", label = "ARIMAX", weight = arimax_configs$weight,
-      abort_on_error = abort_on_error,
-      fit_fun = function() fit_arima(cv_set = cv_set,
+      abort_on_error = abort_on_error, max_allowed = max_allowed,
+      fit_fun =function() fit_arima(cv_set = cv_set,
                                      y_var = y_var,
                                      pred_vars = arimax_configs$pred_vars,
                                      log_trans = arimax_configs$log_trans,
@@ -93,8 +103,8 @@ ensemble_forecast <- function(cv_set, y_var, id_vars,
   if(!is.null(naive_configs)){
     out_list$naive <- fit_ensemble_member(
       model_name = "naive", label = "NAIVE", weight = naive_configs$weight,
-      abort_on_error = abort_on_error,
-      fit_fun = function() fit_naive(cv_set = cv_set,
+      abort_on_error = abort_on_error, max_allowed = max_allowed,
+      fit_fun =function() fit_naive(cv_set = cv_set,
                                      y_var = y_var,
                                      quantile_levels = quantile_levels,
                                      group_vars = naive_configs$group_vars))
@@ -148,9 +158,11 @@ sample_preds <- function(predicted, weight){
 #' @param fit_fun function of no arguments that fits the model and returns a prediction dataframe
 #'    (or NULL if the model could not be fit)
 #' @param abort_on_error whether to re-throw errors instead of dropping the model
+#' @param max_allowed largest prediction allowed before the model is dropped. Default = Inf
 #' @returns dataframe of predictions with `model` and `weight` columns, or NULL if the model was dropped
 #' @noRd
-fit_ensemble_member <- function(model_name, label, weight, fit_fun, abort_on_error = FALSE){
+fit_ensemble_member <- function(model_name, label, weight, fit_fun, abort_on_error = FALSE,
+                                max_allowed = Inf){
   cli::cli_h3("{label} Forecast")
   cli::cli_text(paste0("Started: ", round(Sys.time())))
 
@@ -175,6 +187,16 @@ fit_ensemble_member <- function(model_name, label, weight, fit_fun, abort_on_err
   if(is.null(preds)) return(drop_model("it did not fit correctly (e.g. convergence issues)."))
   if(!is.data.frame(preds) || nrow(preds) == 0 || all(is.na(preds$predicted))){
     return(drop_model("it returned no valid predictions."))
+  }
+  if(any(is.infinite(preds$predicted))){
+    return(drop_model("it returned infinite predictions."))
+  }
+  #check the median if it exists, otherwise all rows
+  is_median <- preds$quant_long %in% "quant_0.5"
+  check_preds <- if(any(is_median)) preds$predicted[is_median] else preds$predicted
+  if(any(check_preds > max_allowed, na.rm = TRUE)){
+    return(drop_model(paste0("its predictions were higher than the maximum allowed value of ",
+                             round(max_allowed, 2), " (a multiple of the maximum observed value).")))
   }
 
   preds$model <- model_name

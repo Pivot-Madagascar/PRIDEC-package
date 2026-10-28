@@ -16,15 +16,13 @@ test_that("ensemble forecast works", {
                          graph_poly = demo_polygon)$W_graph
   #create configs for each model
   inla_configs <- list(reff_var = NULL, pred_vars = c("rain_mm", "temp_c"),
-                       hyper_priors = list("prec.unstruct" = c(1, 5e-4),
-                                           "prec.spatial" = c(1, 5e-4),
-                                           "prec.timerw1" = c(1,0.01)),
+                       hyper_priors = INLA_HYPER_DEFAULT,
                        W_orgUnit = W_orgUnit, sample_pi = FALSE,
                        weight = 0.5)
   glm_nb_configs <- list(pred_vars = c("rain_mm", "temp_c"),
                          weight = 0.1)
   ranger_configs <- list(pred_vars = c("rain_mm", "temp_c"),
-                         hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500),
+                         hyper_control = RANGER_HYPER_DEFAULT,
                          weight = 0.05)
   arimax_configs <- list(pred_vars = c("rain_mm", "temp_c"),
                          log_trans = TRUE,
