@@ -2,6 +2,40 @@
 #' @param pred_intervals data.frame of prediction intervals, output from `fit` step.
 #'   Must include: orgUnit, date, dataset, observed, predicted, quant_long, quantile_level
 #'
+#' @details
+#' Point-forecast scores are calculated for each orgUnit and dataset using the
+#' median forecast (`quant_0.5`) and rows where `observed` is not missing.
+#' They are then averaged across orgUnits within each dataset (ignoring `NA`s),
+#' alongside the weighted interval score (`wis`) and its `dispersion` component
+#' from, which use the full quantiles.
+#'
+#' \describe{
+#'   \item{wape}{Weighted absolute percentage error:
+#'     `sum(|predicted - observed|) / sum(|observed|)`. Total absolute error
+#'     scaled by total observed cases, so months with more cases carry more
+#'     weight. Unlike a mean percentage error, it is defined when individual
+#'     observations are zero (but not when all observations are zero).}
+#'   \item{mean_ae_log}{Absolute error on the log scale:
+#'     `|log(predicted + 1) - log(observed + 1)|`. The +1 avoids `log(0)`.
+#'     Measures relative (multiplicative) error, so it is less dominated by
+#'     large values than `mae`. Note that it is currently aggregated with the
+#'     median across dates, not the mean, despite its name.}
+#'   \item{med_ae}{Median absolute error, `median(|predicted - observed|)`,
+#'     in the original units. Robust to a few very poor forecasts.}
+#'   \item{mae}{Mean absolute error, `mean(|predicted - observed|)`, in the
+#'     original units. Sensitive to large misses.}
+#'   \item{prop_over}{Proportion of forecasts where `predicted > observed`
+#'     (overprediction).}
+#'   \item{prop_under}{Proportion of forecasts where `predicted < observed`
+#'     (underprediction). `prop_over + prop_under` is below 1 when some
+#'     forecasts exactly match the observation. A well-calibrated model
+#'     should have both near 0.5.}
+#'   \item{sp_rho}{Spearman rank correlation between observed and predicted.
+#'     Measures whether the forecast gets the relative ordering of high and low
+#'     months right, regardless of bias or scale. `NA` when either series is
+#'     constant or there are too few observations.}
+#' }
+#'
 #' @returns dataset of performance metrics for assessment and anlalysis datasets for that cv_set
 #' @export
 eval_performance <- function(pred_intervals){
@@ -12,7 +46,7 @@ eval_performance <- function(pred_intervals){
   med_errs <- pred_intervals |>
     dplyr::filter(.data$quant_long == "quant_0.5", !is.na(.data$observed)) |>
     dplyr::summarise(wape = sum(abs(.data$predicted-.data$observed))/sum(abs(.data$observed)),
-                     mean_ae_log = median(abs((log(.data$predicted+1)-log(.data$observed+1)))),
+                     mean_ae_log = mean(abs((log(.data$predicted+1)-log(.data$observed+1)))),
                      med_ae = median(abs(.data$predicted-.data$observed)),
                      mae = mean(abs(.data$predicted-.data$observed)),
                      prop_over = mean(.data$predicted>.data$observed),
