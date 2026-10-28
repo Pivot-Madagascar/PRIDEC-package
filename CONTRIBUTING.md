@@ -2,10 +2,12 @@
 
 This package uses [release-please](https://github.com/googleapis/release-please) to manage versions. It reads the commit messages on `main`, works out the next version number, updates `DESCRIPTION` and `NEWS.md`, and tags a release. This only works if commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) format, so the steps below matter.
 
+It follows Pivot's standard application development git flow described [here](https://github.com/Pivot-Madagascar/pivot-wiki/wiki/Application-Development-Git-Workflow.)
+
 ## Overview
 
 ```
-Issue  ->  Branch  ->  Pull request  ->  Squash merge to main  ->  Release PR  ->  Merge Release PR  ->  New release
+Issue  ->  Branch  ->  Pull request  ->  Squash merge to dev  ->  Merge to main  ->  Release PR  ->  Merge Release PR  ->  New release
 ```
 
 Merging a normal PR does **not** publish a release by itself. It adds changes to an automatically maintained "Release PR". The release happens when someone merges that Release PR.
@@ -17,8 +19,8 @@ Merging a normal PR does **not** publish a release by itself. It adds changes to
 
 ## 2. Make a branch and open a PR
 
-- Branch from `main`, for example `42-inla-sampling` or `17-get-dhis-data`.
-- Open a PR into `main` and link the issue in the description with `Closes #42`.
+- Branch from `dev`, for example `42-inla-sampling` or `17-get-dhis-data`.
+- Open a PR into `dev` and link the issue in the description with `Closes #42`.
 - Run `devtools::check()` and `devtools::test()` before requesting review.
 
 ## 3. Write the PR title as a conventional commit
@@ -59,12 +61,14 @@ Release-please then creates one `NEWS.md` entry per line instead of using the ti
 
 Better still, keep PRs small and focused on one type of change.
 
-## 4. Squash merge into main
+## 4. Squash merge into dev
 
-- Always use **Squash and merge**, not a regular merge or rebase, so the PR title is the single commit message.
+- Always use **Squash and merge** into dev, not a regular merge or rebase, so the PR title is the single commit message.
 - Check the commit title in the merge dialog before confirming. It should be the conventional-commit title.
 
-## 5. Release PR is created or updated automatically
+## 5. Release to production via a PR to main
+
+The `dev` branch should be merged into `main` fairly regularly, either when a PR is accepted into dev, or at least weekly. This should be a normal merge that will contain all of the squashed-merge commit messages on `dev`.
 
 After each push to `main`, the release-please GitHub Action (`.github/workflows/release-please.yml`) opens or updates a PR titled `chore(release): release vX.Y.Z`. It contains:
 
