@@ -245,3 +245,67 @@ test_that("arimax can forecast retrospectively", {
   expect_true(all(forecast_dates %in% assess_dates))
 
 })
+
+
+test_that("arimax cuts leading NAs in the outcome before fitting", {
+  df <- make_arima_df()
+  df$y_obs[1:4] <- NA
+  res <- fit_arima_OneOrgUnit(train_df = df[1:48,], test_df = df[49:51,],
+                              pred_vars = "x1", quantile_levels = 0.5)
+  analysis <- res[res$dataset == "analysis",]
+  expect_equal(min(analysis$date), df$date[5])
+  expect_equal(nrow(res[res$dataset == "assess",]), 3)
+})
+
+test_that("arimax returns NULL when the outcome is all NA", {
+  df <- make_arima_df()
+  df$y_obs[1:48] <- NA
+  expect_null(
+    fit_arima_OneOrgUnit(train_df = df[1:48,], test_df = df[49:51,],
+                         pred_vars = "x1", quantile_levels = 0.5)
+  )
+  expect_equal(
+    fit_arima_OneOrgUnit(train_df = df[1:48,], test_df = df[49:51,],
+                         pred_vars = "x1", quantile_levels = 0.5,
+                         return_model = TRUE),
+    list(model = NULL, predictions = NULL)
+  )
+})
+
+test_that("retry_arima keeps all variables when the model converges", {
+  df <- make_arima_df()[1:48,]
+  y_ts <- stats::ts(df$y_obs, start = c(2018, 1), frequency = 12)
+  expect_no_message(
+    res <- retry_arima(df, pred_vars = "x1", this_y_ts = y_ts)
+  )
+  expect_equal(res$xreg_vars, "x1")
+  expect_s3_class(res$model, "ARIMA")
+})
+
+test_that("retry_arima drops variables that stop the model from fitting", {
+  df <- make_arima_df()[1:48,]
+  df$x2 <- df$x1 #duplicate column makes xreg rank deficient
+  y_ts <- stats::ts(df$y_obs, start = c(2018, 1), frequency = 12)
+
+  expect_message(
+    res <- retry_arima(df, pred_vars = c("x1", "x2"), this_y_ts = y_ts),
+    "Dropping x2"
+  )
+  expect_equal(res$xreg_vars, "x1")
+  expect_s3_class(res$model, "ARIMA")
+})
+
+test_that("retry_arima falls back to ARIMA without xreg if nothing fits", {
+  df <- make_arima_df()[1:48,]
+  df$x_bad <- NA_real_ #cannot be used as a regressor
+  y_ts <- stats::ts(df$y_obs, start = c(2018, 1), frequency = 12)
+
+  expect_message(
+    res <- retry_arima(df, pred_vars = "x_bad", this_y_ts = y_ts),
+    "Fitting ARIMA without xreg"
+  )
+  expect_null(res$xreg_vars)
+  expect_s3_class(res$model, "ARIMA")
+})
+
+

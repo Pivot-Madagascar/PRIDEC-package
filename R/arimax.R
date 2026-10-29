@@ -25,9 +25,9 @@ fit_arima_OneOrgUnit <- function(train_df, test_df, pred_vars,
     train_df <- train_df[first_valid:nrow(train_df), , drop = FALSE]
   } else {
     if(return_model){
+      cli::cli_alert_warning("All values are NA. Cannot predict for orgUnit: {this_org}")
       return(list("model" = NULL,
                   "predictions" = NULL))
-      cli::cli_alert_warning("All value are NA. Cannot predict for orgUnit: {this_org}")
     } else return(NULL)
   }
 
