@@ -15,7 +15,8 @@ ensemble_forecast(
   arimax_configs = NULL,
   naive_configs = NULL,
   return_individual_models = FALSE,
-  abort_on_error = FALSE
+  abort_on_error = FALSE,
+  max_pred_multiplier = 10
 )
 }
 \arguments{
@@ -48,6 +49,12 @@ See \link[PRIDEC]{fit_naive} for more info.}
 \item{abort_on_error}{if TRUE, an error in any model stops the whole forecast. If FALSE (default),
 a model that errors or fails to fit is dropped from the ensemble with a warning and the
 remaining models are re-weighted (weights are normalised within each prediction).}
+
+\item{max_pred_multiplier}{a model is dropped from the ensemble if its predictions are
+higher than this multiple of the maximum value observed in the analysis data
+(\code{cv_set$analysis[[y_var]]}) or if any prediction is infinite. The median prediction
+is checked if it exists, otherwise all predictions are. This check never aborts the
+forecast, regardless of \code{abort_on_error}. Default = 10.}
 }
 \value{
 Dataframe of prediction intervals for the ensemble predictions

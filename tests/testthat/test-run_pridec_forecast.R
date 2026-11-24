@@ -12,7 +12,9 @@ test_that("pridec forecast works", {
   output_dir <- testthat::test_path("examples", "output")
   dir.create(output_dir)
 
-  expect_true(run_pridec_forecast(inputs = input_list, output_dir = output_dir))
+  suppressWarnings({
+    expect_true(run_pridec_forecast(inputs = input_list, output_dir = output_dir))
+  })
   #check files are there
   expect_true(all(c("config.json", "forecast.json", "input_data.json", "input_data.RData",
                 "polygon.geojson") %in% list.files(output_dir)))
