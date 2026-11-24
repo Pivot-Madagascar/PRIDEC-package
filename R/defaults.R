@@ -10,3 +10,7 @@ INLA_SAMPLEPI_DEFAULT <- TRUE
 ncores_default <- function() {
   max(ceiling(parallel::detectCores() / 2), 1L, na.rm = TRUE)
 }
+
+RANGER_HYPER_DEFAULT <- list("mtry" = NULL,
+                             "min.node.size" = NULL,
+                             "num.trees" = 500)

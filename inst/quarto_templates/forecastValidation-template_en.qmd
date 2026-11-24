@@ -31,7 +31,7 @@ execute-dir: project
 library(jsonlite)
 library(skimr)
 library(sf)
-# library(PRIDEC)
+library(PRIDEC)
 
 library(ggplot2); theme_set(theme_bw())
 library(tidyr)

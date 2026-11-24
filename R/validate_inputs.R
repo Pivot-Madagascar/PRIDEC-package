@@ -58,7 +58,7 @@ validate_inputs <- function(config,
   #set to default value if not provided
   if(is.null(config$inla_hyper)){
     message("\nNo inla_hyper provided. Setting to default values.")
-    config$inla_hyper <- NULL
+    config$inla_hyper <- INLA_HYPER_DEFAULT
   } else {
     if(!all(names(config$inla_hyper) == c("prec.spatial", "phi.spatial", "prec.timerw1")) |
        !(all(sapply(config$inla_hyper, length) == 2)) |
@@ -72,9 +72,7 @@ validate_inputs <- function(config,
 
   #set to default value if not provided
   if(is.null(config$ranger_hyper)){
-    config$ranger_hyper <- list("mtry" = NULL,
-                              "min.node.size" = NULL,
-                              "num.trees" = 500)
+    config$ranger_hyper <- RANGER_HYPER_DEFAULT
     message("No ranger_hyper provided. Setting to default values.")
   } else {
     if(!all(names(config$ranger_hyper) == c("mtry", "min.node.size", "num.trees"))){

@@ -16,3 +16,37 @@ dataset of performance metrics for assessment and anlalysis datasets for that cv
 \description{
 Evaluate performance on a cv_set
 }
+\details{
+Point-forecast scores are calculated for each orgUnit and dataset using the
+median forecast (\code{quant_0.5}) and rows where \code{observed} is not missing.
+They are then averaged across orgUnits within each dataset (ignoring \code{NA}s),
+alongside the weighted interval score (\code{wis}) and its \code{dispersion} component
+from, which use the full quantiles.
+
+\describe{
+\item{wape}{Weighted absolute percentage error:
+\verb{sum(|predicted - observed|) / sum(|observed|)}. Total absolute error
+scaled by total observed cases, so months with more cases carry more
+weight. Unlike a mean percentage error, it is defined when individual
+observations are zero (but not when all observations are zero).}
+\item{mean_ae_log}{Absolute error on the log scale:
+\verb{|log(predicted + 1) - log(observed + 1)|}. The +1 avoids \code{log(0)}.
+Measures relative (multiplicative) error, so it is less dominated by
+large values than \code{mae}. Note that it is currently aggregated with the
+median across dates, not the mean, despite its name.}
+\item{med_ae}{Median absolute error, \verb{median(|predicted - observed|)},
+in the original units. Robust to a few very poor forecasts.}
+\item{mae}{Mean absolute error, \verb{mean(|predicted - observed|)}, in the
+original units. Sensitive to large misses.}
+\item{prop_over}{Proportion of forecasts where \code{predicted > observed}
+(overprediction).}
+\item{prop_under}{Proportion of forecasts where \code{predicted < observed}
+(underprediction). \code{prop_over + prop_under} is below 1 when some
+forecasts exactly match the observation. A well-calibrated model
+should have both near 0.5.}
+\item{sp_rho}{Spearman rank correlation between observed and predicted.
+Measures whether the forecast gets the relative ordering of high and low
+months right, regardless of bias or scale. \code{NA} when either series is
+constant or there are too few observations.}
+}
+}

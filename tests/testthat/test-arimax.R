@@ -1,3 +1,15 @@
+# -------------------------testing assets -----------------------
+make_arima_df <- function(n = 51, seed = 3){
+  set.seed(seed)
+  df <- data.frame(orgUnit = "orgA",
+                   date = seq.Date(as.Date("2018-01-01"), by = "month", length.out = n))
+  df$y_obs <- (sin(2*pi/12*lubridate::month(df$date)) + 5)*10 + rnorm(n, sd = 2)
+  df$x1 <- rnorm(n)
+  df
+}
+
+# -------------------------full workflows -------------------------------
+
 test_that("full arimax workflow works", {
   data(demo_malaria)
   data(demo_polygon)
@@ -15,11 +27,14 @@ test_that("full arimax workflow works", {
   cv_set$analysis <- dplyr::filter(cv_set$analysis, orgUnit %in% ex_orgUnits)
   cv_set$assessment <- dplyr::filter(cv_set$assessment, orgUnit %in% ex_orgUnits)
   #fit
-  expect_no_condition(
+  expect_no_error(
   test_fit <- fit_arima(cv_set,
                         y_var = "n_case",
                         pred_vars = c("rain_mm", "temp_c"))
+
   )
+
+  expect_contains(class(test_fit), "data.frame")
 
   # ----- evaluate -------
   test_eval <- eval_performance(test_fit)
@@ -61,14 +76,14 @@ test_that("arimax fits to one orgUnit", {
   demo_df$x3 <- 1
   demo_df$x4 <- "A"
 
-  expect_no_condition(
+  expect_no_error(
     test_x1 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
                                    test_df = demo_df[49:51,],
                                    pred_vars = c("x1"),
                                    quantile_levels = c(0.2,0.5, 0.643))
   )
 
-  expect_no_condition(
+  expect_no_error(
     test_x2 <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
                                      test_df = demo_df[49:51,],
                                      pred_vars = c("x1", "x2"),
@@ -85,15 +100,6 @@ test_that("arimax fits to one orgUnit", {
     "Fitting without static variable"
   )
   expect_equal(nrow(test_x3[test_x3$dataset=="assess",]), 3)
-
-  #testing removal of static variables
-  # expect_warning(
-  #   fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
-  #                                   test_df = demo_df[49:51,],
-  #                                   pred_vars = c("x1", "x4"),
-  #                                   quantile_levels = 0.5),
-  #   "Fitting without static variable"
-  # )
 
 
   # testing having overlapping train and test dfs
@@ -116,6 +122,8 @@ test_that("arimax fits to one orgUnit", {
   })
 
 })
+
+# ----------------------- individual functions ------------------------
 
 test_that("internal get_arima_pi works", {
   demo_df <- data.frame(orgUnit = "orgA",
@@ -143,9 +151,9 @@ test_that("internal get_arima_pi works", {
                                       xreg = this_x_ts)
 
   demo_pi_x <- get_arima_pi(demo_arimax,
-                             quantile_levels = c(0.25, 0.5, 0.75),
-                             h = 3,
-                             xreg = as.matrix(demo_df$x1[25:27]))
+                            quantile_levels = c(0.25, 0.5, 0.75),
+                            h = 3,
+                            xreg = as.matrix(demo_df$x1[25:27]))
   expect_type(demo_pi_x$predicted,"double")
 
 })
@@ -155,10 +163,10 @@ test_that("arimax log transform works", {
   data(demo_polygon)
 
   cv_set <- split_cv_rolling(data_to_split = prep_data(raw_data = demo_malaria,
-                                                           y_var = "n_case",
-                                                           lagged_vars =  c("rain_mm", "temp_c"),
-                                                           scaled_vars = NULL,
-                                                           graph_poly = NULL)$data_prep,
+                                                       y_var = "n_case",
+                                                       lagged_vars =  c("rain_mm", "temp_c"),
+                                                       scaled_vars = NULL,
+                                                       graph_poly = NULL)$data_prep,
                              month_analysis = 48,
                              month_assess = 3)[[8]]
 
@@ -170,19 +178,19 @@ test_that("arimax log transform works", {
   this_analysis <- cv_clean$analysis
   this_assess <- cv_clean$assess
   #fit
-  expect_no_condition({
-  fit_nolog <- fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
-                                  test_df = cv_clean$assess,
-                                  quantile_levels = c(0.25,0.5,0.75),
-                                  pred_vars = c("rain_mm", "temp_c"))
-  fit_log <-fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
-                                 test_df = cv_clean$assess,
-                                 quantile_levels = c(0.25,0.5,0.75),
-                                 pred_vars = c("rain_mm", "temp_c"),
-                                 log_trans = TRUE)
-  # plot(fit_nolog$predicted, fit_log$predicted)
-  eval_performance(fit_nolog)
-  eval_performance(fit_log)
+  expect_no_error({
+    fit_nolog <- fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
+                                      test_df = cv_clean$assess,
+                                      quantile_levels = c(0.25,0.5,0.75),
+                                      pred_vars = c("rain_mm", "temp_c"))
+    fit_log <-fit_arima_OneOrgUnit(train_df =cv_clean$analysis,
+                                   test_df = cv_clean$assess,
+                                   quantile_levels = c(0.25,0.5,0.75),
+                                   pred_vars = c("rain_mm", "temp_c"),
+                                   log_trans = TRUE)
+    # plot(fit_nolog$predicted, fit_log$predicted)
+    eval_performance(fit_nolog)
+    eval_performance(fit_log)
   })
 })
 
@@ -197,9 +205,9 @@ test_that("arimax can forecast retrospectively", {
                               graph_poly = demo_polygon)
 
   cv_set <- split_cv_forecast(data_to_split = data_prep_list$data_prep,
-                            forecast_start_date = as.Date("2023-09-01"),
-                            month_analysis = 48,
-                            month_assess = 3)
+                              forecast_start_date = as.Date("2023-09-01"),
+                              month_analysis = 48,
+                              month_assess = 3)
 
   pred_arimax <- fit_arima(cv_set = cv_set,
                            y_var = "n_case",
@@ -212,5 +220,107 @@ test_that("arimax can forecast retrospectively", {
   forecast_dates <- unique(pred_arimax$date[pred_arimax$dataset == "assess"])
   expect_true(all(forecast_dates %in% assess_dates))
 
-  # plot_predictions(pred_arimax)
 })
+
+# ------------------------data and model checks ----------------------
+
+test_that("screen_xreg removes collinear and constant variables", {
+  set.seed(1)
+  df <- data.frame(x1 = rnorm(48), x2 = rnorm(48))
+  df$x3 <- df$x1*2 + 1       #perfectly collinear with x1
+  df$x4 <- df$x1 + df$x2     #linear combination
+  df$x5 <- 1                 #constant
+  df$x6 <- rnorm(48)
+  df$x6[1:3] <- NA           #incomplete rows are ignored
+
+  expect_equal(screen_xreg(df, c("x1", "x2")), c("x1", "x2"))
+  expect_equal(screen_xreg(df, c("x1", "x2", "x3", "x4", "x5", "x6")),
+               c("x1", "x2", "x6"))
+  #earlier variables preferentially kept
+  expect_equal(screen_xreg(df, c("x3", "x1")), "x3")
+  expect_equal(screen_xreg(df, character(0)), character(0))
+  #more variables than rows
+  expect_equal(screen_xreg(df[1:3,], c("x1", "x2")), character(0))
+})
+
+test_that("arimax fits with collinear variable by dropping it", {
+  set.seed(2)
+  demo_df <- data.frame(orgUnit = "orgA",
+                        date = seq.Date(as.Date("2018-01-01"), by = "month",
+                                        length.out = 51))
+  demo_df$y_obs <- (sin(2*pi/12*lubridate::month(demo_df$date))+5)*10 + rnorm(51, sd = 2)
+  demo_df$x1 <- rnorm(51)
+  demo_df$x2 <- demo_df$x1*3
+
+  expect_warning(
+    test_col <- fit_arima_OneOrgUnit(train_df = demo_df[1:48,],
+                                     test_df = demo_df[49:51,],
+                                     pred_vars = c("x1", "x2"),
+                                     quantile_levels = 0.5),
+    "Collinear variable found in ARIMA model: x2"
+  )
+  expect_equal(nrow(test_col[test_col$dataset == "assess",]), 3)
+})
+
+test_that("arimax cuts leading NAs in the outcome before fitting", {
+  df <- make_arima_df()
+  df$y_obs[1:4] <- NA
+  res <- fit_arima_OneOrgUnit(train_df = df[1:48,], test_df = df[49:51,],
+                              pred_vars = "x1", quantile_levels = 0.5)
+  analysis <- res[res$dataset == "analysis",]
+  expect_equal(min(analysis$date), df$date[5])
+  expect_equal(nrow(res[res$dataset == "assess",]), 3)
+})
+
+test_that("arimax returns NULL when the outcome is all NA", {
+  df <- make_arima_df()
+  df$y_obs[1:48] <- NA
+  expect_null(
+    fit_arima_OneOrgUnit(train_df = df[1:48,], test_df = df[49:51,],
+                         pred_vars = "x1", quantile_levels = 0.5)
+  )
+  expect_equal(
+    fit_arima_OneOrgUnit(train_df = df[1:48,], test_df = df[49:51,],
+                         pred_vars = "x1", quantile_levels = 0.5,
+                         return_model = TRUE),
+    list(model = NULL, predictions = NULL)
+  )
+})
+
+test_that("retry_arima keeps all variables when the model converges", {
+  df <- make_arima_df()[1:48,]
+  y_ts <- stats::ts(df$y_obs, start = c(2018, 1), frequency = 12)
+  expect_no_message(
+    res <- retry_arima(df, pred_vars = "x1", this_y_ts = y_ts)
+  )
+  expect_equal(res$xreg_vars, "x1")
+  expect_s3_class(res$model, "ARIMA")
+})
+
+test_that("retry_arima drops variables that stop the model from fitting", {
+  df <- make_arima_df()[1:48,]
+  df$x2 <- df$x1 #duplicate column makes xreg rank deficient
+  y_ts <- stats::ts(df$y_obs, start = c(2018, 1), frequency = 12)
+
+  expect_message(
+    res <- retry_arima(df, pred_vars = c("x1", "x2"), this_y_ts = y_ts),
+    "Dropping x2"
+  )
+  expect_equal(res$xreg_vars, "x1")
+  expect_s3_class(res$model, "ARIMA")
+})
+
+test_that("retry_arima falls back to ARIMA without xreg if nothing fits", {
+  df <- make_arima_df()[1:48,]
+  df$x_bad <- NA_real_ #cannot be used as a regressor
+  y_ts <- stats::ts(df$y_obs, start = c(2018, 1), frequency = 12)
+
+  expect_message(
+    res <- retry_arima(df, pred_vars = "x_bad", this_y_ts = y_ts),
+    "Fitting ARIMA without xreg"
+  )
+  expect_null(res$xreg_vars)
+  expect_s3_class(res$model, "ARIMA")
+})
+
+

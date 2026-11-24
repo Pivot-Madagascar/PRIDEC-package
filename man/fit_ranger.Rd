@@ -9,7 +9,7 @@ fit_ranger(
   y_var,
   id_vars,
   pred_vars,
-  hyper_control = list(mtry = NULL, min.node.size = NULL, num.trees = 500),
+  hyper_control = RANGER_HYPER_DEFAULT,
   importance = "none",
   quantile_levels = c(0.01, 0.025, seq(0.05, 0.95, by = 0.05), 0.975, 0.99),
   return_model = FALSE

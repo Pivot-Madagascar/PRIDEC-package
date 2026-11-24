@@ -9,7 +9,7 @@ inv_variables_ranger(
   y_var,
   id_vars,
   pred_vars,
-  hyper_control = list(mtry = NULL, min.node.size = NULL, num.trees = 500),
+  hyper_control = RANGER_HYPER_DEFAULT,
   var_scales
 )
 }

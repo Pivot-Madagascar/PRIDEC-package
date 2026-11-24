@@ -23,12 +23,24 @@ fit_glm_nb <- function(cv_set, y_var, id_vars, pred_vars,
 
   both_datasets <- dplyr::bind_rows(this_analysis, this_assess)
 
-  #create formula based on pred_vars
-  glm_formula <- stats::reformulate(termlabels = pred_vars,
-                             response = "y_obs")
+  #check that pred_vars are not static or collinear (rank deficient)
+  kept_vars <- screen_glm_vars(train_df = this_analysis, pred_vars = pred_vars)
+  if(length(kept_vars) < length(pred_vars)){
+    warning(paste("Static or collinear variable found in GLM model:",
+                  paste(setdiff(pred_vars, kept_vars), collapse = ", "),
+                  ". Fitting without these variables.\n"))
+    pred_vars <- kept_vars
+  }
 
-  glm_mod <- MASS::glm.nb(glm_formula,
-                          data = this_analysis)
+  fit <- retry_glm_nb(train_df = this_analysis, pred_vars = pred_vars)
+  if(is.null(fit)){
+    cli::cli_alert_warning("GLM cannot be fit. No predictions returned.")
+    if(return_model){
+      return(list("model" = NULL,
+                  "predictions" = NULL))
+    } else return(NULL)
+  }
+  glm_mod <- fit$model
 
   # Estimate prediction intervals via analytic method
   mod_pi <- as.data.frame(calc_pi_nb_analytic(df = both_datasets, fit = glm_mod,
@@ -47,6 +59,106 @@ fit_glm_nb <- function(cv_set, y_var, id_vars, pred_vars,
 }
 
 
+
+#' Internal function to drop predictors that make the GLM design matrix rank deficient
+#'
+#' Checks ahead of time for static or collinear predictors via a QR decomposition
+#'   of the model matrix, which is much faster than refitting. Variables are added
+#'   one at a time in the order of `pred_vars` and a variable is dropped if it does not
+#'   add its full number of columns to the rank of the model matrix (this also catches
+#'   interactions and factors). Variables in `fixed_vars` are never dropped.
+#' @param train_df data.frame of data used to train the model
+#' @param pred_vars vector of character names of predictor variables
+#' @param fixed_vars vector of character names of variables that are always retained.
+#'   Default = c("orgUnit", "month_season")
+#' @param tol tolerance for the rank determination in [base::qr()]
+#' @return vector of character names of the retained variables
+screen_glm_vars <- function(train_df, pred_vars,
+                            fixed_vars = c("orgUnit", "month_season"),
+                            tol = 1e-7){
+  fixed <- intersect(fixed_vars, pred_vars)
+  candidates <- setdiff(pred_vars, fixed)
+
+  #returns NULL if the model matrix cannot be built (e.g. factor with one level)
+  mm_rank <- function(vars){
+    X <- tryCatch(stats::model.matrix(stats::reformulate(if(length(vars)>0) vars else "1"),
+                                      data = train_df),
+                  error = function(e) NULL)
+    if(is.null(X)) return(NULL)
+    c("rank" = qr(X, tol = tol)$rank, "ncol" = ncol(X), "nrow" = nrow(X))
+  }
+
+  base <- mm_rank(fixed)
+  #problems with the fixed variables are left for retry_glm_nb to handle
+  if(is.null(base)) return(pred_vars)
+
+  kept <- fixed
+  for(v in candidates){
+    new <- mm_rank(c(kept, v))
+    if(!is.null(new) && new["nrow"] > new["ncol"] &&
+       (new["rank"] - base["rank"]) == (new["ncol"] - base["ncol"])){
+      kept <- c(kept, v)
+      base <- new
+    }
+  }
+  return(kept)
+}
+
+#' Internal function to iteratively fit a negative binomial GLM
+#'
+#' This function fits a negative binomial GLM via MASS::glm.nb(). It starts with all
+#'   of the predictor variables and if the model errors or does not converge, it
+#'   removes the last one in the list and tries to refit. Non-convergence is detected
+#'   from the warnings thrown by glm.nb ("iteration limit reached", "alternation limit
+#'   reached" and "algorithm did not converge"). It repeats this process until a model
+#'   is successfully fit. If only the fixed variables are left, no model is
+#'   fit and NULL is returned.
+#' @param train_df data.frame of data used to train the model
+#' @param pred_vars vector of character names of predictor variables. Variables
+#'   in `fixed_vars` are moved to the front so that they are dropped last.
+#' @param fixed_vars vector of character names of variables that are never
+#'   dropped. Default = c("orgUnit", "month_season")
+#' @return a list containing the fit model (`model`) and the variables it was fit
+#'   with (`vars`), or NULL if no model could be fit.
+retry_glm_nb <- function(train_df, pred_vars,
+                         fixed_vars = c("orgUnit", "month_season")){
+  new_pred_vars <- unique(c(fixed_vars, pred_vars))
+  convergence_warnings <- "iteration limit reached|alternation limit reached|did not converge"
+
+  repeat{
+    fit_err <- NULL
+    glm_mod <- tryCatch({
+      mod <- withCallingHandlers(
+        MASS::glm.nb(stats::reformulate(termlabels = new_pred_vars, response = "y_obs"),
+                     data = train_df),
+        warning = function(w){
+          #convergence warnings are treated as errors, others are passed on
+          if(grepl(convergence_warnings, conditionMessage(w))){
+            stop(conditionMessage(w), call. = FALSE)
+          }
+        })
+      if(isFALSE(mod$converged)) stop("glm.nb did not converge", call. = FALSE)
+      mod
+    }, error = function(e){
+      fit_err <<- conditionMessage(e)
+      NULL
+    })
+
+    if(!is.null(glm_mod)){
+      return(list("model" = glm_mod,
+                  "vars" = new_pred_vars))
+    }
+
+    dropped <- new_pred_vars[length(new_pred_vars)]
+    new_pred_vars <- new_pred_vars[-length(new_pred_vars)]
+
+    if(length(new_pred_vars) <= length(fixed_vars)){
+      cli::cli_alert_warning("Unable to fit GLM ({fit_err}) and no optional predictors remain.")
+      return(NULL)
+    }
+    cli::cli_alert_warning("Unable to fit GLM ({fit_err}). Dropping {dropped} and refitting.")
+  }
+}
 
 #' Estimate glm.nb prediction interval analytically
 #'

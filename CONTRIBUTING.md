@@ -2,13 +2,15 @@
 
 This package uses [release-please](https://github.com/googleapis/release-please) to manage versions. It reads the commit messages on `main`, works out the next version number, updates `DESCRIPTION` and `NEWS.md`, and tags a release. This only works if commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) format, so the steps below matter.
 
+It follows Pivot's standard application development github flow described [here](https://github.com/Pivot-Madagascar/pivot-wiki/wiki/Application-Development-Git-Workflow.)
+
 ## Overview
 
 ```
 Issue  ->  Branch  ->  Pull request  ->  Squash merge to main  ->  Release PR  ->  Merge Release PR  ->  New release
 ```
 
-Merging a normal PR does **not** publish a release by itself. It adds changes to an automatically maintained "Release PR". The release happens when someone merges that Release PR.
+Merging a normal PR does **not** publish a release by itself. It adds changes to an automatically maintained "Release PR". The release happens when someone merges that Release PR (this can only be done by a project admin).
 
 ## 1. Start from an issue
 
@@ -18,8 +20,9 @@ Merging a normal PR does **not** publish a release by itself. It adds changes to
 ## 2. Make a branch and open a PR
 
 - Branch from `main`, for example `42-inla-sampling` or `17-get-dhis-data`.
+- Work on the issue on this branch. Small commits within this branch can be formatted as you like, as they will be squash-merged.
 - Open a PR into `main` and link the issue in the description with `Closes #42`.
-- Run `devtools::check()` and `devtools::test()` before requesting review.
+- Run `devtools::check()` and `devtools::test()` before requesting review. TO DO: Run automatically via github actions.
 
 ## 3. Write the PR title as a conventional commit
 
@@ -61,10 +64,10 @@ Better still, keep PRs small and focused on one type of change.
 
 ## 4. Squash merge into main
 
-- Always use **Squash and merge**, not a regular merge or rebase, so the PR title is the single commit message.
-- Check the commit title in the merge dialog before confirming. It should be the conventional-commit title.
+- Always use **Squash and merge** into main, not a regular merge, so the PR title is the single commit message.
+- Check the commit title in the merge dialog before confirming. It should be the conventional-commit title. [is there a way to automate this check?]
 
-## 5. Release PR is created or updated automatically
+## 5. Release to production via a PR to main
 
 After each push to `main`, the release-please GitHub Action (`.github/workflows/release-please.yml`) opens or updates a PR titled `chore(release): release vX.Y.Z`. It contains:
 
@@ -79,7 +82,7 @@ More merged PRs keep accumulating in this same Release PR. Do not edit it by han
 When you are ready to release:
 
 1. Review the version number and `NEWS.md` entries in the Release PR.
-2. Merge it (this one is not a feature PR, so merge it as is).
+2. Merge it (this one is not a feature PR, so merge it as is). A sqaush merge is fine because it is one commit.
 3. Release-please tags `vX.Y.Z` and creates a GitHub release with the notes.
 
 If nothing releasable (`feat` or `fix`) has been merged since the last release, no Release PR is opened.

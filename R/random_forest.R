@@ -15,10 +15,15 @@
 #'   object and prediction intervals, if `return_model` = TRUE
 #' @export
 fit_ranger <- function(cv_set, y_var, id_vars, pred_vars,
-                       hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500),
+                       hyper_control = RANGER_HYPER_DEFAULT,
                        importance = "none",
                        quantile_levels = c(0.01,0.025, seq(0.05,0.95, by = 0.05), 0.975, 0.99),
                        return_model = FALSE){
+
+  #backwards compatibility for hyper_control=NULL
+  if(is.null(hyper_control)) {
+    hyper_control <- RANGER_HYPER_DEFAULT
+  }
 
   #ensure that orgUnit and month of year are always included as predictor variables
   pred_vars <- unique(c("orgUnit", "month_season", pred_vars))
@@ -64,7 +69,7 @@ fit_ranger <- function(cv_set, y_var, id_vars, pred_vars,
 #'   containing data for pdp plots with each element corresponding to a variable
 #' @export
 inv_variables_ranger <- function(cv_set, y_var, id_vars, pred_vars,
-                                 hyper_control = list("mtry" = NULL, "min.node.size" = NULL, "num.trees" = 500),
+                                 hyper_control = RANGER_HYPER_DEFAULT,
                                  var_scales){
   rf_final <- fit_ranger(cv_set = cv_set,
                          y_var = y_var,
