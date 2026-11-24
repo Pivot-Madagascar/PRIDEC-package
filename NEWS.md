@@ -1,3 +1,18 @@
+## [0.2.1](https://github.com/Pivot-Madagascar/PRIDEC-package/compare/v0.2.0...v0.2.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* add prediction threshold to avoid cases blowing up in log link ([ee8f111](https://github.com/Pivot-Madagascar/PRIDEC-package/commit/ee8f1119cea4041fbc1606e770caff6917e6e377))
+* **arima:** bug in unending while loop ([ee8f111](https://github.com/Pivot-Madagascar/PRIDEC-package/commit/ee8f1119cea4041fbc1606e770caff6917e6e377))
+* **arima:** screen ARIMA data ([ee8f111](https://github.com/Pivot-Madagascar/PRIDEC-package/commit/ee8f1119cea4041fbc1606e770caff6917e6e377))
+
+
+### Internal
+
+* **arima:** add additional unit tests ([ee8f111](https://github.com/Pivot-Madagascar/PRIDEC-package/commit/ee8f1119cea4041fbc1606e770caff6917e6e377))
+* document evaluation metrics ([ee8f111](https://github.com/Pivot-Madagascar/PRIDEC-package/commit/ee8f1119cea4041fbc1606e770caff6917e6e377))
+
 ## [0.2.0](https://github.com/Pivot-Madagascar/PRIDEC-package/compare/v0.1.0...v0.2.0) (2026-10-20)
 
 
